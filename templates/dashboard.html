@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ title }} — NetScan Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#080d14; --bg2:#0d1520; --bg3:#111d2c;
+    --grid:rgba(0,200,255,0.04);
+    --accent:#00c8ff; --accent2:#00ff9d; --accent3:#ff6b35; --accent4:#a855f7;
+    --text:#c8d8e8; --text2:#7a96b0;
+    --border:rgba(0,200,255,0.15);
+    --glow:0 0 20px rgba(0,200,255,0.15);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; overflow-x:hidden; }
+  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+
+  /* SIDEBAR */
+  .sidebar { position:fixed; top:0; left:0; width:240px; height:100vh; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
+  .sidebar-logo { padding:28px 24px 20px; border-bottom:1px solid var(--border); }
+  .sidebar-logo .badge { display:inline-block; font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--accent); border:1px solid var(--accent); padding:3px 10px; border-radius:2px; margin-bottom:10px; box-shadow:var(--glow); }
+  .sidebar-logo h2 { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:#fff; letter-spacing:1px; }
+  .sidebar-logo h2 span { color:var(--accent); }
+  .sidebar-logo p { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text2); margin-top:4px; letter-spacing:1px; }
+  .sidebar nav { padding:20px 0; flex:1; }
+  .nav-label { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--text2); padding:0 24px; margin-bottom:8px; margin-top:16px; }
+  .nav-link { display:flex; align-items:center; gap:10px; padding:10px 24px; color:var(--text2); text-decoration:none; font-size:13px; font-family:'Inter',sans-serif; transition:all 0.2s; border-left:3px solid transparent; }
+  .nav-link:hover { color:var(--text); background:rgba(0,200,255,0.04); border-left-color:rgba(0,200,255,0.3); }
+  .nav-link.active { color:var(--accent); background:rgba(0,200,255,0.06); border-left-color:var(--accent); }
+  .nav-link .icon { font-size:15px; width:20px; text-align:center; }
+  .sidebar-footer { padding:16px 24px; border-top:1px solid var(--border); font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text2); letter-spacing:1px; }
+
+  /* MAIN */
+  .main { margin-left:240px; flex:1; padding:36px; position:relative; z-index:1; }
+  .page-header { margin-bottom:32px; }
+  .page-header .section-label { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--accent2); text-transform:uppercase; margin-bottom:6px; }
+  .page-header h1 { font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; color:#fff; letter-spacing:1px; }
+
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .stat-card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:20px; position:relative; overflow:hidden; }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .stat-card.total::before { background:var(--accent); }
+  .stat-card.completed::before { background:var(--accent2); }
+  .stat-card.running::before { background:var(--accent3); }
+  .stat-card.errors::before { background:var(--accent4); }
+  .stat-num { font-family:'Rajdhani',sans-serif; font-size:36px; font-weight:700; color:#fff; line-height:1; }
+  .stat-card.total .stat-num { color:var(--accent); }
+  .stat-card.completed .stat-num { color:var(--accent2); }
+  .stat-card.running .stat-num { color:var(--accent3); }
+  .stat-card.errors .stat-num { color:var(--accent4); }
+  .stat-label { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); margin-top:6px; letter-spacing:1px; }
+
+  /* CARD */
+  .card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:24px; margin-bottom:20px; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:12px; border-bottom:1px solid var(--border); }
+  .card-title { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; color:#fff; letter-spacing:0.5px; }
+  .card-label { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--accent); letter-spacing:2px; }
+
+  /* TABLE */
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--text2); padding:8px 12px; text-align:left; border-bottom:1px solid var(--border); text-transform:uppercase; }
+  td { padding:10px 12px; border-bottom:1px solid rgba(0,200,255,0.05); color:var(--text); font-family:'Inter',sans-serif; }
+  tr:hover td { background:rgba(0,200,255,0.03); }
+  code { font-family:'Share Tech Mono',monospace; color:var(--accent); font-size:11px; }
+
+  /* BADGE */
+  .badge-status { display:inline-block; padding:3px 10px; border-radius:3px; font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:1px; }
+  .badge-status.completed { background:rgba(0,255,157,0.1); color:var(--accent2); border:1px solid rgba(0,255,157,0.2); }
+  .badge-status.running { background:rgba(255,107,53,0.1); color:var(--accent3); border:1px solid rgba(255,107,53,0.2); }
+  .badge-status.error { background:rgba(200,0,0,0.1); color:#ff4444; border:1px solid rgba(200,0,0,0.2); }
+
+  /* BTN */
+  .btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:1px; text-decoration:none; cursor:pointer; border:none; transition:all 0.2s; }
+  .btn-primary { background:rgba(0,200,255,0.1); color:var(--accent); border:1px solid rgba(0,200,255,0.3); }
+  .btn-primary:hover { background:rgba(0,200,255,0.18); box-shadow:var(--glow); }
+  .btn-sm { padding:5px 12px; font-size:10px; }
+
+  .empty-state { text-align:center; padding:48px 0; font-family:'Share Tech Mono',monospace; font-size:12px; color:var(--text2); }
+  .empty-state a { color:var(--accent); text-decoration:none; }
+  .empty-state a:hover { text-decoration:underline; }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
+  .main { animation:fadeUp 0.5s ease both; }
+</style>
+</head>
+<body>
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="badge">// NETSCAMPRO</div>
+    <h2>NetScan<span>Pro</span></h2>
+    <p>FUPRE · FYP · OBEH E.O</p>
+  </div>
+  <nav>
+    <div class="nav-label">// Navigation</div>
+    <a href="/" class="nav-link {% if page=='home' %}active{% endif %}"><span class="icon">📋</span> Dashboard</a>
+    <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="icon">➕</span> New Scan</a>
+    <div class="nav-label">// Info</div>
+    <a href="#" class="nav-link"><span class="icon">📄</span> Reports</a>
+  </nav>
+  <div class="sidebar-footer">v1.0.0 · ETHICAL USE ONLY</div>
+</aside>
+
+<main class="main">
+  <div class="page-header">
+    <div class="section-label">// Dashboard</div>
+    <h1>Scan History</h1>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card total">
+      <div class="stat-num">{{ sessions|length }}</div>
+      <div class="stat-label">TOTAL SCANS</div>
+    </div>
+    <div class="stat-card completed">
+      <div class="stat-num">{{ sessions|selectattr('status','equalto','completed')|list|length }}</div>
+      <div class="stat-label">COMPLETED</div>
+    </div>
+    <div class="stat-card running">
+      <div class="stat-num">{{ sessions|selectattr('status','equalto','running')|list|length }}</div>
+      <div class="stat-label">RUNNING</div>
+    </div>
+    <div class="stat-card errors">
+      <div class="stat-num">{{ sessions|selectattr('status','equalto','error')|list|length }}</div>
+      <div class="stat-label">ERRORS</div>
+    </div>
+  </div>
+
+  <!-- Sessions -->
+  <div class="card">
+    <div class="card-header">
+      <div>
+        <div class="card-label">// SCAN SESSIONS</div>
+        <div class="card-title">All Scans</div>
+      </div>
+      <a href="/scan/new" class="btn btn-primary">+ NEW SCAN</a>
+    </div>
+    {% if sessions %}
+    <table>
+      <thead>
+        <tr>
+          <th>Session ID</th>
+          <th>Target</th>
+          <th>Started</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sessions %}
+        <tr>
+          <td><code>{{ s.id }}</code></td>
+          <td>{{ s.target }}</td>
+          <td style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2)">{{ s.started_at[:19] }}</td>
+          <td><span class="badge-status {{ s.status }}">{{ s.status.upper() }}</span></td>
+          <td><a href="/scan/{{ s.id }}" class="btn btn-primary btn-sm">VIEW →</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p style="font-size:24px;margin-bottom:12px">🛡️</p>
+      <p>No scans yet.</p>
+      <p style="margin-top:8px"><a href="/scan/new">Start your first scan →</a></p>
+    </div>
+    {% endif %}
+  </div>
+</main>
+</body>
+</html>

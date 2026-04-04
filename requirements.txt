@@ -1,0 +1,22 @@
+# NetScan Pro - Python Dependencies
+# Install all with: pip install -r requirements.txt
+
+# Core scanning
+python-nmap>=0.7.1        # Nmap Python wrapper (requires nmap installed on OS)
+scapy>=2.5.0              # Packet crafting for raw socket operations
+
+# Web testing
+requests>=2.31.0          # HTTP client for web requests
+beautifulsoup4>=4.12.0    # HTML parser for web crawling
+urllib3>=2.0.0            # HTTP utilities (SSL warning suppression)
+
+# CVE lookup
+# (uses built-in requests — no extra package needed)
+
+# Report generation
+jinja2>=3.1.2             # HTML templating engine
+reportlab>=4.0.0          # PDF generation
+
+# Web dashboard
+flask>=3.0.0              # Web framework for dashboard
+gunicorn>=21.2.0          # Production WSGI server (required for Render)

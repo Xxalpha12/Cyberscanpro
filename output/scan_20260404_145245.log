@@ -1,0 +1,5 @@
+2026-04-04 14:52:45,905 [INFO] modules.database: Database schema initialized.
+2026-04-04 14:52:45,905 [INFO] modules.database: Database initialized at C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\db\netscampro.db
+2026-04-04 14:52:45,923 [INFO] __main__: Scan session created: cc4ab380
+2026-04-04 14:52:46,183 [INFO] modules.network_scanner: Starting nmap scan: target=192.168.1.0/24, args='-Pn -sV -sC -O -T4 -p 1-1024'
+2026-04-04 14:55:36,740 [ERROR] modules.network_scanner: Nmap scan failed: b'<?xml version="1.0" encoding="UTF-8"?>\r\n<!DOCTYPE nmaprun>\r\n<?xml-stylesheet href="file:///C:/Program Files (x86)/Nmap/nmap.xsl" type="text/xsl"?>\r\n<!-- Nmap 7.80 scan initiated Sat Apr 04 14:52:46 2026 as: nmap -oX - -Pn -sV -sC -O -T4 -p 1-1024 192.168.1.0/24 -->\r\n<nmaprun scanner="nmap" args="nmap -oX - -Pn -sV -sC -O -T4 -p 1-1024 192.168.1.0/24" start="1775307166" startstr="Sat Apr 04 14:52:46 2026" version="7.80" xmloutputversion="1.04">\r\n<scaninfo type="syn" protocol="tcp" numservices="1024" services="1-1024"/>\r\n<verbose level="0"/>\r\n<debugging level="0"/>\r\n'

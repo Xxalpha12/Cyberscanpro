@@ -1,0 +1,8 @@
+2026-04-04 15:28:18,522 [INFO] modules.database: Database schema initialized.
+2026-04-04 15:28:18,522 [INFO] modules.database: Database initialized at C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\db\netscampro.db
+2026-04-04 15:28:18,532 [INFO] __main__: Scan session created: bb487751
+2026-04-04 15:28:18,838 [INFO] modules.network_scanner: Starting nmap scan: target=192.168.1.10, args='-Pn -sV --top-ports 100 -T4 -p 1-1024'
+2026-04-04 15:28:32,535 [INFO] modules.network_scanner: 192.168.1.10 | 0 open ports
+2026-04-04 15:28:32,536 [INFO] modules.network_scanner: Nmap scan complete. 1 host(s) found.
+2026-04-04 15:28:32,592 [INFO] modules.report_generator: HTML report saved: C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\output\netscampro_report_bb487751_20260404_152832.html
+2026-04-04 15:28:32,805 [INFO] modules.report_generator: PDF report saved: C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\output\netscampro_report_bb487751_20260404_152832.pdf

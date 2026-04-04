@@ -1,0 +1,4 @@
+2026-04-04 14:50:53,866 [INFO] modules.database: Database schema initialized.
+2026-04-04 14:50:53,866 [INFO] modules.database: Database initialized at C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\db\netscampro.db
+2026-04-04 14:50:53,908 [INFO] __main__: Scan session created: cfdc3fc1
+2026-04-04 14:50:54,172 [INFO] modules.network_scanner: Starting nmap scan: target=192.168.1.0/24, args='-Pn -sV -sC -O -T4 -p 1-1024'

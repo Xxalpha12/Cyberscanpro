@@ -1,0 +1,10 @@
+2026-04-04 13:39:51,997 [INFO] modules.database: Database schema initialized.
+2026-04-04 13:39:51,998 [INFO] modules.database: Database initialized at C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\db\netscampro.db
+2026-04-04 13:39:52,017 [INFO] __main__: Scan session created: d2f04001
+2026-04-04 13:39:52,279 [INFO] modules.network_scanner: Starting nmap scan: target=192.168.1.0/24, args='-sV -sC -O -p- -T4 -p 1-1024'
+2026-04-04 13:39:52,301 [ERROR] modules.network_scanner: Nmap scan failed: 'Only 1 -p option allowed, separate multiple ranges with commas.\r\nQUITTING!\r\n'
+2026-04-04 13:39:52,307 [INFO] modules.web_tester: No web services found on discovered hosts.
+2026-04-04 13:39:52,308 [INFO] modules.cve_mapper: Starting CVE mapping...
+2026-04-04 13:39:52,309 [INFO] modules.cve_mapper: CVE mapping complete. 0 finding(s).
+2026-04-04 13:39:52,324 [INFO] modules.report_generator: HTML report saved: C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\output\netscampro_report_d2f04001_20260404_133952.html
+2026-04-04 13:39:52,467 [INFO] modules.report_generator: PDF report saved: C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\output\netscampro_report_d2f04001_20260404_133952.pdf

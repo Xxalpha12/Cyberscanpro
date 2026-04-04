@@ -1,0 +1,10 @@
+2026-04-04 14:08:58,583 [INFO] modules.database: Database schema initialized.
+2026-04-04 14:08:58,584 [INFO] modules.database: Database initialized at C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\db\netscampro.db
+2026-04-04 14:08:58,594 [INFO] __main__: Scan session created: 9a67974e
+2026-04-04 14:08:58,898 [INFO] modules.network_scanner: Starting nmap scan: target=127.0.0.1, args='-Pn -sV -sC -O -T4 -p 1-1024'
+2026-04-04 14:09:36,622 [INFO] modules.network_scanner: Nmap scan complete. 1 host(s) found.
+2026-04-04 14:09:36,633 [INFO] modules.web_tester: No web services found on discovered hosts.
+2026-04-04 14:09:36,635 [INFO] modules.cve_mapper: Starting CVE mapping...
+2026-04-04 14:09:40,959 [INFO] modules.cve_mapper: CVE mapping complete. 3 finding(s).
+2026-04-04 14:09:41,018 [INFO] modules.report_generator: HTML report saved: C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\output\netscampro_report_9a67974e_20260404_140940.html
+2026-04-04 14:09:41,232 [INFO] modules.report_generator: PDF report saved: C:\Users\PC\Downloads\Telegram Desktop\NetScanPro\netscampro\output\netscampro_report_9a67974e_20260404_140940.pdf

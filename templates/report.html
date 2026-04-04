@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ report_title }}</title>
+<style>
+  :root {
+    --navy: #1F3864; --blue: #2E75B6; --red: #C00000;
+    --orange: #E67E22; --green: #27AE60; --grey: #7F8C8D;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; font-size: 13px; color: #333; background: #f5f7fa; }
+  .page { max-width: 1050px; margin: 0 auto; padding: 40px 30px; }
+
+  /* Header */
+  .report-header { background: var(--navy); color: white; padding: 32px 40px; border-radius: 8px; margin-bottom: 30px; }
+  .report-header h1 { font-size: 24px; margin-bottom: 6px; }
+  .report-header p { font-size: 12px; opacity: 0.75; }
+  .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+  .meta-item label { font-size: 10px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+  .meta-item span { display: block; font-size: 14px; font-weight: bold; }
+
+  /* Risk badge */
+  .risk-badge { display: inline-block; padding: 4px 12px; border-radius: 4px; font-size: 13px; font-weight: bold; }
+  .risk-CRITICAL { background: #C00000; color: white; }
+  .risk-HIGH { background: #E74C3C; color: white; }
+  .risk-MEDIUM { background: #E67E22; color: white; }
+  .risk-LOW { background: #2980B9; color: white; }
+  .risk-INFORMATIONAL { background: #27AE60; color: white; }
+
+  /* Severity counts */
+  .sev-bar { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+  .sev-chip { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; color: white; }
+  .sev-Critical { background: #C00000; }
+  .sev-High { background: #E74C3C; }
+  .sev-Medium { background: #E67E22; }
+  .sev-Low { background: #2980B9; }
+  .sev-None { background: #7F8C8D; }
+
+  /* Sections */
+  section { background: white; border-radius: 8px; padding: 24px 28px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+  h2 { font-size: 16px; color: var(--navy); border-bottom: 2px solid var(--blue); padding-bottom: 8px; margin-bottom: 16px; }
+  h3 { font-size: 13px; color: var(--blue); margin: 16px 0 8px; }
+
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--navy); color: white; padding: 8px 10px; text-align: left; }
+  td { padding: 7px 10px; border-bottom: 1px solid #eee; vertical-align: top; }
+  tr:nth-child(even) td { background: #f8fafc; }
+
+  /* Finding card */
+  .finding-card { border: 1px solid #e0e0e0; border-radius: 6px; margin-bottom: 16px; overflow: hidden; }
+  .finding-header { padding: 10px 14px; display: flex; justify-content: space-between; align-items: center; }
+  .finding-header.Critical { background: #fff0f0; border-left: 4px solid #C00000; }
+  .finding-header.High { background: #fff5f5; border-left: 4px solid #E74C3C; }
+  .finding-header.Medium { background: #fffbf0; border-left: 4px solid #E67E22; }
+  .finding-header.Low { background: #f0f6ff; border-left: 4px solid #2980B9; }
+  .finding-body { padding: 12px 14px; }
+  .finding-body table td:first-child { font-weight: bold; color: #555; width: 130px; }
+
+  /* Disclaimer */
+  .disclaimer { font-size: 11px; color: #888; font-style: italic; padding: 14px; background: #f9f9f9; border-radius: 6px; border: 1px solid #eee; margin-top: 30px; }
+
+  /* Severity badge inline */
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; color: white; }
+  .badge.Critical { background: #C00000; }
+  .badge.High { background: #E74C3C; }
+  .badge.Medium { background: #E67E22; }
+  .badge.Low { background: #2980B9; }
+  .badge.None { background: #7F8C8D; }
+
+  @media print { body { background: white; } .page { padding: 0; } section { box-shadow: none; } }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="report-header">
+    <h1>🛡️ {{ report_title }}</h1>
+    <p>{{ institution }} | Authorized Security Assessment</p>
+    <div class="meta-grid">
+      <div class="meta-item"><label>Target</label><span>{{ target }}</span></div>
+      <div class="meta-item"><label>Session ID</label><span>{{ session_id }}</span></div>
+      <div class="meta-item"><label>Generated</label><span>{{ generated_at }}</span></div>
+      <div class="meta-item"><label>Total Hosts</label><span>{{ total_hosts }}</span></div>
+      <div class="meta-item"><label>Total Findings</label><span>{{ total_findings }}</span></div>
+      <div class="meta-item"><label>Overall Risk</label><span><span class="risk-badge risk-{{ risk_rating }}">{{ risk_rating }}</span></span></div>
+    </div>
+  </div>
+
+  <!-- SEVERITY SUMMARY -->
+  <section>
+    <h2>Executive Summary</h2>
+    <div class="sev-bar">
+      {% for sev, count in severity_counts.items() %}
+      <span class="sev-chip sev-{{ sev }}">{{ sev }}: {{ count }}</span>
+      {% endfor %}
+    </div>
+    <p>This report documents the findings of an automated vulnerability assessment conducted against <strong>{{ target }}</strong>. A total of <strong>{{ total_hosts }}</strong> host(s) were discovered and <strong>{{ total_findings }}</strong> security finding(s) were identified across network and application layers.</p>
+  </section>
+
+  <!-- HOSTS -->
+  <section>
+    <h2>1. Discovered Hosts</h2>
+    {% if hosts %}
+    {% for host in hosts %}
+    <h3>{{ host.ip }} {% if host.hostname and host.hostname != 'N/A' %}({{ host.hostname }}){% endif %} — OS: {{ host.os or 'Unknown' }}</h3>
+    {% if host.ports %}
+    <table>
+      <thead><tr><th>Port</th><th>Protocol</th><th>State</th><th>Service</th><th>Version</th></tr></thead>
+      <tbody>
+        {% for p in host.ports %}
+        <tr>
+          <td>{{ p.port }}</td>
+          <td>{{ p.protocol }}</td>
+          <td>{{ p.state }}</td>
+          <td>{{ p.service }}</td>
+          <td>{{ p.version or 'N/A' }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p style="color:#888">No open ports detected.</p>
+    {% endif %}
+    {% endfor %}
+    {% else %}
+    <p>No hosts discovered.</p>
+    {% endif %}
+  </section>
+
+  <!-- WEB FINDINGS -->
+  <section>
+    <h2>2. Web Application Findings</h2>
+    {% if web_findings %}
+    {% for f in web_findings %}
+    <div class="finding-card">
+      <div class="finding-header {{ f.severity }}">
+        <strong>{{ f.vuln_type }}</strong>
+        <span class="badge {{ f.severity }}">{{ f.severity }}</span>
+      </div>
+      <div class="finding-body">
+        <table>
+          <tr><td>Host</td><td>{{ f.host_ip }}</td></tr>
+          <tr><td>URL</td><td style="word-break:break-all">{{ f.url }}</td></tr>
+          <tr><td>Description</td><td>{{ f.description }}</td></tr>
+          <tr><td>Evidence</td><td><code style="font-size:11px">{{ f.evidence }}</code></td></tr>
+          <tr><td>Recommendation</td><td>{{ f.recommendation }}</td></tr>
+        </table>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>No web vulnerabilities detected.</p>
+    {% endif %}
+  </section>
+
+  <!-- CVE FINDINGS -->
+  <section>
+    <h2>3. CVE Findings</h2>
+    {% if cve_findings %}
+    <table>
+      <thead>
+        <tr><th>CVE ID</th><th>Host</th><th>Port</th><th>Service</th><th>CVSS</th><th>Severity</th><th>Reference</th></tr>
+      </thead>
+      <tbody>
+        {% for f in cve_findings %}
+        <tr>
+          <td>{{ f.cve_id }}</td>
+          <td>{{ f.host_ip }}</td>
+          <td>{{ f.port }}</td>
+          <td>{{ f.service }}</td>
+          <td>{{ f.cvss_score }}</td>
+          <td><span class="badge {{ f.severity }}">{{ f.severity }}</span></td>
+          <td><a href="{{ f.reference }}" target="_blank" style="font-size:11px">Link</a></td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No CVE findings recorded.</p>
+    {% endif %}
+  </section>
+
+  <!-- DISCLAIMER -->
+  <div class="disclaimer">⚠️ {{ disclaimer }}</div>
+
+</div>
+</body>
+</html>
