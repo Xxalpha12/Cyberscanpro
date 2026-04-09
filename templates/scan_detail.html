@@ -4,219 +4,256 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{{ title }} — NetScan Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#080d14; --bg2:#0d1520; --bg3:#111d2c; --grid:rgba(0,200,255,0.04); --accent:#00c8ff; --accent2:#00ff9d; --accent3:#ff6b35; --accent4:#a855f7; --text:#c8d8e8; --text2:#7a96b0; --border:rgba(0,200,255,0.15); --glow:0 0 20px rgba(0,200,255,0.15); }
+  :root { --bg:#060c14; --bg2:#0a1220; --bg3:#0f1a2e; --accent:#00c8ff; --accent2:#00ff9d; --accent3:#ff6b35; --accent4:#a855f7; --red:#ff3c3c; --text:#a8c4d8; --text2:#3d5a70; --border:rgba(0,200,255,0.12); --glow:0 0 24px rgba(0,200,255,0.2); --glow2:0 0 24px rgba(0,255,157,0.2); }
   * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; overflow-x:hidden; }
-  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px); background-size:40px 40px; pointer-events:none; z-index:0; }
+  body { font-family:'Share Tech Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; display:flex; overflow-x:hidden; }
+  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,200,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.03) 1px,transparent 1px); background-size:32px 32px; pointer-events:none; z-index:0; }
+  body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px); pointer-events:none; z-index:0; }
 
-  .sidebar { position:fixed; top:0; left:0; width:240px; height:100vh; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
-  .sidebar-logo { padding:28px 24px 20px; border-bottom:1px solid var(--border); }
-  .sidebar-logo .badge { display:inline-block; font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--accent); border:1px solid var(--accent); padding:3px 10px; border-radius:2px; margin-bottom:10px; box-shadow:var(--glow); }
-  .sidebar-logo h2 { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:#fff; }
-  .sidebar-logo h2 span { color:var(--accent); }
-  .sidebar-logo p { font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text2); margin-top:4px; }
-  .sidebar nav { padding:20px 0; flex:1; }
-  .nav-label { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--text2); padding:0 24px; margin-bottom:8px; margin-top:16px; }
-  .nav-link { display:flex; align-items:center; gap:10px; padding:10px 24px; color:var(--text2); text-decoration:none; font-size:13px; transition:all 0.2s; border-left:3px solid transparent; }
-  .nav-link:hover { color:var(--text); background:rgba(0,200,255,0.04); border-left-color:rgba(0,200,255,0.3); }
+  .sidebar { position:fixed; top:0; left:0; width:250px; height:100vh; background:rgba(10,18,32,0.97); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
+  .sidebar-logo { padding:24px 20px 18px; border-bottom:1px solid var(--border); }
+  .logo-top { font-size:9px; letter-spacing:4px; color:var(--text2); margin-bottom:10px; }
+  .logo-main { font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:700; color:#fff; letter-spacing:2px; text-shadow:0 0 30px rgba(0,200,255,0.5); }
+  .logo-main span { color:var(--accent); }
+  .logo-tag { display:inline-block; margin-top:8px; font-size:9px; letter-spacing:2px; color:var(--accent); border:1px solid rgba(0,200,255,0.3); padding:3px 8px; border-radius:2px; box-shadow:var(--glow); }
+  .sidebar nav { padding:8px 0; flex:1; }
+  .nav-section { font-size:8px; letter-spacing:4px; color:var(--text2); padding:12px 20px 6px; }
+  .nav-link { display:flex; align-items:center; gap:10px; padding:9px 20px; color:var(--text2); text-decoration:none; font-size:11px; letter-spacing:1px; transition:all 0.2s; border-left:2px solid transparent; }
+  .nav-link::before { content:'> '; color:var(--text2); }
+  .nav-link:hover { color:var(--accent); background:rgba(0,200,255,0.04); border-left-color:rgba(0,200,255,0.4); }
+  .nav-link:hover::before { color:var(--accent); }
   .nav-link.active { color:var(--accent); background:rgba(0,200,255,0.06); border-left-color:var(--accent); }
-  .nav-link .icon { font-size:15px; width:20px; }
-  .sidebar-footer { padding:16px 24px; border-top:1px solid var(--border); font-family:'Share Tech Mono',monospace; font-size:9px; color:var(--text2); }
+  .nav-link.active::before { content:'█ '; color:var(--accent); }
+  .sidebar-footer { padding:12px 20px; border-top:1px solid var(--border); font-size:9px; color:var(--text2); letter-spacing:1px; margin-top:auto; }
 
-  .main { margin-left:240px; flex:1; padding:36px; position:relative; z-index:1; }
-  .back-link { display:inline-flex; align-items:center; gap:6px; font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); text-decoration:none; letter-spacing:1px; margin-bottom:20px; transition:color 0.2s; }
-  .back-link:hover { color:var(--accent); }
-  .page-header { margin-bottom:28px; }
-  .page-header .section-label { font-family:'Share Tech Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--accent2); margin-bottom:6px; }
-  .page-header h1 { font-family:'Rajdhani',sans-serif; font-size:28px; font-weight:700; color:#fff; }
-  .page-header .meta { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); margin-top:6px; letter-spacing:0.5px; }
+  .main { margin-left:250px; flex:1; padding:28px 32px; position:relative; z-index:1; }
+  .back { display:inline-flex; align-items:center; gap:6px; font-size:10px; color:var(--text2); text-decoration:none; letter-spacing:1px; margin-bottom:20px; transition:color 0.2s; }
+  .back:hover { color:var(--accent); }
+  .page-top { margin-bottom:24px; }
+  .page-eyebrow { font-size:9px; letter-spacing:4px; color:var(--accent2); margin-bottom:6px; }
+  .page-title { font-family:'Rajdhani',sans-serif; font-size:30px; font-weight:700; color:#fff; letter-spacing:1px; }
+  .page-meta { font-size:10px; color:var(--text2); margin-top:6px; letter-spacing:1px; }
 
-  /* SEVERITY SUMMARY */
-  .sev-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:24px; }
-  .sev-card { border-radius:8px; padding:16px 18px; position:relative; overflow:hidden; }
-  .sev-card.Critical { background:rgba(192,0,0,0.08); border:1px solid rgba(192,0,0,0.3); }
-  .sev-card.High { background:rgba(231,76,60,0.08); border:1px solid rgba(231,76,60,0.3); }
-  .sev-card.Medium { background:rgba(230,126,34,0.08); border:1px solid rgba(230,126,34,0.3); }
-  .sev-card.Low { background:rgba(0,200,255,0.08); border:1px solid rgba(0,200,255,0.2); }
-  .sev-num { font-family:'Rajdhani',sans-serif; font-size:32px; font-weight:700; }
-  .sev-card.Critical .sev-num { color:#ff4444; }
-  .sev-card.High .sev-num { color:#E74C3C; }
-  .sev-card.Medium .sev-num { color:var(--accent3); }
-  .sev-card.Low .sev-num { color:var(--accent); }
-  .sev-label { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); margin-top:4px; letter-spacing:1px; }
+  /* Severity summary */
+  .sev-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
+  .sev-card { border-radius:6px; padding:14px 16px; position:relative; overflow:hidden; }
+  .sev-card.Critical{background:rgba(192,0,0,0.08);border:1px solid rgba(192,0,0,0.3);}
+  .sev-card.High{background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);}
+  .sev-card.Medium{background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.3);}
+  .sev-card.Low{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);}
+  .sev-label { font-size:8px; letter-spacing:3px; color:var(--text2); margin-bottom:6px; }
+  .sev-num { font-family:'VT323',monospace; font-size:44px; line-height:1; }
+  .sev-card.Critical .sev-num{color:#ff4444;text-shadow:0 0 20px rgba(255,68,68,0.4);}
+  .sev-card.High .sev-num{color:#E74C3C;text-shadow:0 0 20px rgba(231,76,60,0.4);}
+  .sev-card.Medium .sev-num{color:var(--accent3);text-shadow:0 0 20px rgba(255,107,53,0.4);}
+  .sev-card.Low .sev-num{color:var(--accent);text-shadow:0 0 20px rgba(0,200,255,0.4);}
 
-  /* CARD */
-  .card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:24px; margin-bottom:20px; }
-  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border); }
-  .card-label { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; margin-bottom:4px; }
-  .card-title { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; color:#fff; }
+  /* Panel */
+  .panel { background:rgba(6,12,20,0.8); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:16px; }
+  .panel-titlebar { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--bg3); border-bottom:1px solid var(--border); }
+  .panel-title-left { display:flex; align-items:center; gap:10px; }
+  .tdots { display:flex; gap:5px; }
+  .tdot { width:9px; height:9px; border-radius:50%; }
+  .tdot.r{background:#ff5f56;} .tdot.y{background:#ffbd2e;} .tdot.g{background:#27c93f;}
+  .panel-title { font-size:10px; color:var(--accent); letter-spacing:2px; }
+  .panel-count { font-size:10px; color:var(--text2); letter-spacing:1px; }
 
-  /* HOST BLOCK */
-  .host-block { background:var(--bg3); border:1px solid var(--border); border-radius:6px; padding:16px; margin-bottom:14px; }
-  .host-ip { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; color:var(--accent); margin-bottom:4px; }
-  .host-meta { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); margin-bottom:12px; }
+  /* Host block */
+  .host-block { padding:16px; border-bottom:1px solid rgba(0,200,255,0.04); }
+  .host-block:last-child { border:none; }
+  .host-ip { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; color:var(--accent); margin-bottom:3px; }
+  .host-meta { font-size:9px; color:var(--text2); letter-spacing:1px; margin-bottom:12px; }
 
-  table { width:100%; border-collapse:collapse; font-size:12px; }
-  th { font-family:'Share Tech Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--text2); padding:8px 10px; text-align:left; border-bottom:1px solid var(--border); text-transform:uppercase; }
-  td { padding:8px 10px; border-bottom:1px solid rgba(0,200,255,0.04); color:var(--text); }
-  tr:hover td { background:rgba(0,200,255,0.02); }
+  table { width:100%; border-collapse:collapse; }
+  th { font-size:8px; letter-spacing:3px; color:var(--text2); padding:8px 14px; text-align:left; border-bottom:1px solid var(--border); }
+  td { padding:9px 14px; border-bottom:1px solid rgba(0,200,255,0.04); font-size:11px; }
+  tr:last-child td { border:none; }
+  tbody tr:hover td { background:rgba(0,200,255,0.03); }
+  .td-port { font-family:'VT323',monospace; font-size:18px; color:var(--accent); }
+  .td-svc { color:#fff; }
+  .td-open { color:var(--accent2); }
+  .td-ver { color:var(--text2); font-size:10px; }
 
-  /* FINDING CARD */
-  .finding-card { border-radius:6px; margin-bottom:12px; overflow:hidden; }
-  .finding-card.Critical { border:1px solid rgba(192,0,0,0.35); }
-  .finding-card.High { border:1px solid rgba(231,76,60,0.35); }
-  .finding-card.Medium { border:1px solid rgba(230,126,34,0.35); }
-  .finding-card.Low { border:1px solid rgba(0,200,255,0.2); }
-  .finding-hdr { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; }
-  .finding-card.Critical .finding-hdr { background:rgba(192,0,0,0.07); }
-  .finding-card.High .finding-hdr { background:rgba(231,76,60,0.07); }
-  .finding-card.Medium .finding-hdr { background:rgba(230,126,34,0.07); }
-  .finding-card.Low .finding-hdr { background:rgba(0,200,255,0.05); }
-  .finding-type { font-family:'Rajdhani',sans-serif; font-weight:700; font-size:14px; color:#fff; }
-  .sev-badge { font-family:'Share Tech Mono',monospace; font-size:10px; padding:3px 10px; border-radius:3px; letter-spacing:1px; }
-  .sev-badge.Critical { background:rgba(192,0,0,0.2); color:#ff4444; border:1px solid rgba(192,0,0,0.3); }
-  .sev-badge.High { background:rgba(231,76,60,0.2); color:#E74C3C; border:1px solid rgba(231,76,60,0.3); }
-  .sev-badge.Medium { background:rgba(230,126,34,0.15); color:var(--accent3); border:1px solid rgba(230,126,34,0.3); }
-  .sev-badge.Low { background:rgba(0,200,255,0.08); color:var(--accent); border:1px solid rgba(0,200,255,0.2); }
-  .finding-body { padding:12px 14px; display:grid; grid-template-columns:120px 1fr; gap:6px 16px; font-size:12px; }
-  .finding-body dt { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--text2); letter-spacing:1px; padding-top:1px; }
-  .finding-body dd { color:var(--text); word-break:break-word; }
-  code { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--accent2); background:rgba(0,255,157,0.06); padding:1px 5px; border-radius:3px; }
+  /* Finding card */
+  .finding-card { border-bottom:1px solid rgba(0,200,255,0.04); }
+  .finding-card:last-child { border:none; }
+  .finding-hdr { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; cursor:pointer; transition:background 0.2s; }
+  .finding-hdr:hover { background:rgba(0,200,255,0.03); }
+  .finding-hdr.Critical{border-left:3px solid #C00000;}
+  .finding-hdr.High{border-left:3px solid #E74C3C;}
+  .finding-hdr.Medium{border-left:3px solid var(--accent3);}
+  .finding-hdr.Low{border-left:3px solid var(--accent);}
+  .finding-type { font-size:12px; color:#fff; letter-spacing:0.5px; }
+  .finding-host { font-size:10px; color:var(--text2); margin-top:2px; }
+  .sev-badge { font-size:9px; padding:3px 10px; border-radius:20px; letter-spacing:1px; white-space:nowrap; }
+  .sev-badge.Critical{background:rgba(192,0,0,0.12);color:#ff4444;border:1px solid rgba(192,0,0,0.3);}
+  .sev-badge.High{background:rgba(231,76,60,0.12);color:#E74C3C;border:1px solid rgba(231,76,60,0.3);}
+  .sev-badge.Medium{background:rgba(255,107,53,0.1);color:var(--accent3);border:1px solid rgba(255,107,53,0.3);}
+  .sev-badge.Low{background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.2);}
+  .finding-body { padding:0 16px 14px; display:none; }
+  .finding-body.open { display:block; }
+  .finding-row { display:grid; grid-template-columns:100px 1fr; gap:6px 12px; margin-top:8px; font-size:11px; }
+  .finding-key { color:var(--text2); letter-spacing:1px; font-size:10px; padding-top:1px; }
+  .finding-val { color:var(--text); word-break:break-word; }
+  code { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--accent2); background:rgba(0,255,157,0.06); padding:1px 5px; border-radius:2px; }
 
-  .empty { font-family:'Share Tech Mono',monospace; font-size:11px; color:var(--text2); padding:20px 0; text-align:center; }
+  /* CVE table */
+  .cve-id-link { color:var(--accent); text-decoration:none; font-size:10px; letter-spacing:1px; }
+  .cve-id-link:hover { text-shadow:var(--glow); }
 
+  .empty { font-size:10px; color:var(--text2); text-align:center; padding:24px 0; letter-spacing:1px; }
   @keyframes fadeUp { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
   .main { animation:fadeUp 0.5s ease both; }
 </style>
 </head>
 <body>
-
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="badge">// NETSCAMPRO</div>
-    <h2>NetScan<span>Pro</span></h2>
-    <p>FUPRE · FYP · OBEH E.O</p>
+    <div class="logo-top">// SECURITY ASSESSMENT PLATFORM</div>
+    <div class="logo-main">NetScan<span>Pro</span></div>
+    <div class="logo-tag">FUPRE · FYP · OBEH E.O</div>
   </div>
   <nav>
-    <div class="nav-label">// Navigation</div>
-    <a href="/" class="nav-link"><span class="icon">📋</span> Dashboard</a>
-    <a href="/scan/new" class="nav-link"><span class="icon">➕</span> New Scan</a>
-    <div class="nav-label">// Current</div>
-    <a href="#" class="nav-link active"><span class="icon">🔎</span> Scan Results</a>
+    <div class="nav-section">// NAVIGATION</div>
+    <a href="/" class="nav-link">Dashboard</a>
+    <a href="/scan/new" class="nav-link">New Scan</a>
+    <a href="#" class="nav-link">Reports</a>
+    <div class="nav-section">// CURRENT</div>
+    <a href="#" class="nav-link active">Scan Results</a>
   </nav>
-  <div class="sidebar-footer">v1.0.0 · ETHICAL USE ONLY</div>
+  <div class="sidebar-footer">ETHICAL USE ONLY · v1.0.0</div>
 </aside>
 
 <main class="main">
-  <a href="/" class="back-link">← BACK TO DASHBOARD</a>
+  <a href="/" class="back">← BACK TO DASHBOARD</a>
 
-  <div class="page-header">
-    <div class="section-label">// Scan Results</div>
-    <h1>{{ session.target }}</h1>
-    <div class="meta">SESSION: {{ session.id }} &nbsp;·&nbsp; STARTED: {{ session.started_at[:19] }} &nbsp;·&nbsp; STATUS: {{ session.status.upper() }}</div>
+  <div class="page-top">
+    <div class="page-eyebrow">// SCAN RESULTS</div>
+    <div class="page-title">{{ session.target }}</div>
+    <div class="page-meta">SESSION: {{ session.id }} &nbsp;·&nbsp; {{ session.started_at[:19] }} &nbsp;·&nbsp; STATUS: {{ session.status.upper() }}</div>
   </div>
 
   <!-- Severity summary -->
   <div class="sev-grid">
-    {% for sev, count in severity_counts.items() %}
+    {% for sev in ['Critical','High','Medium','Low'] %}
     <div class="sev-card {{ sev }}">
-      <div class="sev-num">{{ count }}</div>
-      <div class="sev-label">{{ sev.upper() }}</div>
+      <div class="sev-label">// {{ sev.upper() }}</div>
+      <div class="sev-num">{{ severity_counts[sev] }}</div>
     </div>
     {% endfor %}
   </div>
 
   <!-- Hosts -->
-  <div class="card">
-    <div class="card-header">
-      <div><div class="card-label">// Network Layer</div><div class="card-title">Discovered Hosts</div></div>
-      <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2)">{{ hosts|length }} host(s)</span>
+  <div class="panel">
+    <div class="panel-titlebar">
+      <div class="panel-title-left">
+        <div class="tdots"><div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div></div>
+        <span class="panel-title">// NETWORK_HOSTS.LOG</span>
+      </div>
+      <span class="panel-count">{{ hosts|length }} HOST(S)</span>
     </div>
     {% if hosts %}
       {% for host in hosts %}
       <div class="host-block">
         <div class="host-ip">{{ host.ip }}</div>
-        <div class="host-meta">HOSTNAME: {{ host.hostname or 'N/A' }} &nbsp;·&nbsp; OS: {{ host.os or 'Unknown' }}</div>
+        <div class="host-meta">HOSTNAME: {{ host.hostname or 'N/A' }} &nbsp;·&nbsp; OS: {{ host.os or 'UNKNOWN' }}</div>
         {% if host.ports %}
         <table>
-          <thead><tr><th>Port</th><th>Protocol</th><th>State</th><th>Service</th><th>Version</th></tr></thead>
+          <thead><tr><th>PORT</th><th>PROTO</th><th>STATE</th><th>SERVICE</th><th>VERSION</th></tr></thead>
           <tbody>
             {% for p in host.ports %}
             <tr>
-              <td><code>{{ p.port }}</code></td>
+              <td class="td-port">{{ p.port }}</td>
               <td style="color:var(--text2)">{{ p.protocol }}</td>
-              <td style="color:var(--accent2)">{{ p.state }}</td>
-              <td>{{ p.service }}</td>
-              <td style="color:var(--text2);font-size:11px">{{ p.version or 'N/A' }}</td>
+              <td class="td-open">{{ p.state }}</td>
+              <td class="td-svc">{{ p.service }}</td>
+              <td class="td-ver">{{ p.version or 'N/A' }}</td>
             </tr>
             {% endfor %}
           </tbody>
         </table>
         {% else %}
-        <p class="empty">No open ports detected.</p>
+        <p class="empty">NO OPEN PORTS DETECTED</p>
         {% endif %}
       </div>
       {% endfor %}
     {% else %}
-    <p class="empty">No hosts discovered.</p>
+    <p class="empty">NO HOSTS DISCOVERED</p>
     {% endif %}
   </div>
 
   <!-- Web findings -->
-  <div class="card">
-    <div class="card-header">
-      <div><div class="card-label">// Application Layer</div><div class="card-title">Web Findings</div></div>
-      <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2)">{{ web_findings|length }} finding(s)</span>
+  <div class="panel">
+    <div class="panel-titlebar">
+      <div class="panel-title-left">
+        <div class="tdots"><div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div></div>
+        <span class="panel-title">// WEB_FINDINGS.LOG</span>
+      </div>
+      <span class="panel-count">{{ web_findings|length }} FINDING(S)</span>
     </div>
     {% if web_findings %}
       {% for f in web_findings %}
-      <div class="finding-card {{ f.severity }}">
-        <div class="finding-hdr">
-          <div class="finding-type">{{ f.vuln_type }}</div>
+      <div class="finding-card">
+        <div class="finding-hdr {{ f.severity }}" onclick="toggleFinding(this)">
+          <div>
+            <div class="finding-type">{{ f.vuln_type }}</div>
+            <div class="finding-host">{{ f.host_ip }} · {{ f.url[:60] }}{% if f.url|length > 60 %}...{% endif %}</div>
+          </div>
           <span class="sev-badge {{ f.severity }}">{{ f.severity.upper() }}</span>
         </div>
-        <dl class="finding-body">
-          <dt>HOST</dt><dd>{{ f.host_ip }}</dd>
-          <dt>URL</dt><dd style="word-break:break-all;font-size:11px">{{ f.url }}</dd>
-          <dt>DESCRIPTION</dt><dd>{{ f.description }}</dd>
-          <dt>EVIDENCE</dt><dd><code>{{ f.evidence[:120] }}</code></dd>
-          <dt>FIX</dt><dd>{{ f.recommendation }}</dd>
-        </dl>
+        <div class="finding-body">
+          <div class="finding-row">
+            <span class="finding-key">DESCRIPTION</span><span class="finding-val">{{ f.description }}</span>
+            <span class="finding-key">EVIDENCE</span><span class="finding-val"><code>{{ f.evidence[:150] if f.evidence else 'N/A' }}</code></span>
+            <span class="finding-key">FIX</span><span class="finding-val">{{ f.recommendation }}</span>
+            <span class="finding-key">URL</span><span class="finding-val" style="word-break:break-all;font-size:10px">{{ f.url }}</span>
+          </div>
+        </div>
       </div>
       {% endfor %}
     {% else %}
-    <p class="empty">No web vulnerabilities detected.</p>
+    <p class="empty">NO WEB VULNERABILITIES DETECTED</p>
     {% endif %}
   </div>
 
   <!-- CVE findings -->
-  <div class="card">
-    <div class="card-header">
-      <div><div class="card-label">// CVE Intelligence</div><div class="card-title">CVE Findings</div></div>
-      <span style="font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2)">{{ cve_findings|length }} finding(s)</span>
+  <div class="panel">
+    <div class="panel-titlebar">
+      <div class="panel-title-left">
+        <div class="tdots"><div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div></div>
+        <span class="panel-title">// CVE_FINDINGS.LOG</span>
+      </div>
+      <span class="panel-count">{{ cve_findings|length }} FINDING(S)</span>
     </div>
     {% if cve_findings %}
     <table>
-      <thead><tr><th>CVE ID</th><th>Host</th><th>Port</th><th>Service</th><th>CVSS</th><th>Severity</th></tr></thead>
+      <thead><tr><th>CVE ID</th><th>HOST</th><th>PORT</th><th>SERVICE</th><th>CVSS</th><th>SEVERITY</th></tr></thead>
       <tbody>
         {% for f in cve_findings %}
         <tr>
-          <td><a href="{{ f.reference }}" target="_blank" style="color:var(--accent);font-family:'Share Tech Mono',monospace;font-size:11px;text-decoration:none">{{ f.cve_id }}</a></td>
-          <td>{{ f.host_ip }}</td>
-          <td><code>{{ f.port }}</code></td>
-          <td style="font-size:11px">{{ f.service }}</td>
-          <td style="font-family:'Share Tech Mono',monospace;font-size:11px">{{ f.cvss_score }}</td>
+          <td><a href="{{ f.reference }}" target="_blank" class="cve-id-link">{{ f.cve_id }}</a></td>
+          <td style="color:#fff">{{ f.host_ip }}</td>
+          <td class="td-port" style="font-size:14px">{{ f.port }}</td>
+          <td style="font-size:10px;color:var(--text2)">{{ f.service }}</td>
+          <td style="font-family:'VT323',monospace;font-size:18px;color:var(--accent3)">{{ f.cvss_score }}</td>
           <td><span class="sev-badge {{ f.severity }}">{{ f.severity.upper() }}</span></td>
         </tr>
         {% endfor %}
       </tbody>
     </table>
     {% else %}
-    <p class="empty">No CVE findings recorded.</p>
+    <p class="empty">NO CVE FINDINGS RECORDED</p>
     {% endif %}
   </div>
 </main>
+
+<script>
+function toggleFinding(el) {
+  const body = el.nextElementSibling;
+  body.classList.toggle("open");
+}
+</script>
 </body>
 </html>
