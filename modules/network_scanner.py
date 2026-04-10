@@ -68,12 +68,27 @@ class NetworkScanner:
             logger.info("Using threaded socket scanner.")
             hosts = self._scan_with_sockets()
 
-        # HTTP fallback — if TCP/nmap found nothing, probe via HTTP directly
-        # Works even when Render/mobile blocks raw TCP connections
-        if not hosts:
-            logger.info("0 hosts from TCP scan — trying HTTP fallback...")
-            self._progress(25, "TCP scan found nothing — trying HTTP fallback...")
-            hosts = self._http_fallback()
+        # HTTP fallback — trigger if:
+        # 1. No hosts found at all, OR
+        # 2. Hosts found but NO web ports detected (80, 443, 8080, etc.)
+        web_ports = {80, 443, 8080, 8443, 8000, 8888}
+        has_web = any(
+            p.get("port") in web_ports
+            for h in hosts
+            for p in h.get("ports", [])
+        )
+
+        if not hosts or not has_web:
+            reason = "0 hosts found" if not hosts else "no web ports detected"
+            logger.info(f"HTTP fallback triggered ({reason})...")
+            self._progress(25, f"HTTP fallback: {reason} — probing via HTTP...")
+            fallback = self._http_fallback()
+            if fallback:
+                if not hosts:
+                    hosts = fallback
+                else:
+                    # Merge fallback web ports into existing host
+                    hosts[0]["ports"].extend(fallback[0]["ports"])
 
         self.hosts = hosts
         return hosts
