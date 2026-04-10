@@ -5,6 +5,8 @@ banner grabbing, and graceful CIDR limits.
 """
 
 import socket
+import requests
+requests.packages.urllib3.disable_warnings()
 import ipaddress
 import threading
 from urllib.parse import urlparse
@@ -61,10 +63,20 @@ class NetworkScanner:
         self._progress(5, f"Target resolved to {self.target}")
 
         if NMAP_AVAILABLE:
-            return self._scan_with_nmap()
+            hosts = self._scan_with_nmap()
         else:
             logger.info("Using threaded socket scanner.")
-            return self._scan_with_sockets()
+            hosts = self._scan_with_sockets()
+
+        # HTTP fallback — if TCP/nmap found nothing, probe via HTTP directly
+        # Works even when Render/mobile blocks raw TCP connections
+        if not hosts:
+            logger.info("0 hosts from TCP scan — trying HTTP fallback...")
+            self._progress(25, "TCP scan found nothing — trying HTTP fallback...")
+            hosts = self._http_fallback()
+
+        self.hosts = hosts
+        return hosts
 
     def get_web_hosts(self) -> list:
         web_ports = {80, 443, 8080, 8443, 8000, 8888}
@@ -246,6 +258,58 @@ class NetworkScanner:
         return all_hosts
 
     # ── BANNER GRAB ───────────────────────────────────────────────────────────
+
+
+    def _http_fallback(self) -> list:
+        """
+        When TCP scanning is blocked (Render, mobile data, firewalls),
+        probe common web ports via HTTP requests directly.
+        Works anywhere the requests library can reach the internet.
+        """
+        probe_ports = [
+            (80,   "http",  "http"),
+            (443,  "https", "https"),
+            (8080, "http",  "http-alt"),
+            (8443, "https", "https-alt"),
+            (8000, "http",  "http-alt"),
+        ]
+
+        open_ports = []
+        host_addr  = self.hostname if self.hostname else self.target
+
+        for port, scheme, service in probe_ports:
+            url = f"{scheme}://{host_addr}"
+            if port not in (80, 443):
+                url += f":{port}"
+            try:
+                r = requests.get(url, timeout=8, verify=False, allow_redirects=True)
+                server  = r.headers.get("Server", "")
+                powered = r.headers.get("X-Powered-By", "")
+                version = f"{server} {powered}".strip() or "N/A"
+                open_ports.append({
+                    "port":     port,
+                    "protocol": "tcp",
+                    "state":    "open",
+                    "service":  service,
+                    "version":  version
+                })
+                logger.info(f"HTTP fallback: {url} -> {r.status_code} ({version})")
+                self._progress(28, f"HTTP fallback: port {port} open ({service})")
+            except requests.RequestException as e:
+                logger.info(f"HTTP fallback: {url} -> unreachable ({e})")
+
+        if open_ports:
+            return [{
+                "ip":       self.target,
+                "hostname": self.hostname or self.target,
+                "os":       "Unknown",
+                "status":   "up",
+                "ports":    open_ports
+            }]
+
+        logger.warning("HTTP fallback also found nothing — target may be down.")
+        self._progress(28, "WARNING: Target unreachable via TCP and HTTP.")
+        return []
 
     def _grab_banner(self, sock: socket.socket, port: int) -> str:
         try:
