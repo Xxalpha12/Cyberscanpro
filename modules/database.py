@@ -89,6 +89,19 @@ class Database:
                 deleted_at TEXT NOT NULL
             )
         """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS scan_schedules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                target TEXT NOT NULL,
+                scan_type TEXT DEFAULT 'quick',
+                port_range TEXT DEFAULT '1-1024',
+                frequency TEXT NOT NULL,
+                next_run TEXT NOT NULL,
+                last_run TEXT,
+                active INTEGER DEFAULT 1,
+                created_at TEXT NOT NULL
+            )
+        """)
         self.conn.commit()
 
     # ── SESSION ──────────────────────────────────────────
@@ -286,6 +299,59 @@ class Database:
             WHERE status='running'
             AND started_at < datetime('now', '-30 minutes')
         """, (datetime.now().isoformat(),))
+        self.conn.commit()
+
+    # ── SCHEDULES ────────────────────────────────────────
+
+    def create_schedule(self, target: str, scan_type: str,
+                        port_range: str, frequency: str, next_run: str) -> int:
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT INTO scan_schedules
+            (target, scan_type, port_range, frequency, next_run, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (target, scan_type, port_range, frequency, next_run,
+              datetime.now().isoformat()))
+        self.conn.commit()
+        return cursor.lastrowid
+
+    def get_all_schedules(self) -> list:
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM scan_schedules WHERE active=1 ORDER BY next_run")
+        return [dict(row) for row in cursor.fetchall()]
+
+    def get_due_schedules(self) -> list:
+        cursor = self.conn.cursor()
+        now = datetime.now().isoformat()
+        cursor.execute("""
+            SELECT * FROM scan_schedules
+            WHERE active=1 AND next_run <= ?
+        """, (now,))
+        return [dict(row) for row in cursor.fetchall()]
+
+    def update_schedule_last_run(self, schedule_id: int):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            SELECT frequency FROM scan_schedules WHERE id=?
+        """, (schedule_id,))
+        row = cursor.fetchone()
+        if not row:
+            return
+        frequency = row[0]
+        freq_map  = {"hourly": 1, "daily": 24, "weekly": 168}
+        hours     = freq_map.get(frequency, 24)
+        next_run  = (datetime.now() + timedelta(hours=hours)).isoformat()
+        cursor.execute("""
+            UPDATE scan_schedules
+            SET last_run=?, next_run=?
+            WHERE id=?
+        """, (datetime.now().isoformat(), next_run, schedule_id))
+        self.conn.commit()
+
+    def delete_schedule(self, schedule_id: int):
+        cursor = self.conn.cursor()
+        cursor.execute("UPDATE scan_schedules SET active=0 WHERE id=?",
+                       (schedule_id,))
         self.conn.commit()
 
     def close(self):

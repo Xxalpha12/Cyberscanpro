@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scan Schedules — NetScan Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#060c14; --bg2:#0a1220; --bg3:#0f1a2e; --accent:#00c8ff; --accent2:#00ff9d; --accent3:#ff6b35; --text:#a8c4d8; --text2:#3d5a70; --border:rgba(0,200,255,0.12); --glow:0 0 24px rgba(0,200,255,0.2); }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:'Share Tech Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; display:flex; }
+
+  .sidebar { width:220px; background:var(--bg2); border-right:1px solid var(--border); padding:24px 0; flex-shrink:0; }
+  .sidebar-logo { padding:0 20px 20px; border-bottom:1px solid var(--border); margin-bottom:20px; }
+  .sidebar-logo h2 { font-family:'Rajdhani',sans-serif; font-size:22px; font-weight:700; color:#fff; }
+  .sidebar-logo h2 span { color:var(--accent); }
+  .sidebar-logo p { font-size:9px; color:var(--text2); }
+  .nav-link { display:flex; align-items:center; gap:10px; padding:9px 20px; color:var(--text2); text-decoration:none; font-size:11px; letter-spacing:1px; transition:all 0.2s; border-left:2px solid transparent; }
+  .nav-link:hover { color:var(--accent); border-left-color:rgba(0,200,255,0.4); }
+  .nav-link.active { color:var(--accent); border-left-color:var(--accent); }
+
+  .main { flex:1; padding:32px; overflow-y:auto; }
+  .page-eyebrow { font-size:8px; letter-spacing:4px; color:var(--text2); margin-bottom:8px; }
+  .page-title { font-family:'Rajdhani',sans-serif; font-size:30px; font-weight:700; color:#fff; margin-bottom:24px; }
+
+  .card { background:var(--bg2); border:1px solid var(--border); border-radius:8px; padding:24px; margin-bottom:20px; }
+  .card-title { font-family:'Rajdhani',sans-serif; font-size:16px; font-weight:700; color:#fff; margin-bottom:16px; padding-bottom:10px; border-bottom:1px solid var(--border); }
+
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .field label { display:block; font-size:9px; letter-spacing:3px; color:var(--text2); margin-bottom:6px; }
+  .field input, .field select { width:100%; background:var(--bg3); border:1px solid var(--border); border-radius:4px; padding:10px 12px; color:var(--text); font-family:'Share Tech Mono',monospace; font-size:12px; outline:none; }
+  .field input:focus, .field select:focus { border-color:var(--accent); }
+
+  .btn { padding:10px 20px; background:rgba(0,200,255,0.1); color:var(--accent); border:1px solid rgba(0,200,255,0.35); border-radius:4px; font-family:'Share Tech Mono',monospace; font-size:11px; letter-spacing:2px; cursor:pointer; transition:all 0.2s; }
+  .btn:hover { background:rgba(0,200,255,0.2); box-shadow:var(--glow); }
+  .btn-danger { background:rgba(255,60,60,0.1); color:#ff4444; border-color:rgba(255,60,60,0.3); }
+  .btn-danger:hover { background:rgba(255,60,60,0.2); }
+
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  th { text-align:left; padding:10px 12px; background:var(--bg3); color:var(--text2); font-size:9px; letter-spacing:2px; border-bottom:1px solid var(--border); }
+  td { padding:10px 12px; border-bottom:1px solid rgba(0,200,255,0.05); }
+  tr:hover td { background:rgba(0,200,255,0.03); }
+
+  .badge { display:inline-block; padding:3px 10px; border-radius:3px; font-size:9px; letter-spacing:1px; }
+  .badge-active { background:rgba(0,255,157,0.1); color:var(--accent2); border:1px solid rgba(0,255,157,0.3); }
+
+  .empty { text-align:center; padding:40px; color:var(--text2); font-size:11px; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <h2>NetScan<span>Pro</span></h2>
+    <p>FUPRE · FYP · OBEH E.O</p>
+  </div>
+  <a href="/" class="nav-link">Dashboard</a>
+  <a href="/scan/new" class="nav-link">New Scan</a>
+  <a href="/compare" class="nav-link">Compare Scans</a>
+  <a href="/schedules" class="nav-link active">Schedules</a>
+  <a href="/export/csv" class="nav-link">Reports</a>
+  <a href="/logout" class="nav-link">Logout</a>
+</div>
+
+<div class="main">
+  <div class="page-eyebrow">// SCAN SCHEDULING</div>
+  <div class="page-title">Scheduled Scans</div>
+
+  <!-- Create Schedule -->
+  <div class="card">
+    <div class="card-title">// NEW SCHEDULE</div>
+    <div class="form-grid">
+      <div class="field">
+        <label>// TARGET</label>
+        <input type="text" id="sch-target" placeholder="e.g. scanme.nmap.org">
+      </div>
+      <div class="field">
+        <label>// FREQUENCY</label>
+        <select id="sch-freq">
+          <option value="hourly">Hourly</option>
+          <option value="daily" selected>Daily</option>
+          <option value="weekly">Weekly</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>// SCAN TYPE</label>
+        <select id="sch-type">
+          <option value="quick">Quick</option>
+          <option value="full">Full</option>
+          <option value="stealth">Stealth</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>// PORT RANGE</label>
+        <input type="text" id="sch-ports" value="1-1024">
+      </div>
+    </div>
+    <br>
+    <button class="btn" onclick="createSchedule()">▶ ADD SCHEDULE</button>
+    <span id="sch-msg" style="margin-left:12px;font-size:10px;color:var(--accent2);"></span>
+  </div>
+
+  <!-- Schedule List -->
+  <div class="card">
+    <div class="card-title">// ACTIVE SCHEDULES</div>
+    <div id="schedule-list">
+      {% if schedules %}
+      <table>
+        <thead>
+          <tr><th>TARGET</th><th>FREQUENCY</th><th>SCAN TYPE</th><th>NEXT RUN</th><th>LAST RUN</th><th>STATUS</th><th>ACTION</th></tr>
+        </thead>
+        <tbody>
+          {% for s in schedules %}
+          <tr id="sched-{{ s.id }}">
+            <td>{{ s.target }}</td>
+            <td>{{ s.frequency }}</td>
+            <td>{{ s.scan_type }}</td>
+            <td>{{ s.next_run[:16] if s.next_run else 'N/A' }}</td>
+            <td>{{ s.last_run[:16] if s.last_run else 'Never' }}</td>
+            <td><span class="badge badge-active">ACTIVE</span></td>
+            <td><button class="btn btn-danger" onclick="deleteSchedule({{ s.id }})">DEL</button></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty">No schedules configured. Add one above.</div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<script>
+async function createSchedule() {
+  const target = document.getElementById("sch-target").value.trim();
+  const freq   = document.getElementById("sch-freq").value;
+  const type   = document.getElementById("sch-type").value;
+  const ports  = document.getElementById("sch-ports").value.trim();
+  const msg    = document.getElementById("sch-msg");
+
+  if (!target) { msg.textContent = "Target required."; msg.style.color="var(--accent3)"; return; }
+
+  const res  = await fetch("/api/schedules", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({target, frequency:freq, scan_type:type, port_range:ports})
+  });
+  const data = await res.json();
+  if (data.success) {
+    msg.textContent = `Schedule created. Next run: ${data.next_run.slice(0,16)}`;
+    msg.style.color = "var(--accent2)";
+    setTimeout(() => location.reload(), 1500);
+  } else {
+    msg.textContent = data.error || "Failed.";
+    msg.style.color = "var(--accent3)";
+  }
+}
+
+async function deleteSchedule(id) {
+  if (!confirm("Delete this schedule?")) return;
+  await fetch(`/api/schedules/${id}`, {method:"DELETE"});
+  document.getElementById(`sched-${id}`)?.remove();
+}
+</script>
+</body>
+</html>

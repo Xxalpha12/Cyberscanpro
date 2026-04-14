@@ -1,0 +1,9 @@
+2026-04-09 12:01:03,974 [INFO] __main__: Scan session created: 2b8f5b5f
+2026-04-09 12:01:07,709 [INFO] modules.network_scanner: DNS: testphp.vulnweb.com → 44.228.249.3
+2026-04-09 12:01:07,710 [INFO] modules.network_scanner: Target: testphp.vulnweb.com  →  44.228.249.3
+2026-04-09 12:01:07,755 [INFO] modules.network_scanner: Nmap: -Pn -sV -sC -O -T4 -p-
+2026-04-09 12:01:08,026 [ERROR] modules.network_scanner: Nmap failed: 'TCP/IP fingerprinting (for OS scan) requires root privileges.\nQUITTING!\n'
+2026-04-09 12:01:08,031 [INFO] modules.web_tester: No web services found on discovered hosts.
+2026-04-09 12:01:08,033 [INFO] modules.cve_scanner: CVE scan complete. 0 finding(s).
+2026-04-09 12:01:08,140 [INFO] modules.report_generator: HTML report saved: /data/data/com.termux/files/home/NetScanPro/output/netscampro_report_2b8f5b5f_20260409_120108.html
+2026-04-09 12:01:08,618 [INFO] modules.report_generator: PDF report saved: /data/data/com.termux/files/home/NetScanPro/output/netscampro_report_2b8f5b5f_20260409_120108.pdf

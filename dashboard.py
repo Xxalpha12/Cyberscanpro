@@ -16,7 +16,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email.mime.text import MIMEText
 from email import encoders
-from datetime import datetime
+from datetime import datetime, timedelta
 from modules.database import Database
 from modules.logger import get_logger
 from modules.risk_scorer import score_all_hosts
@@ -445,14 +445,23 @@ def remediation_checklist(session_id):
 # ── EMAIL DELIVERY ────────────────────────────────────────
 
 def _send_report_email(recipient: str, target: str, session_id: str, report_paths: list):
-    """Send scan report via email using SMTP."""
+    """
+    Send scan report via email using SMTP.
+    Configure these environment variables in Render:
+      SMTP_HOST — e.g. smtp.gmail.com
+      SMTP_PORT — e.g. 587
+      SMTP_USER — your Gmail address
+      SMTP_PASS — your Gmail App Password (not regular password)
+    To get Gmail App Password:
+      Google Account → Security → 2-Step Verification → App Passwords
+    """
     smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
     smtp_port = int(os.environ.get("SMTP_PORT", "587"))
     smtp_user = os.environ.get("SMTP_USER", "")
     smtp_pass = os.environ.get("SMTP_PASS", "")
 
     if not smtp_user or not smtp_pass:
-        logger.warning("SMTP credentials not configured. Email not sent.")
+        logger.warning("SMTP credentials not configured. Set SMTP_USER and SMTP_PASS env vars in Render.")
         return
 
     try:
@@ -523,6 +532,58 @@ def api_sessions():
     sessions = db.get_all_sessions()
     db.close()
     return jsonify(sessions)
+
+
+# ── SCHEDULE ROUTES ──────────────────────────────────────────────────────────
+
+@app.route("/schedules")
+@login_required
+def schedules():
+    db = Database()
+    scheds = db.get_all_schedules()
+    db.close()
+    return render_template("schedules.html", schedules=scheds,
+                           page="schedules", title="Scan Schedules")
+
+
+@app.route("/api/schedules", methods=["GET"])
+@login_required
+def api_get_schedules():
+    db = Database()
+    scheds = db.get_all_schedules()
+    db.close()
+    return jsonify(scheds)
+
+
+@app.route("/api/schedules", methods=["POST"])
+@login_required
+def api_create_schedule():
+    data      = request.get_json()
+    target    = data.get("target","").strip()
+    scan_type = data.get("scan_type","quick")
+    port_range = data.get("port_range","1-1024")
+    frequency = data.get("frequency","daily")
+
+    if not target:
+        return jsonify({"error": "Target required"}), 400
+
+    freq_hours = {"hourly": 1, "daily": 24, "weekly": 168}
+    hours      = freq_hours.get(frequency, 24)
+    next_run   = (datetime.now() + timedelta(hours=hours)).isoformat()
+
+    db = Database()
+    sid = db.create_schedule(target, scan_type, port_range, frequency, next_run)
+    db.close()
+    return jsonify({"success": True, "id": sid, "next_run": next_run})
+
+
+@app.route("/api/schedules/<int:schedule_id>", methods=["DELETE"])
+@login_required
+def api_delete_schedule(schedule_id):
+    db = Database()
+    db.delete_schedule(schedule_id)
+    db.close()
+    return jsonify({"success": True})
 
 
 def _ts():

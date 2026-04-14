@@ -266,20 +266,44 @@ async function startScan() {
     email:         document.getElementById("email").value.trim() || null
   };
 
-  const res = await fetch("/scan/run", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload)
-  });
-  const data = await res.json();
-  if (data.error) { toast(data.error, "error"); document.getElementById("run-btn").disabled = false; return; }
+  let data;
+  try {
+    const res = await fetch("/scan/run", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    data = await res.json();
+  } catch(e) {
+    toast("Network error: " + e.message, "error");
+    document.getElementById("run-btn").disabled = false;
+    return;
+  }
 
+  if (data.error) {
+    toast(data.error, "error");
+    document.getElementById("run-btn").disabled = false;
+    document.getElementById("log-body").innerHTML = `<div class="log-line err">ERROR: ${data.error}</div>`;
+    return;
+  }
+
+  // Start polling every 1.5 seconds
   pollInterval = setInterval(() => pollStatus(data.session_id), 1500);
+
+  // Also poll immediately
+  pollStatus(data.session_id);
 }
 
 async function pollStatus(sessionId) {
-  const res = await fetch(`/scan/${sessionId}/status`);
-  const data = await res.json();
+  let data;
+  try {
+    const res = await fetch(`/scan/${sessionId}/status`);
+    data = await res.json();
+  } catch(e) {
+    // Network hiccup — keep polling
+    console.warn("Poll error:", e);
+    return;
+  }
 
   // Update log
   const box = document.getElementById("log-body");

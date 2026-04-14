@@ -1,0 +1,14 @@
+2026-04-10 11:06:52,430 [INFO] __main__: Scan session created: 0db1e1cb
+2026-04-10 11:06:52,435 [INFO] modules.network_scanner: DNS: testphp.vulnweb.com → 44.228.249.3
+2026-04-10 11:06:52,435 [INFO] modules.network_scanner: Target: testphp.vulnweb.com  →  44.228.249.3
+2026-04-10 11:06:52,457 [INFO] modules.network_scanner: Nmap: -Pn -sV --top-ports 100 -T4 -p 1-1024,80,443,8080,8443,8000,8888
+2026-04-10 11:07:18,653 [INFO] modules.network_scanner: Nmap done. 1 host(s).
+2026-04-10 11:07:18,681 [INFO] modules.web_tester: No web services found on discovered hosts.
+2026-04-10 11:07:29,378 [INFO] modules.cve_scanner:   [Medium] CVE-2023-23715 — 44.228.249.3:587 (submission) CVSS: 5.2
+2026-04-10 11:07:29,378 [INFO] modules.cve_scanner:   [None] CVE-2025-23638 — 44.228.249.3:587 (submission) CVSS: 0.0
+2026-04-10 11:07:29,379 [INFO] modules.cve_scanner:   [None] CVE-2025-32670 — 44.228.249.3:587 (submission) CVSS: 0.0
+2026-04-10 11:07:29,379 [INFO] modules.cve_scanner:   [Medium] CVE-2025-47626 — 44.228.249.3:587 (submission) CVSS: 4.8
+2026-04-10 11:07:29,379 [INFO] modules.cve_scanner:   [None] CVE-2025-58016 — 44.228.249.3:587 (submission) CVSS: 0.0
+2026-04-10 11:07:29,379 [INFO] modules.cve_scanner: CVE scan complete. 5 finding(s).
+2026-04-10 11:07:29,453 [INFO] modules.report_generator: HTML report saved: /data/data/com.termux/files/home/NetScanPro/output/netscampro_report_0db1e1cb_20260410_110729.html
+2026-04-10 11:07:29,952 [INFO] modules.report_generator: PDF report saved: /data/data/com.termux/files/home/NetScanPro/output/netscampro_report_0db1e1cb_20260410_110729.pdf
