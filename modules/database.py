@@ -90,6 +90,26 @@ class Database:
             )
         """)
         cursor.execute("""
+            CREATE TABLE IF NOT EXISTS scan_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL,
+                message TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+        """)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS scan_status (
+                session_id TEXT PRIMARY KEY,
+                status TEXT DEFAULT 'running',
+                progress INTEGER DEFAULT 0,
+                hosts_found INTEGER DEFAULT 0,
+                web_count INTEGER DEFAULT 0,
+                cve_count INTEGER DEFAULT 0,
+                report_paths TEXT DEFAULT '',
+                updated_at TEXT NOT NULL
+            )
+        """)
+        cursor.execute("""
             CREATE TABLE IF NOT EXISTS scan_schedules (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 target TEXT NOT NULL,
@@ -300,6 +320,43 @@ class Database:
             AND started_at < datetime('now', '-30 minutes')
         """, (datetime.now().isoformat(),))
         self.conn.commit()
+
+    # ── SCAN LOGS (persistent) ───────────────────────────
+
+    def append_log(self, session_id: str, message: str):
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "INSERT INTO scan_logs (session_id, message, created_at) VALUES (?, ?, ?)",
+            (session_id, message, datetime.now().isoformat())
+        )
+        self.conn.commit()
+
+    def get_logs(self, session_id: str) -> list:
+        cursor = self.conn.cursor()
+        cursor.execute(
+            "SELECT message FROM scan_logs WHERE session_id=? ORDER BY id",
+            (session_id,)
+        )
+        return [row[0] for row in cursor.fetchall()]
+
+    def set_scan_status(self, session_id: str, status: str, progress: int,
+                        hosts_found: int = 0, web_count: int = 0,
+                        cve_count: int = 0, report_paths: str = ""):
+        cursor = self.conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO scan_status
+            (session_id, status, progress, hosts_found, web_count,
+             cve_count, report_paths, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, (session_id, status, progress, hosts_found, web_count,
+              cve_count, report_paths, datetime.now().isoformat()))
+        self.conn.commit()
+
+    def get_scan_status(self, session_id: str) -> dict:
+        cursor = self.conn.cursor()
+        cursor.execute("SELECT * FROM scan_status WHERE session_id=?", (session_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
 
     # ── SCHEDULES ────────────────────────────────────────
 

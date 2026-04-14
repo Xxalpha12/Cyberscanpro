@@ -93,10 +93,30 @@ def run_scan():
     }
 
     def _log(msg):
-        active_scans[session_id]["log"].append(f"[{_ts()}] {msg}")
+        entry = f"[{_ts()}] {msg}"
+        active_scans[session_id]["log"].append(entry)
+        # Also persist to DB so it survives server restarts
+        try:
+            _db = Database()
+            _db.append_log(session_id, entry)
+            _db.close()
+        except Exception:
+            pass
 
     def _set_progress(pct, msg=None):
         active_scans[session_id]["progress"] = pct
+        # Persist status to DB
+        try:
+            _db = Database()
+            _db.set_scan_status(
+                session_id, "running", pct,
+                active_scans[session_id].get("hosts_found", 0),
+                active_scans[session_id].get("web_count", 0),
+                active_scans[session_id].get("cve_count", 0)
+            )
+            _db.close()
+        except Exception:
+            pass
         if msg:
             _log(msg)
 
@@ -221,12 +241,28 @@ def run_scan():
             active_scans[session_id]["status"]   = "completed"
             active_scans[session_id]["progress"] = 100
             _log("Scan completed successfully.")
+            try:
+                _db = Database()
+                _db.set_scan_status(session_id, "completed", 100,
+                    active_scans[session_id].get("hosts_found", 0),
+                    active_scans[session_id].get("web_count", 0),
+                    active_scans[session_id].get("cve_count", 0),
+                    ",".join(os.path.basename(p) for p in active_scans[session_id].get("report_paths",[])))
+                _db.close()
+            except Exception:
+                pass
 
         except Exception as e:
             active_scans[session_id]["status"]   = "error"
             active_scans[session_id]["progress"] = 0
             _log(f"ERROR: {str(e)}")
             logger.error(f"Scan error: {e}")
+            try:
+                _db = Database()
+                _db.set_scan_status(session_id, "error", 0)
+                _db.close()
+            except Exception:
+                pass
 
     threading.Thread(target=_run, daemon=True).start()
     return jsonify({"session_id": session_id, "status": "started"})
@@ -235,18 +271,37 @@ def run_scan():
 @app.route("/scan/<session_id>/status")
 @login_required
 def scan_status(session_id):
-    if session_id not in active_scans:
-        return jsonify({"status": "not_found", "log": [], "progress": 0})
-    scan = active_scans[session_id]
-    return jsonify({
-        "status":       scan["status"],
-        "log":          scan["log"],
-        "progress":     scan.get("progress", 0),
-        "report_paths": [os.path.basename(p) for p in scan.get("report_paths", [])],
-        "hosts_found":  scan.get("hosts_found", 0),
-        "web_count":    scan.get("web_count", 0),
-        "cve_count":    scan.get("cve_count", 0),
-    })
+    # Try in-memory first (fastest)
+    if session_id in active_scans:
+        scan = active_scans[session_id]
+        return jsonify({
+            "status":       scan["status"],
+            "log":          scan["log"],
+            "progress":     scan.get("progress", 0),
+            "report_paths": [os.path.basename(p) for p in scan.get("report_paths", [])],
+            "hosts_found":  scan.get("hosts_found", 0),
+            "web_count":    scan.get("web_count", 0),
+            "cve_count":    scan.get("cve_count", 0),
+        })
+
+    # Fall back to DB (handles server restarts on Render free tier)
+    db = Database()
+    db_status = db.get_scan_status(session_id)
+    db_logs   = db.get_logs(session_id)
+    db.close()
+
+    if db_status:
+        return jsonify({
+            "status":       db_status["status"],
+            "log":          db_logs,
+            "progress":     db_status["progress"],
+            "report_paths": [p for p in db_status["report_paths"].split(",") if p],
+            "hosts_found":  db_status["hosts_found"],
+            "web_count":    db_status["web_count"],
+            "cve_count":    db_status["cve_count"],
+        })
+
+    return jsonify({"status": "not_found", "log": [], "progress": 0})
 
 
 @app.route("/scan/<session_id>")
