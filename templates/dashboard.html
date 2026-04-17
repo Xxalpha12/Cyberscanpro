@@ -416,6 +416,60 @@ async function refreshStats() {
     if (ts) ts.innerHTML = `<span class="ok">[+] Sessions: ${data.session_count}</span>`;
 
   } catch(e) { console.error("Refresh error:", e); }
+
+  // Also refresh session list and activity feed
+  try {
+    const sres = await fetch("/api/sessions");
+    const sessions = await sres.json();
+
+    // Update activity feed
+    const feed = document.getElementById("activity-feed");
+    if (feed) {
+      const recent = sessions.slice(0, 6);
+      feed.innerHTML = recent.map(s => {
+        const dot = s.status === "completed" ? "ok" : s.status === "running" ? "warn" : "err";
+        const time = s.started_at ? s.started_at.substring(11,16) : "";
+        return `<div class="feed-item">
+          <span class="feed-dot ${dot}"></span>
+          <div class="feed-info">
+            <div class="feed-target">${s.target}</div>
+            <div class="feed-meta">${s.id.substring(0,8)} &nbsp; ${time}</div>
+          </div>
+        </div>`;
+      }).join("");
+    }
+
+    // Update session table rows status badges
+    sessions.forEach(s => {
+      const badge = document.querySelector(`#row-${s.id} .status-badge`);
+      if (badge) {
+        badge.textContent = s.status.toUpperCase();
+        badge.className = `status-badge status-${s.status}`;
+      }
+    });
+
+    // Add new sessions not yet in table
+    const tbody = document.getElementById("sessions-table");
+    if (tbody) {
+      const existingIds = new Set([...tbody.querySelectorAll("tr")].map(r => r.id.replace("row-","")));
+      sessions.forEach(s => {
+        if (!existingIds.has(s.id)) {
+          const tr = document.createElement("tr");
+          tr.id = `row-${s.id}`;
+          tr.innerHTML = `
+            <td class="mono accent">${s.id.substring(0,8)}</td>
+            <td>${s.target}</td>
+            <td class="mono">${s.started_at ? s.started_at.substring(0,16).replace("T"," ") : ""}</td>
+            <td><span class="status-badge status-${s.status}">${s.status.toUpperCase()}</span></td>
+            <td>
+              <a href="/scan/${s.id}" class="vbtn">VIEW →</a>
+              <button class="dbtn" onclick="deleteSession('${s.id}')">DEL</button>
+            </td>`;
+          tbody.prepend(tr);
+        }
+      });
+    }
+  } catch(e) { console.error("Session refresh error:", e); }
 }
 
 // ── DELETE SESSION ─────────────────────────────────────
