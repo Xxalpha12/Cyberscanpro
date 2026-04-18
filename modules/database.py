@@ -1,5 +1,5 @@
 """
-NetScan Pro - Database Module
+CyberScan Pro - Database Module
 """
 
 import sqlite3
@@ -10,7 +10,7 @@ from modules.logger import get_logger
 
 logger = get_logger(__name__)
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "netscampro.db")
+DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "cyberscanpro.db")
 
 
 class Database:

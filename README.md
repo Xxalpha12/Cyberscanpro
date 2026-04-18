@@ -1,4 +1,4 @@
-# NetScan Pro 🛡️
+# CyberScan Pro 🛡️
 ### Automated Network & Web Application Vulnerability Assessment Tool
 **FUPRE Final Year Project | Author: Obeh | Department of Computer Science**
 
@@ -7,7 +7,7 @@
 ## Project Structure
 
 ```
-netscampro/
+cyberscanpro/
 ├── main.py                  ← Entry point (CLI + dashboard launcher)
 ├── dashboard.py             ← Flask web dashboard
 ├── requirements.txt         ← Python dependencies
@@ -28,7 +28,7 @@ netscampro/
 │   └── scan_detail.html     ← Scan results detail view
 │
 ├── db/
-│   └── netscampro.db        ← SQLite database (auto-created)
+│   └── cyberscanpro.db        ← SQLite database (auto-created)
 │
 └── output/
     └── *.pdf / *.html       ← Generated reports + scan logs
@@ -103,7 +103,7 @@ For safe testing without hitting real systems:
 1. **Install VirtualBox** + **Metasploitable 2** (intentionally vulnerable Linux VM)
 2. **Install DVWA** (Damn Vulnerable Web Application) on the VM
 3. Set both VMs to **Host-Only Adapter** networking
-4. Run NetScan Pro targeting the Metasploitable IP
+4. Run CyberScan Pro targeting the Metasploitable IP
 
 ```bash
 # Example against Metasploitable
@@ -114,7 +114,7 @@ python main.py -t 192.168.56.101 --full --output both -v
 
 ## Ethical Use Disclaimer
 
-> ⚠️ NetScan Pro is designed **exclusively** for authorized security assessments
+> ⚠️ CyberScan Pro is designed **exclusively** for authorized security assessments
 > in controlled lab environments. Never use this tool against any system you
 > do not own or have explicit written permission to test.
 > Unauthorized use is illegal and unethical.

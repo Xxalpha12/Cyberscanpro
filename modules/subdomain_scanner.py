@@ -1,5 +1,5 @@
 """
-NetScan Pro - Subdomain Discovery Module
+CyberScan Pro - Subdomain Discovery Module
 Discovers subdomains using:
   1. Free HackerTarget API
   2. Common subdomain wordlist bruteforce

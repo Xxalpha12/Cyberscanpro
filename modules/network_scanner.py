@@ -1,5 +1,5 @@
 """
-NetScan Pro - Network Scanner Module
+CyberScan Pro - Network Scanner Module
 Threaded port scanning with DNS resolution, URL/domain/CIDR support,
 banner grabbing, and graceful CIDR limits.
 """

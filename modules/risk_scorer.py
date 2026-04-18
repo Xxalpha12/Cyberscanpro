@@ -1,5 +1,5 @@
 """
-NetScan Pro - Risk Scorer Module
+CyberScan Pro - Risk Scorer Module
 Real risk scoring based on findings, open ports, and service exposure.
 
 Score breakdown (max 100):

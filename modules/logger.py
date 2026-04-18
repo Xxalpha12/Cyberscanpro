@@ -1,5 +1,5 @@
 """
-NetScan Pro - Logger Utility
+CyberScan Pro - Logger Utility
 """
 
 import logging

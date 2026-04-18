@@ -1,5 +1,5 @@
 """
-NetScan Pro - CVE Mapper Module
+CyberScan Pro - CVE Mapper Module
 Maps discovered services to known CVEs using the
 NVD (National Vulnerability Database) REST API v2.
 
@@ -53,7 +53,7 @@ class CVEMapper:
 
         self.session = requests.Session()
         self.session.headers.update({
-            "User-Agent": "NetScanPro/1.0 (security research)"
+            "User-Agent": "CyberScanPro/1.0 (security research)"
         })
         if self.api_key:
             self.session.headers["apiKey"] = self.api_key

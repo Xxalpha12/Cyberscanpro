@@ -1,1 +1,1 @@
-# NetScan Pro - Modules Package
+# CyberScan Pro - Modules Package

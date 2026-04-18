@@ -1,5 +1,5 @@
 """
-NetScan Pro - Authentication Module
+CyberScan Pro - Authentication Module
 Provides login/logout routes and login_required decorator.
 """
 

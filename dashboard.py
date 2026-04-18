@@ -1,5 +1,5 @@
 """
-NetScan Pro - Web Dashboard (Flask)
+CyberScan Pro - Web Dashboard (Flask)
 Full featured dashboard with auth, CSV export, comparison,
 risk scoring, scheduling, email delivery, and more.
 """
@@ -25,7 +25,7 @@ from auth import auth, login_required
 logger = get_logger(__name__)
 
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "netscampro-secret-2025-change-me")
+app.secret_key = os.environ.get("SECRET_KEY", "cyberscanpro-secret-2025-change-me")
 app.register_blueprint(auth)
 
 OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "output")
@@ -49,7 +49,7 @@ def index():
     return render_template("dashboard.html", sessions=sessions,
                            severity_counts=severity_counts,
                            total_findings=total_findings,
-                           page="home", title="NetScan Pro Dashboard",
+                           page="home", title="CyberScan Pro Dashboard",
                            username=session.get("username", "admin"))
 
 
@@ -369,7 +369,7 @@ def export_csv():
                          s.get("completed_at", ""), s["status"]])
 
     response = make_response(output.getvalue())
-    response.headers["Content-Disposition"] = "attachment; filename=netscampro_sessions.csv"
+    response.headers["Content-Disposition"] = "attachment; filename=cyberscanpro_sessions.csv"
     response.headers["Content-Type"] = "text/csv"
     return response
 
@@ -403,7 +403,7 @@ def export_session_csv(session_id):
                          f["cve_id"], f["cvss_score"], f["severity"], f["reference"]])
 
     response = make_response(output.getvalue())
-    response.headers["Content-Disposition"] = f"attachment; filename=netscanpro_{session_id}_findings.csv"
+    response.headers["Content-Disposition"] = f"attachment; filename=cyberscanpro_{session_id}_findings.csv"
     response.headers["Content-Type"] = "text/csv"
     return response
 
@@ -523,9 +523,9 @@ def _send_report_email(recipient: str, target: str, session_id: str, report_path
         msg = MIMEMultipart()
         msg["From"]    = smtp_user
         msg["To"]      = recipient
-        msg["Subject"] = f"NetScan Pro Report — {target} [{session_id}]"
+        msg["Subject"] = f"CyberScan Pro Report — {target} [{session_id}]"
 
-        body = f"""NetScan Pro — Automated Vulnerability Assessment Report
+        body = f"""CyberScan Pro — Automated Vulnerability Assessment Report
 
 Target:     {target}
 Session ID: {session_id}
@@ -534,7 +534,7 @@ Generated:  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 Please find the attached penetration test report.
 
 ---
-NetScan Pro | FUPRE Final Year Project | Obeh Emmanuel Onoriode
+CyberScan Pro | FUPRE Final Year Project | Obeh Emmanuel Onoriode
 ⚠ This report is confidential. Authorized use only.
 """
         msg.attach(MIMEText(body, "plain"))

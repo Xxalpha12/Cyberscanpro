@@ -1,5 +1,5 @@
 """
-NetScan Pro - Web Application Tester Module
+CyberScan Pro - Web Application Tester Module
 Crawls web applications on discovered hosts and tests for
 common OWASP Top 10 vulnerabilities.
 
@@ -114,7 +114,7 @@ class WebTester:
         self.findings = []
         self.session = requests.Session()
         self.session.headers.update({
-            "User-Agent": "NetScanPro/1.0 (Authorized Security Assessment)"
+            "User-Agent": "CyberScanPro/1.0 (Authorized Security Assessment)"
         })
         self.session.verify = False  # For self-signed certs in lab environments
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-NetScan Pro - Automated Network & Web Application Vulnerability Assessment Tool
+CyberScan Pro - Automated Network & Web Application Vulnerability Assessment Tool
 Author: Obeh Emmanuel Onoriode
 Matric Number: Cos/9581/2022
 Institution: FUPRE
@@ -35,8 +35,8 @@ BANNER = r"""
 
 def parse_args():
     parser = argparse.ArgumentParser(
-        prog="netscampro",
-        description="NetScan Pro - Automated Network & Web Vulnerability Assessment Tool",
+        prog="cyberscanpro",
+        description="CyberScan Pro - Automated Network & Web Vulnerability Assessment Tool",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -56,7 +56,7 @@ Examples:
     parser.add_argument("--output", choices=["pdf", "html", "both"], default="both",
                         help="Output report format (default: both)")
     parser.add_argument("--dashboard", action="store_true",
-                        help="Launch the NetScan Pro web dashboard")
+                        help="Launch the CyberScan Pro web dashboard")
     parser.add_argument("--port", type=int, default=5000,
                         help="Port for the web dashboard (default: 5000)")
     parser.add_argument("-v", "--verbose", action="store_true",
@@ -177,7 +177,7 @@ def launch_dashboard(port):
     """Launch the Flask web dashboard."""
     from dashboard import app
     print(BANNER)
-    print(f"  [*] Launching NetScan Pro Dashboard on http://localhost:{port}")
+    print(f"  [*] Launching CyberScan Pro Dashboard on http://localhost:{port}")
     print(f"  [*] Press CTRL+C to stop.\n")
     app.run(host="0.0.0.0", port=port, debug=False)
 

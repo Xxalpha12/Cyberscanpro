@@ -1,5 +1,5 @@
 """
-NetScan Pro - Scan Scheduler Module
+CyberScan Pro - Scan Scheduler Module
 Allows scheduling recurring scans at set intervals.
 Schedules are stored in the database and checked on dashboard load.
 """
