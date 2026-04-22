@@ -15,10 +15,27 @@ DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "cybers
 
 class Database:
     def __init__(self):
-        os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
-        self.conn = sqlite3.connect(DB_PATH)
-        self.conn.row_factory = sqlite3.Row
+        if USE_POSTGRES:
+            self.conn = psycopg2.connect(DATABASE_URL, cursor_factory=psycopg2.extras.RealDictCursor)
+            self.conn.autocommit = False
+            self._pg = True
+        else:
+            os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
+            self.conn = sqlite3.connect(DB_PATH)
+            self.conn.row_factory = sqlite3.Row
+            self._pg = False
         self._init_schema()
+
+    def _placeholder(self):
+        """Return correct placeholder for current DB."""
+        return "%s" if self._pg else "?"
+
+    def _execute(self, cursor, sql, params=()):
+        """Execute with correct placeholder."""
+        if self._pg:
+            sql = sql.replace("?", "%s")
+        cursor.execute(sql, params)
+        return cursor
 
     def _init_schema(self):
         cursor = self.conn.cursor()

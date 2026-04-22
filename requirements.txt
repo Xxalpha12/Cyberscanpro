@@ -20,3 +20,9 @@ reportlab>=4.0.0          # PDF generation
 # Web dashboard
 flask>=3.0.0              # Web framework for dashboard
 gunicorn>=21.2.0          # Production WSGI server (required for Render)
+
+# PostgreSQL support (persistent database)
+psycopg2-binary>=2.9.0    # PostgreSQL adapter
+
+# Screenshot generation
+Pillow>=10.0.0            # Image processing for screenshots

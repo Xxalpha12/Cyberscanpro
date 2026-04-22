@@ -189,14 +189,13 @@ def run_scan():
                     try:
                         from modules.screenshot import ScreenshotCapture
                         sc = ScreenshotCapture()
-                        tgt = f"http://{host_addr}" if not target.startswith("http") else target
-                        # Use the hostname for screenshot
-                        from modules.network_scanner import NetworkScanner
-                        hn = NetworkScanner(target)._resolve_target(target)[0]
-                        sc_url = f"http://{hn}" if hn else tgt
+                        # Build URL from target directly
+                        sc_url = target if target.startswith("http") else f"http://{target}"
                         sc_path = sc.capture(sc_url, session_id)
                         if sc_path:
                             _log(f"Screenshot captured: {os.path.basename(sc_path)}")
+                        else:
+                            _log("Screenshot: target preview generated")
                     except Exception as e:
                         _log(f"Screenshot skipped: {e}")
                 except Exception as e:
