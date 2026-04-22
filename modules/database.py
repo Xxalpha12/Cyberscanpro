@@ -2,15 +2,28 @@
 CyberScan Pro - Database Module
 """
 
-import sqlite3
 import os
 import uuid
+import sqlite3
 from datetime import datetime
 from modules.logger import get_logger
 
 logger = get_logger(__name__)
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "cyberscanpro.db")
+DB_PATH      = os.path.join(os.path.dirname(os.path.dirname(__file__)), "db", "cyberscanpro.db")
+DATABASE_URL = os.environ.get("DATABASE_URL", "")
+USE_POSTGRES = bool(DATABASE_URL)
+
+if USE_POSTGRES:
+    try:
+        import psycopg2
+        import psycopg2.extras
+        logger.info("Using PostgreSQL (Supabase) — persistent storage")
+    except ImportError:
+        USE_POSTGRES = False
+        logger.warning("psycopg2 not installed — falling back to SQLite")
+else:
+    logger.info("Using SQLite — local storage")
 
 
 class Database:
