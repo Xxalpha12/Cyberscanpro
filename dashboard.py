@@ -189,7 +189,6 @@ def run_scan():
                     try:
                         from modules.screenshot import ScreenshotCapture
                         sc = ScreenshotCapture()
-                        # Build URL from target directly
                         sc_url = target if target.startswith("http") else f"http://{target}"
                         sc_path = sc.capture(sc_url, session_id)
                         if sc_path:
