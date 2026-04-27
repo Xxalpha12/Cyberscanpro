@@ -1,90 +1,82 @@
 """
-CyberScan Pro - Screenshot Capture Module
-Captures screenshots of web targets using requests + PIL.
-Works on Render free tier without a headless browser.
-Falls back to HTTP response preview if screenshot fails.
+CyberScan Pro - Visual Screenshot Capture Module
+Uses screenshotone.com API for real browser screenshots.
+Falls back to text preview if API key not set.
 """
 
-import requests
 import os
-from io import BytesIO
+import requests
 from modules.logger import get_logger
 
 logger = get_logger(__name__)
 
-OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output", "screenshots")
-
+OUTPUT_DIR = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)), "output", "screenshots"
+)
 requests.packages.urllib3.disable_warnings()
 
 
 class ScreenshotCapture:
-    """
-    Captures website screenshots using screenshotting APIs.
-    Uses free tier of screenshot services — no headless browser needed.
-    """
 
-    def __init__(self, timeout: int = 10):
+    def __init__(self, timeout: int = 30):
         self.timeout = timeout
+        self.api_key = os.environ.get("SCREENSHOT_API_KEY", "")
         os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     def capture(self, url: str, session_id: str) -> str | None:
-        """
-        Capture screenshot of URL.
-        Returns path to saved image or None if failed.
-        """
-        # Ensure URL has scheme
+        """Capture screenshot. Returns path to saved image or None."""
         if not url.startswith("http"):
             url = f"http://{url}"
 
-        filename = f"screenshot_{session_id}.png"
-        filepath = os.path.join(OUTPUT_DIR, filename)
+        filepath = os.path.join(OUTPUT_DIR, f"screenshot_{session_id}.png")
 
-        # Try method 1: screenshotapi.net (free tier)
-        result = self._try_screenshotapi(url, filepath)
+        # Method 1: screenshotone.com (real browser screenshot)
+        if self.api_key:
+            result = self._screenshotone(url, filepath)
+            if result:
+                return result
+
+        # Method 2: thum.io (free, no key needed)
+        result = self._thumio(url, filepath)
         if result:
             return result
 
-        # Try method 2: urlbox.io free tier
-        result = self._try_urlbox(url, filepath)
-        if result:
-            return result
+        # Method 3: Text preview fallback
+        return self._text_preview(url, filepath)
 
-        # Try method 3: Generate HTML preview thumbnail
-        result = self._generate_html_preview(url, filepath, session_id)
-        if result:
-            return result
-
-        logger.warning(f"All screenshot methods failed for {url}")
-        return None
-
-    def _try_screenshotapi(self, url: str, filepath: str) -> str | None:
-        """Use screenshotapi.net free tier."""
+    def _screenshotone(self, url: str, filepath: str) -> str | None:
+        """Real browser screenshot via screenshotone.com."""
         try:
-            api_url = f"https://screenshotapi.net/api/v1/screenshot"
+            api_url = "https://api.screenshotone.com/take"
             params = {
-                "token": "SCREENSHOTAPI_FREE",
-                "url": url,
-                "width": 1280,
-                "height": 800,
-                "output": "image",
-                "file_type": "png"
+                "access_key":        self.api_key,
+                "url":               url,
+                "viewport_width":    1280,
+                "viewport_height":   800,
+                "format":            "png",
+                "block_ads":         "true",
+                "block_cookie_banners": "true",
+                "delay":             2,
+                "timeout":           30,
             }
             r = requests.get(api_url, params=params, timeout=self.timeout)
-            if r.status_code == 200 and r.headers.get("content-type", "").startswith("image"):
+            if r.status_code == 200 and "image" in r.headers.get("content-type", ""):
                 with open(filepath, "wb") as f:
                     f.write(r.content)
-                logger.info(f"Screenshot saved via screenshotapi: {filepath}")
+                logger.info(f"Visual screenshot saved: {filepath}")
                 return filepath
+            else:
+                logger.warning(f"screenshotone API error: {r.status_code} {r.text[:100]}")
         except Exception as e:
-            logger.warning(f"screenshotapi failed: {e}")
+            logger.warning(f"screenshotone failed: {e}")
         return None
 
-    def _try_urlbox(self, url: str, filepath: str) -> str | None:
-        """Use thum.io free screenshot service."""
+    def _thumio(self, url: str, filepath: str) -> str | None:
+        """Free screenshot via thum.io."""
         try:
             import urllib.parse
             encoded = urllib.parse.quote(url, safe="")
-            api_url = f"https://image.thum.io/get/width/1280/crop/800/{encoded}"
+            api_url  = f"https://image.thum.io/get/width/1280/crop/800/{encoded}"
             r = requests.get(api_url, timeout=self.timeout, verify=False)
             if r.status_code == 200 and len(r.content) > 5000:
                 with open(filepath, "wb") as f:
@@ -95,73 +87,72 @@ class ScreenshotCapture:
             logger.warning(f"thum.io failed: {e}")
         return None
 
-    def _generate_html_preview(self, url: str, filepath: str, session_id: str) -> str | None:
-        """
-        Generate a simple HTML-based preview image showing
-        server headers and response info when screenshot APIs fail.
-        """
+    def _text_preview(self, url: str, filepath: str) -> str | None:
+        """Generate text-based preview when screenshot APIs fail."""
         try:
-            from PIL import Image, ImageDraw, ImageFont
-            import textwrap
+            from PIL import Image, ImageDraw
+            import re
 
             r = requests.get(url, timeout=8, verify=False, allow_redirects=True)
-            server = r.headers.get("Server", "Unknown")
-            powered = r.headers.get("X-Powered-By", "")
-            status = r.status_code
-            title = ""
+            server  = r.headers.get("Server", "Unknown")
+            powered = r.headers.get("X-Powered-By", "Not disclosed")
+            status  = r.status_code
+            title   = ""
 
-            # Try extract page title
-            if b"<title>" in r.content.lower():
-                import re
-                match = re.search(rb"<title>(.*?)</title>", r.content, re.IGNORECASE)
-                if match:
-                    title = match.group(1).decode("utf-8", errors="ignore")[:60]
+            match = re.search(rb"<title>(.*?)</title>", r.content, re.IGNORECASE)
+            if match:
+                title = match.group(1).decode("utf-8", errors="ignore").strip()[:60]
 
-            # Create preview image
-            img = Image.new("RGB", (800, 400), color=(8, 12, 20))
+            img  = Image.new("RGB", (1280, 800), color=(8, 12, 20))
             draw = ImageDraw.Draw(img)
 
-            # Header bar
-            draw.rectangle([0, 0, 800, 50], fill=(0, 40, 60))
-            draw.rectangle([0, 48, 800, 50], fill=(0, 200, 255))
+            # Browser chrome bar
+            draw.rectangle([0, 0, 1280, 50], fill=(0, 40, 60))
+            draw.rectangle([0, 48, 1280, 50], fill=(0, 200, 255))
+            draw.rectangle([10, 10, 1270, 38], fill=(10, 20, 35),
+                           outline=(0, 200, 255))
 
-            # URL bar
-            draw.rectangle([10, 10, 790, 38], fill=(10, 20, 35), outline=(0, 200, 255, 100))
+            # URL in bar
             draw.text((20, 16), f"  {url}", fill=(0, 200, 255))
 
-            # Status indicator
-            status_color = (0, 200, 100) if status == 200 else (255, 100, 50)
-            draw.ellipse([760, 16, 778, 34], fill=status_color)
+            # Status dot
+            dot_color = (0, 200, 100) if status == 200 else (255, 100, 50)
+            draw.ellipse([1240, 16, 1260, 36], fill=dot_color)
 
-            # Content area
-            y = 70
-            info_lines = [
-                f"HTTP Status:    {status}",
-                f"Server:         {server}",
-                f"Powered By:     {powered or 'Not disclosed'}",
-                f"Title:          {title or 'No title found'}",
-                f"",
-                f"Content-Type:   {r.headers.get('Content-Type', 'Unknown')}",
-                f"Content-Length: {r.headers.get('Content-Length', 'Unknown')}",
+            # Content
+            lines = [
+                (f"HTTP Status:     {status}", (0, 200, 255)),
+                (f"Server:          {server}", (160, 220, 240)),
+                (f"Powered By:      {powered}", (160, 220, 240)),
+                (f"Page Title:      {title or 'No title found'}", (160, 220, 240)),
+                ("", None),
+                (f"Content-Type:    {r.headers.get('Content-Type', 'Unknown')}", (100, 160, 190)),
+                (f"Content-Length:  {r.headers.get('Content-Length', 'Unknown')}", (100, 160, 190)),
+                ("", None),
+                ("Security Headers:", (0, 200, 255)),
+                (f"  X-Frame-Options:       {r.headers.get('X-Frame-Options', '⚠ MISSING')}", (200, 180, 100)),
+                (f"  Content-Security-Policy: {r.headers.get('Content-Security-Policy', '⚠ MISSING')[:40]}", (200, 180, 100)),
+                (f"  Strict-Transport-Security: {r.headers.get('Strict-Transport-Security', '⚠ MISSING')}", (200, 180, 100)),
             ]
 
-            for line in info_lines:
-                color = (0, 200, 255) if ":" in line else (100, 150, 180)
-                draw.text((40, y), line, fill=color)
-                y += 28
+            y = 80
+            for text, color in lines:
+                if color:
+                    draw.text((60, y), text, fill=color)
+                y += 40
 
-            # CyberScan Pro watermark
-            draw.text((20, 370), "CyberScan Pro — Automated Vulnerability Assessment", fill=(30, 60, 80))
+            draw.text((20, 770),
+                      "CyberScan Pro — Automated Vulnerability Assessment",
+                      fill=(30, 60, 80))
 
             img.save(filepath, format="PNG")
-            logger.info(f"HTML preview generated: {filepath}")
+            logger.info(f"Text preview generated: {filepath}")
             return filepath
 
         except Exception as e:
-            logger.warning(f"HTML preview generation failed: {e}")
+            logger.warning(f"Text preview failed: {e}")
         return None
 
     @staticmethod
     def get_screenshot_url(session_id: str) -> str:
-        """Return the URL path to access a screenshot."""
         return f"/screenshots/{session_id}"
