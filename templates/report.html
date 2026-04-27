@@ -117,6 +117,19 @@
     </div>
   </div>
 
+  <!-- TARGET SCREENSHOT -->
+  <section style="padding:0; overflow:hidden;">
+    <div style="background:var(--navy); padding:14px 20px; display:flex; justify-content:space-between; align-items:center;">
+      <h2 style="color:white; border:none; margin:0; padding:0; font-size:15px;">📸 Target Screenshot</h2>
+      <span style="font-size:11px; color:rgba(255,255,255,0.6);">{{ target }}</span>
+    </div>
+    <div style="padding:16px; background:white;">
+      <img src="/screenshots/{{ session_id }}"
+           style="width:100%; border-radius:6px; border:1px solid #e0e0e0;"
+           onerror="this.parentElement.innerHTML='<p style='color:#888;font-size:12px;padding:10px;'>Screenshot not available for this scan.</p>'">
+    </div>
+  </section>
+
   <!-- WHAT THIS REPORT MEANS -->
   <section>
     <h2>📋 What This Report Means — A Simple Guide</h2>
