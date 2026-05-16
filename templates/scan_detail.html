@@ -2,127 +2,108 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{{ title }} — CyberScan Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&family=VT323&display=swap" rel="stylesheet">
+<title>{{ session.target }} — CyberScan Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#060c14; --bg2:#0a1220; --bg3:#0f1a2e; --accent:#00c8ff; --accent2:#00ff9d; --accent3:#ff6b35; --accent4:#a855f7; --red:#ff3c3c; --text:#a8c4d8; --text2:#3d5a70; --border:rgba(0,200,255,0.12); --glow:0 0 24px rgba(0,200,255,0.2); --glow2:0 0 24px rgba(0,255,157,0.2); }
-  * { box-sizing:border-box; margin:0; padding:0; }
-  body { font-family:'Share Tech Mono',monospace; background:var(--bg); color:var(--text); min-height:100vh; display:flex; overflow-x:hidden; }
-  body::before { content:''; position:fixed; inset:0; background-image:linear-gradient(rgba(0,200,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.03) 1px,transparent 1px); background-size:32px 32px; pointer-events:none; z-index:0; }
-  body::after { content:''; position:fixed; inset:0; background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.06) 3px,rgba(0,0,0,0.06) 4px); pointer-events:none; z-index:0; }
-
-  .sidebar { position:fixed; top:0; left:0; width:250px; height:100vh; background:rgba(10,18,32,0.97); border-right:1px solid var(--border); display:flex; flex-direction:column; z-index:10; }
-  .sidebar-logo { padding:24px 20px 18px; border-bottom:1px solid var(--border); }
-  .logo-top { font-size:9px; letter-spacing:4px; color:var(--text2); margin-bottom:10px; }
-  .logo-main { font-family:'Rajdhani',sans-serif; font-size:26px; font-weight:700; color:#fff; letter-spacing:2px; text-shadow:0 0 30px rgba(0,200,255,0.5); }
-  .logo-main span { color:var(--accent); }
-  .logo-tag { display:inline-block; margin-top:8px; font-size:9px; letter-spacing:2px; color:var(--accent); border:1px solid rgba(0,200,255,0.3); padding:3px 8px; border-radius:2px; box-shadow:var(--glow); }
-  .sidebar nav { padding:8px 0; flex:1; }
-  .nav-section { font-size:8px; letter-spacing:4px; color:var(--text2); padding:12px 20px 6px; }
-  .nav-link { display:flex; align-items:center; gap:10px; padding:9px 20px; color:var(--text2); text-decoration:none; font-size:11px; letter-spacing:1px; transition:all 0.2s; border-left:2px solid transparent; }
-  .nav-link::before { content:'> '; color:var(--text2); }
-  .nav-link:hover { color:var(--accent); background:rgba(0,200,255,0.04); border-left-color:rgba(0,200,255,0.4); }
-  .nav-link:hover::before { color:var(--accent); }
-  .nav-link.active { color:var(--accent); background:rgba(0,200,255,0.06); border-left-color:var(--accent); }
-  .nav-link.active::before { content:'█ '; color:var(--accent); }
-  .sidebar-footer { padding:12px 20px; border-top:1px solid var(--border); font-size:9px; color:var(--text2); letter-spacing:1px; margin-top:auto; }
-
-  .main { margin-left:250px; flex:1; padding:28px 32px; position:relative; z-index:1; }
-  .back { display:inline-flex; align-items:center; gap:6px; font-size:10px; color:var(--text2); text-decoration:none; letter-spacing:1px; margin-bottom:20px; transition:color 0.2s; }
-  .back:hover { color:var(--accent); }
-  .page-top { margin-bottom:24px; }
-  .page-eyebrow { font-size:9px; letter-spacing:4px; color:var(--accent2); margin-bottom:6px; }
-  .page-title { font-family:'Rajdhani',sans-serif; font-size:30px; font-weight:700; color:#fff; letter-spacing:1px; }
-  .page-meta { font-size:10px; color:var(--text2); margin-top:6px; letter-spacing:1px; }
-
-  /* Severity summary */
-  .sev-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:20px; }
-  .sev-card { border-radius:6px; padding:14px 16px; position:relative; overflow:hidden; }
-  .sev-card.Critical{background:rgba(192,0,0,0.08);border:1px solid rgba(192,0,0,0.3);}
-  .sev-card.High{background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);}
-  .sev-card.Medium{background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.3);}
-  .sev-card.Low{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.2);}
-  .sev-label { font-size:8px; letter-spacing:3px; color:var(--text2); margin-bottom:6px; }
-  .sev-num { font-family:'VT323',monospace; font-size:44px; line-height:1; }
-  .sev-card.Critical .sev-num{color:#ff4444;text-shadow:0 0 20px rgba(255,68,68,0.4);}
-  .sev-card.High .sev-num{color:#E74C3C;text-shadow:0 0 20px rgba(231,76,60,0.4);}
-  .sev-card.Medium .sev-num{color:var(--accent3);text-shadow:0 0 20px rgba(255,107,53,0.4);}
-  .sev-card.Low .sev-num{color:var(--accent);text-shadow:0 0 20px rgba(0,200,255,0.4);}
-
-  /* Panel */
-  .panel { background:rgba(6,12,20,0.8); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin-bottom:16px; }
-  .panel-titlebar { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--bg3); border-bottom:1px solid var(--border); }
-  .panel-title-left { display:flex; align-items:center; gap:10px; }
-  .tdots { display:flex; gap:5px; }
-  .tdot { width:9px; height:9px; border-radius:50%; }
-  .tdot.r{background:#ff5f56;} .tdot.y{background:#ffbd2e;} .tdot.g{background:#27c93f;}
-  .panel-title { font-size:10px; color:var(--accent); letter-spacing:2px; }
-  .panel-count { font-size:10px; color:var(--text2); letter-spacing:1px; }
-
-  /* Host block */
-  .host-block { padding:16px; border-bottom:1px solid rgba(0,200,255,0.04); }
-  .host-block:last-child { border:none; }
-  .host-ip { font-family:'Rajdhani',sans-serif; font-size:18px; font-weight:700; color:var(--accent); margin-bottom:3px; }
-  .host-meta { font-size:9px; color:var(--text2); letter-spacing:1px; margin-bottom:12px; }
-
-  table { width:100%; border-collapse:collapse; }
-  th { font-size:8px; letter-spacing:3px; color:var(--text2); padding:8px 14px; text-align:left; border-bottom:1px solid var(--border); }
-  td { padding:9px 14px; border-bottom:1px solid rgba(0,200,255,0.04); font-size:11px; }
-  tr:last-child td { border:none; }
-  tbody tr:hover td { background:rgba(0,200,255,0.03); }
-  .td-port { font-family:'VT323',monospace; font-size:18px; color:var(--accent); }
-  .td-svc { color:#fff; }
-  .td-open { color:var(--accent2); }
-  .td-ver { color:var(--text2); font-size:10px; }
-
-  /* Finding card */
-  .finding-card { border-bottom:1px solid rgba(0,200,255,0.04); }
-  .finding-card:last-child { border:none; }
-  .finding-hdr { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; cursor:pointer; transition:background 0.2s; }
-  .finding-hdr:hover { background:rgba(0,200,255,0.03); }
-  .finding-hdr.Critical{border-left:3px solid #C00000;}
-  .finding-hdr.High{border-left:3px solid #E74C3C;}
-  .finding-hdr.Medium{border-left:3px solid var(--accent3);}
-  .finding-hdr.Low{border-left:3px solid var(--accent);}
-  .finding-type { font-size:12px; color:#fff; letter-spacing:0.5px; }
-  .finding-host { font-size:10px; color:var(--text2); margin-top:2px; }
-  .sev-badge { font-size:9px; padding:3px 10px; border-radius:20px; letter-spacing:1px; white-space:nowrap; }
-  .sev-badge.Critical{background:rgba(192,0,0,0.12);color:#ff4444;border:1px solid rgba(192,0,0,0.3);}
-  .sev-badge.High{background:rgba(231,76,60,0.12);color:#E74C3C;border:1px solid rgba(231,76,60,0.3);}
-  .sev-badge.Medium{background:rgba(255,107,53,0.1);color:var(--accent3);border:1px solid rgba(255,107,53,0.3);}
-  .sev-badge.Low{background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.2);}
-  .finding-body { padding:0 16px 14px; display:none; }
-  .finding-body.open { display:block; }
-  .finding-row { display:grid; grid-template-columns:100px 1fr; gap:6px 12px; margin-top:8px; font-size:11px; }
-  .finding-key { color:var(--text2); letter-spacing:1px; font-size:10px; padding-top:1px; }
-  .finding-val { color:var(--text); word-break:break-word; }
-  code { font-family:'Share Tech Mono',monospace; font-size:10px; color:var(--accent2); background:rgba(0,255,157,0.06); padding:1px 5px; border-radius:2px; }
-
-  /* CVE table */
-  .cve-id-link { color:var(--accent); text-decoration:none; font-size:10px; letter-spacing:1px; }
-  .cve-id-link:hover { text-shadow:var(--glow); }
-
-  .empty { font-size:10px; color:var(--text2); text-align:center; padding:24px 0; letter-spacing:1px; }
-  @keyframes fadeUp { from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)} }
-  .main { animation:fadeUp 0.5s ease both; }
+  :root{--bg:#060c14;--bg2:#0a1220;--bg3:#0f1a2e;--accent:#00c8ff;--accent2:#00ff9d;--accent3:#ff6b35;--text:#a8c4d8;--text2:#3d5a70;--border:rgba(0,200,255,0.12);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Share Tech Mono",monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+  body.light{--bg:#f0f4f8;--bg2:#fff;--bg3:#e8edf2;--text:#2c3e50;--text2:#7f8c8d;--border:rgba(0,100,200,0.15);}
+  .sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);padding:24px 0;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto;}
+  .sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:20px;}
+  .sidebar-logo h2{font-family:"Rajdhani",sans-serif;font-size:22px;font-weight:700;color:#fff;}
+  .sidebar-logo h2 span{color:var(--accent);}
+  .sidebar-logo p{font-size:9px;color:var(--text2);}
+  .nav-section{padding:6px 20px;font-size:8px;letter-spacing:3px;color:var(--text2);margin-top:10px;}
+  .nav-link{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--text2);text-decoration:none;font-size:11px;letter-spacing:1px;transition:all 0.2s;border-left:2px solid transparent;}
+  .nav-link:hover,.nav-link.active{color:var(--accent);border-left-color:var(--accent);}
+  .sidebar-footer{padding:16px 20px;font-size:9px;color:var(--text2);border-top:1px solid var(--border);margin-top:auto;}
+  .main{flex:1;padding:28px;overflow-y:auto;}
+  .back{display:inline-block;font-size:10px;color:var(--text2);text-decoration:none;letter-spacing:2px;margin-bottom:16px;}
+  .back:hover{color:var(--accent);}
+  .page-top{margin-bottom:20px;}
+  .page-eyebrow{font-size:8px;letter-spacing:4px;color:var(--text2);margin-bottom:6px;}
+  .page-title{font-family:"Rajdhani",sans-serif;font-size:28px;font-weight:700;color:#fff;}
+  .page-meta{font-size:10px;color:var(--text2);margin-top:4px;letter-spacing:1px;}
+  .sev-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+  .sev-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;}
+  .sev-card.Critical{border-color:rgba(192,0,0,0.4);background:rgba(192,0,0,0.06);}
+  .sev-card.High{border-color:rgba(230,100,0,0.4);background:rgba(230,100,0,0.06);}
+  .sev-card.Medium{border-color:rgba(230,180,0,0.4);background:rgba(230,180,0,0.06);}
+  .sev-card.Low{border-color:rgba(0,150,220,0.4);background:rgba(0,150,220,0.06);}
+  .sev-label{font-size:8px;letter-spacing:3px;color:var(--text2);margin-bottom:8px;}
+  .sev-num{font-family:"Rajdhani",sans-serif;font-size:36px;font-weight:700;}
+  .sev-card.Critical .sev-num{color:#e74c3c;}
+  .sev-card.High .sev-num{color:#e67e22;}
+  .sev-card.Medium .sev-num{color:#f1c40f;}
+  .sev-card.Low .sev-num{color:#2980b9;}
+  .panel{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden;}
+  .panel-titlebar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg3);border-bottom:1px solid var(--border);}
+  .panel-title-left{display:flex;align-items:center;gap:10px;}
+  .tdots{display:flex;gap:5px;}
+  .tdot{width:10px;height:10px;border-radius:50%;}
+  .tdot.r{background:#ff5f57;}
+  .tdot.y{background:#ffbd2e;}
+  .tdot.g{background:#28ca41;}
+  .panel-title{font-size:10px;letter-spacing:2px;color:var(--accent);}
+  .panel-count{font-size:10px;color:var(--text2);}
+  .host-card{padding:14px 16px;border-bottom:1px solid rgba(0,200,255,0.05);}
+  .host-ip{font-size:16px;font-weight:bold;color:var(--accent);margin-bottom:4px;}
+  .host-meta{font-size:10px;color:var(--text2);margin-bottom:12px;}
+  .port-table{width:100%;border-collapse:collapse;font-size:11px;}
+  .port-table th{text-align:left;padding:6px 10px;background:var(--bg3);color:var(--text2);font-size:9px;letter-spacing:2px;}
+  .port-table td{padding:7px 10px;border-bottom:1px solid rgba(0,200,255,0.05);}
+  .port-open{color:var(--accent2);font-weight:bold;}
+  .finding-item{padding:12px 16px;border-bottom:1px solid rgba(0,200,255,0.05);}
+  .finding-item:last-child{border-bottom:none;}
+  .finding-title{font-size:12px;font-weight:bold;color:#fff;margin-bottom:4px;}
+  .finding-meta{font-size:10px;color:var(--text2);}
+  .badge{display:inline-block;padding:2px 10px;border-radius:3px;font-size:9px;font-weight:bold;letter-spacing:1px;}
+  .badge-Critical{background:rgba(192,0,0,0.2);color:#e74c3c;border:1px solid rgba(192,0,0,0.4);}
+  .badge-High{background:rgba(230,100,0,0.2);color:#e67e22;border:1px solid rgba(230,100,0,0.4);}
+  .badge-Medium{background:rgba(230,180,0,0.2);color:#f1c40f;border:1px solid rgba(230,180,0,0.4);}
+  .badge-Low{background:rgba(0,150,220,0.2);color:#2980b9;border:1px solid rgba(0,150,220,0.4);}
+  .empty-state{padding:30px;text-align:center;color:var(--text2);font-size:11px;}
+  .report-btn{display:inline-flex;align-items:center;gap:8px;padding:10px 18px;border-radius:4px;text-decoration:none;font-size:11px;letter-spacing:1px;transition:all 0.2s;margin:4px;}
+  .report-btn-html{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.3);color:var(--accent);}
+  .report-btn-pdf{background:rgba(255,107,53,0.08);border:1px solid rgba(255,107,53,0.3);color:var(--accent3);}
+  .report-btn-check{background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.3);color:var(--accent2);}
+  .report-btn:hover{transform:translateY(-1px);opacity:0.9;}
+  .ss-container{padding:14px 16px;}
+  .ss-url-bar{background:var(--bg3);border:1px solid var(--border);border-radius:4px 4px 0 0;padding:8px 14px;font-size:10px;color:var(--accent);display:flex;align-items:center;justify-content:space-between;}
+  .ss-dot{width:10px;height:10px;border-radius:50%;background:var(--accent2);}
+  .ss-img{width:100%;border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;display:block;}
+  .ss-placeholder{padding:40px;text-align:center;color:var(--text2);font-size:11px;background:var(--bg3);border:1px solid var(--border);border-top:none;border-radius:0 0 4px 4px;}
+  .capture-btn{padding:6px 16px;background:rgba(0,200,255,0.1);border:1px solid rgba(0,200,255,0.3);border-radius:4px;color:var(--accent);font-family:"Share Tech Mono",monospace;font-size:10px;letter-spacing:1px;cursor:pointer;transition:all 0.2s;}
+  .capture-btn:hover{background:rgba(0,200,255,0.2);}
+  .notes-area{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:10px;color:var(--text);font-family:"Share Tech Mono",monospace;font-size:11px;resize:vertical;min-height:100px;outline:none;line-height:1.6;}
+  .notes-area:focus{border-color:var(--accent);}
+  .save-btn{padding:8px 18px;background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.3);border-radius:4px;color:var(--accent2);font-family:"Share Tech Mono",monospace;font-size:10px;cursor:pointer;letter-spacing:1px;}
+  .cve-table{width:100%;border-collapse:collapse;font-size:11px;}
+  .cve-table th{text-align:left;padding:8px 12px;background:var(--bg3);color:var(--text2);font-size:9px;letter-spacing:2px;border-bottom:1px solid var(--border);}
+  .cve-table td{padding:8px 12px;border-bottom:1px solid rgba(0,200,255,0.05);}
+  @media(max-width:768px){body{flex-direction:column;}.sidebar{width:100%;position:relative;height:auto;}.sev-grid{grid-template-columns:repeat(2,1fr);}.main{padding:16px;}}
 </style>
 </head>
 <body>
 <aside class="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-top">// SECURITY ASSESSMENT PLATFORM</div>
-    <div class="logo-main">CyberScan<span>Pro</span></div>
-    <div class="logo-tag">FUPRE · FYP · OBEH E.O</div>
+    <h2>CyberScan<span>Pro</span></h2>
+    <p>FUPRE · FYP · OBEH E.O</p>
   </div>
-  <nav>
-    <div class="nav-section">// NAVIGATION</div>
-    <a href="/" class="nav-link">Dashboard</a>
-    <a href="/scan/new" class="nav-link">New Scan</a>
-    <a href="#" class="nav-link">Reports</a>
-    <div class="nav-section">// CURRENT</div>
-    <a href="#" class="nav-link active">Scan Results</a>
-  </nav>
+  <div class="nav-section">// NAVIGATION</div>
+  <a href="/" class="nav-link">Dashboard</a>
+  <a href="/scan/new" class="nav-link">New Scan</a>
+  <a href="/history" class="nav-link">Scan History</a>
+  <a href="/compare" class="nav-link">Compare Scans</a>
+  <a href="/schedules" class="nav-link">Schedules</a>
+  <a href="/export/csv" class="nav-link">Export CSV</a>
+  <div class="nav-section">// CURRENT</div>
+  <a href="#" class="nav-link active">Scan Results</a>
+  <div class="nav-section">// ACCOUNT</div>
+  <a href="/logout" class="nav-link">Logout</a>
   <div class="sidebar-footer">ETHICAL USE ONLY · v1.0.0</div>
 </aside>
 
@@ -132,10 +113,10 @@
   <div class="page-top">
     <div class="page-eyebrow">// SCAN RESULTS</div>
     <div class="page-title">{{ session.target }}</div>
-    <div class="page-meta">SESSION: {{ session.id }} &nbsp;·&nbsp; {{ session.started_at[:19] }} &nbsp;·&nbsp; STATUS: {{ session.status.upper() }}</div>
+    <div class="page-meta">SESSION: {{ session.id }} &nbsp;·&nbsp; {{ session.started_at[:19].replace('T',' ') if session.started_at else '' }} &nbsp;·&nbsp; STATUS: {{ session.status.upper() }}</div>
   </div>
 
-  <!-- Severity summary -->
+  <!-- Severity Summary -->
   <div class="sev-grid">
     {% for sev in ['Critical','High','Medium','Low'] %}
     <div class="sev-card {{ sev }}">
@@ -145,7 +126,57 @@
     {% endfor %}
   </div>
 
-  <!-- Hosts -->
+  <!-- Screenshot Panel -->
+  <div class="panel">
+    <div class="panel-titlebar">
+      <div class="panel-title-left">
+        <div class="tdots"><div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div></div>
+        <span class="panel-title">// TARGET SCREENSHOT</span>
+      </div>
+      <button class="capture-btn" onclick="captureScreenshot()" id="ss-btn">📸 CAPTURE</button>
+    </div>
+    <div class="ss-container">
+      <div class="ss-url-bar">
+        <span>{{ session.target }}</span>
+        <div class="ss-dot" id="ss-dot" style="background:#666;"></div>
+      </div>
+      <div id="ss-content">
+        <img id="ss-img" src="/screenshots/{{ session.id }}"
+             class="ss-img"
+             style="display:none;"
+             onload="document.getElementById('ss-dot').style.background='#28ca41'; this.style.display='block'; document.getElementById('ss-placeholder').style.display='none';"
+             onerror="this.style.display='none'; document.getElementById('ss-placeholder').style.display='flex';">
+        <div class="ss-placeholder" id="ss-placeholder" style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+          <span>No screenshot yet.</span>
+          <span style="font-size:10px;">Click 📸 CAPTURE to take one.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reports Panel -->
+  {% if report_files %}
+  <div class="panel">
+    <div class="panel-titlebar">
+      <div class="panel-title-left">
+        <div class="tdots"><div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div></div>
+        <span class="panel-title">// REPORTS</span>
+      </div>
+    </div>
+    <div style="padding:14px 16px;display:flex;flex-wrap:wrap;">
+      {% for f in report_files %}
+        {% if f.endswith('.html') %}
+        <a href="/report/{{ f }}" target="_blank" class="report-btn report-btn-html">🌐 HTML REPORT</a>
+        {% elif f.endswith('.pdf') %}
+        <a href="/report/{{ f }}" target="_blank" class="report-btn report-btn-pdf">📄 PDF REPORT</a>
+        {% endif %}
+      {% endfor %}
+      <a href="/scan/{{ session.id }}/checklist" target="_blank" class="report-btn report-btn-check">✅ REMEDIATION CHECKLIST</a>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Network Hosts -->
   <div class="panel">
     <div class="panel-titlebar">
       <div class="panel-title-left">
@@ -156,35 +187,31 @@
     </div>
     {% if hosts %}
       {% for host in hosts %}
-      <div class="host-block">
+      <div class="host-card">
         <div class="host-ip">{{ host.ip }}</div>
-        <div class="host-meta">HOSTNAME: {{ host.hostname or 'N/A' }} &nbsp;·&nbsp; OS: {{ host.os or 'UNKNOWN' }}</div>
+        <div class="host-meta">HOSTNAME: {{ host.hostname or 'N/A' }} &nbsp;·&nbsp; OS: {{ host.os or 'Unknown' }}</div>
         {% if host.ports %}
-        <table>
-          <thead><tr><th>PORT</th><th>PROTO</th><th>STATE</th><th>SERVICE</th><th>VERSION</th></tr></thead>
-          <tbody>
-            {% for p in host.ports %}
-            <tr>
-              <td class="td-port">{{ p.port }}</td>
-              <td style="color:var(--text2)">{{ p.protocol }}</td>
-              <td class="td-open">{{ p.state }}</td>
-              <td class="td-svc">{{ p.service }}</td>
-              <td class="td-ver">{{ p.version or 'N/A' }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
+        <table class="port-table">
+          <tr><th>PORT</th><th>PROTO</th><th>STATE</th><th>SERVICE</th><th>VERSION</th></tr>
+          {% for p in host.ports %}
+          <tr>
+            <td style="color:var(--accent);font-weight:bold;">{{ p.port }}</td>
+            <td>{{ p.protocol }}</td>
+            <td class="port-open">{{ p.state }}</td>
+            <td style="color:#fff;">{{ p.service }}</td>
+            <td style="color:var(--text2);font-size:10px;">{{ p.version or 'N/A' }}</td>
+          </tr>
+          {% endfor %}
         </table>
-        {% else %}
-        <p class="empty">NO OPEN PORTS DETECTED</p>
         {% endif %}
       </div>
       {% endfor %}
     {% else %}
-    <p class="empty">NO HOSTS DISCOVERED</p>
+      <div class="empty-state">No hosts discovered.</div>
     {% endif %}
   </div>
 
-  <!-- Web findings -->
+  <!-- Web Findings -->
   <div class="panel">
     <div class="panel-titlebar">
       <div class="panel-title-left">
@@ -195,30 +222,21 @@
     </div>
     {% if web_findings %}
       {% for f in web_findings %}
-      <div class="finding-card">
-        <div class="finding-hdr {{ f.severity }}" onclick="toggleFinding(this)">
-          <div>
-            <div class="finding-type">{{ f.vuln_type }}</div>
-            <div class="finding-host">{{ f.host_ip }} · {{ f.url[:60] }}{% if f.url|length > 60 %}...{% endif %}</div>
-          </div>
-          <span class="sev-badge {{ f.severity }}">{{ f.severity.upper() }}</span>
+      <div class="finding-item">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;">
+          <div class="finding-title">{{ f.vuln_type }}</div>
+          <span class="badge badge-{{ f.severity }}">{{ f.severity }}</span>
         </div>
-        <div class="finding-body">
-          <div class="finding-row">
-            <span class="finding-key">DESCRIPTION</span><span class="finding-val">{{ f.description }}</span>
-            <span class="finding-key">EVIDENCE</span><span class="finding-val"><code>{{ f.evidence[:150] if f.evidence else 'N/A' }}</code></span>
-            <span class="finding-key">FIX</span><span class="finding-val">{{ f.recommendation }}</span>
-            <span class="finding-key">URL</span><span class="finding-val" style="word-break:break-all;font-size:10px">{{ f.url }}</span>
-          </div>
-        </div>
+        <div class="finding-meta">{{ f.host_ip }} &nbsp;·&nbsp; {{ f.url }}</div>
+        {% if f.evidence %}<div class="finding-meta" style="color:var(--accent3);margin-top:4px;font-size:10px;">Evidence: {{ f.evidence[:100] }}</div>{% endif %}
       </div>
       {% endfor %}
     {% else %}
-    <p class="empty">NO WEB VULNERABILITIES DETECTED</p>
+      <div class="empty-state">NO WEB VULNERABILITIES DETECTED</div>
     {% endif %}
   </div>
 
-  <!-- CVE findings -->
+  <!-- CVE Findings -->
   <div class="panel">
     <div class="panel-titlebar">
       <div class="panel-title-left">
@@ -228,61 +246,102 @@
       <span class="panel-count">{{ cve_findings|length }} FINDING(S)</span>
     </div>
     {% if cve_findings %}
-    <table>
-      <thead><tr><th>CVE ID</th><th>HOST</th><th>PORT</th><th>SERVICE</th><th>CVSS</th><th>SEVERITY</th></tr></thead>
-      <tbody>
-        {% for f in cve_findings %}
-        <tr>
-          <td><a href="{{ f.reference }}" target="_blank" class="cve-id-link">{{ f.cve_id }}</a></td>
-          <td style="color:#fff">{{ f.host_ip }}</td>
-          <td class="td-port" style="font-size:14px">{{ f.port }}</td>
-          <td style="font-size:10px;color:var(--text2)">{{ f.service }}</td>
-          <td style="font-family:'VT323',monospace;font-size:18px;color:var(--accent3)">{{ f.cvss_score }}</td>
-          <td><span class="sev-badge {{ f.severity }}">{{ f.severity.upper() }}</span></td>
-        </tr>
-        {% endfor %}
-      </tbody>
+    <table class="cve-table">
+      <tr><th>CVE ID</th><th>HOST</th><th>PORT</th><th>SERVICE</th><th>CVSS</th><th>SEVERITY</th></tr>
+      {% for f in cve_findings %}
+      <tr>
+        <td style="color:var(--accent);font-weight:bold;">{{ f.cve_id }}</td>
+        <td>{{ f.host_ip }}</td>
+        <td>{{ f.port }}</td>
+        <td>{{ f.service }}</td>
+        <td style="color:{% if f.cvss_score|float >= 9 %}#e74c3c{% elif f.cvss_score|float >= 7 %}#e67e22{% else %}#f1c40f{% endif %};font-weight:bold;">{{ f.cvss_score }}</td>
+        <td><span class="badge badge-{{ f.severity }}">{{ f.severity }}</span></td>
+      </tr>
+      {% endfor %}
     </table>
     {% else %}
-    <p class="empty">NO CVE FINDINGS RECORDED</p>
+      <div class="empty-state">NO CVE FINDINGS DETECTED</div>
     {% endif %}
   </div>
+
+  <!-- Target Notes -->
+  <div class="panel">
+    <div class="panel-titlebar">
+      <div class="panel-title-left">
+        <div class="tdots"><div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div></div>
+        <span class="panel-title">// TARGET NOTES</span>
+      </div>
+      <button class="save-btn" onclick="saveNotes()">💾 SAVE NOTES</button>
+    </div>
+    <div style="padding:14px 16px;">
+      <textarea class="notes-area" id="notes-area" placeholder="Add notes about this scan... (client name, remediation status, follow-up actions)"></textarea>
+      <div id="notes-status" style="font-size:10px;color:var(--text2);margin-top:6px;"></div>
+    </div>
+  </div>
+
 </main>
 
 <script>
-function toggleFinding(el) {
-  const body = el.nextElementSibling;
-  body.classList.toggle("open");
+// ── SCREENSHOT ────────────────────────────────────────────────────────────────
+// Try loading existing screenshot on page load
+window.addEventListener("load", () => {
+  const img = document.getElementById("ss-img");
+  img.src = "/screenshots/{{ session.id }}?t=" + Date.now();
+});
+
+async function captureScreenshot() {
+  const btn = document.getElementById("ss-btn");
+  btn.textContent = "⏳ CAPTURING...";
+  btn.disabled = true;
+  try {
+    const res  = await fetch("/api/screenshot/{{ session.id }}", {method:"POST"});
+    const data = await res.json();
+    if (data.success) {
+      const img = document.getElementById("ss-img");
+      img.src = data.url + "?t=" + Date.now();
+      img.style.display = "block";
+      document.getElementById("ss-placeholder").style.display = "none";
+      document.getElementById("ss-dot").style.background = "#28ca41";
+      btn.textContent = "✅ CAPTURED";
+    } else {
+      btn.textContent = "❌ FAILED — RETRY";
+      btn.disabled = false;
+    }
+  } catch(e) {
+    btn.textContent = "❌ ERROR — RETRY";
+    btn.disabled = false;
+  }
 }
 
-// ── NOTES ────────────────────────────────────────
+// ── NOTES ─────────────────────────────────────────────────────────────────────
 async function loadNotes() {
   try {
     const res  = await fetch("/api/notes/{{ session.id }}");
     const data = await res.json();
-    const area = document.getElementById("notes-area");
-    if (area && data.notes) area.value = data.notes;
+    if (data.notes) document.getElementById("notes-area").value = data.notes;
   } catch(e) {}
 }
 
 async function saveNotes() {
-  const notes = document.getElementById("notes-area").value;
+  const notes  = document.getElementById("notes-area").value;
   const status = document.getElementById("notes-status");
   try {
     await fetch("/api/notes/{{ session.id }}", {
-      method: "POST",
-      headers: {"Content-Type":"application/json"},
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
       body: JSON.stringify({notes})
     });
-    status.textContent = "✅ Notes saved successfully";
+    status.textContent = "✅ Notes saved";
     status.style.color = "var(--accent2)";
     setTimeout(() => status.textContent = "", 3000);
   } catch(e) {
-    status.textContent = "❌ Failed to save notes";
+    status.textContent = "❌ Failed to save";
     status.style.color = "var(--accent3)";
   }
 }
 
+// Apply theme
+if (localStorage.getItem("theme") === "light") document.body.classList.add("light");
 loadNotes();
 </script>
 </body>

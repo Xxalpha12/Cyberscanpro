@@ -235,11 +235,14 @@
   </div>
   <nav>
     <div class="nav-section">// NAVIGATION</div>
-    <a href="/" class="nav-link {% if page=='home' %}active{% endif %}">Dashboard</a>
+        <a href="/" class="nav-link {% if page=='home' %}active{% endif %}">Dashboard</a>
     <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}">New Scan</a>
-    <a href="#" class="nav-link">Reports</a>
-    <div class="nav-section">// SYSTEM</div>
-    <a href="#" class="nav-link">Settings</a>
+    <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}">Scan History</a>
+    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}">Compare Scans</a>
+    <a href="/schedules" class="nav-link {% if page=='schedules' %}active{% endif %}">Schedules</a>
+    <a href="/export/csv" class="nav-link">Export CSV</a>
+    <div class="nav-section">// ACCOUNT</div>
+    <a href="/logout" class="nav-link">Logout</a>
   </nav>
   <div class="term-widget">
     <div class="term-titlebar">

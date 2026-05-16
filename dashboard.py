@@ -382,9 +382,21 @@ def delete_scan(session_id):
 @app.route("/report/<filename>")
 @login_required
 def download_report(filename):
-    filepath = os.path.join(OUTPUT_DIR, filename)
+    # Security: only allow safe filenames
+    import re
+    if not re.match(r'^[\w\-\.]+$', filename):
+        abort(400)
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    filepath = os.path.join(output_dir, filename)
     if not os.path.exists(filepath):
         abort(404)
+    # Open PDF in browser, download HTML
+    if filename.endswith(".pdf"):
+        return send_file(filepath, as_attachment=False,
+                        mimetype="application/pdf")
+    elif filename.endswith(".html"):
+        return send_file(filepath, as_attachment=False,
+                        mimetype="text/html")
     return send_file(filepath, as_attachment=True)
 
 
