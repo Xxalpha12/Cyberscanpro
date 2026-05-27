@@ -83,10 +83,31 @@
   .log-body::-webkit-scrollbar { width:4px; }
   .log-body::-webkit-scrollbar-track { background:var(--bg3); }
   .log-body::-webkit-scrollbar-thumb { background:var(--border); border-radius:2px; }
-  .log-line { color:var(--text2); }
-  .log-line.ok { color:var(--accent2); }
-  .log-line.err { color:var(--red); }
-  .log-line.info { color:var(--accent); }
+  /* ── TERMINAL LOG ── */
+  .log-panel { background:#0a0a0a; border:1px solid #333; border-radius:8px; margin-top:16px; overflow:hidden; font-family:"Share Tech Mono",monospace; }
+  .log-titlebar { background:#1a1a1a; padding:8px 14px; display:flex; align-items:center; gap:10px; border-bottom:1px solid #333; }
+  .log-label { font-size:11px; color:#00ff41; letter-spacing:2px; flex:1; }
+  .log-body { background:#0a0a0a; padding:14px 16px; min-height:200px; max-height:400px; overflow-y:auto; font-size:12px; line-height:1.8; }
+  .log-body::-webkit-scrollbar { width:4px; }
+  .log-body::-webkit-scrollbar-track { background:#111; }
+  .log-body::-webkit-scrollbar-thumb { background:#333; border-radius:2px; }
+  .log-line { color:#00b300; display:flex; gap:8px; }
+  .log-line::before { content:">"; color:#00ff41; flex-shrink:0; }
+  .log-line.ok { color:#00ff41; font-weight:bold; }
+  .log-line.ok::before { content:"✓"; color:#00ff41; }
+  .log-line.err { color:#ff4444; }
+  .log-line.err::before { content:"✗"; color:#ff4444; }
+  .log-line.info { color:#00cfff; font-weight:bold; }
+  .log-line.info::before { content:"*"; color:#00cfff; }
+  .log-line.warn { color:#ffaa00; }
+  .log-line.warn::before { content:"!"; color:#ffaa00; }
+  .log-cursor { display:inline-block; width:8px; height:14px; background:#00ff41; animation:blink 1s step-end infinite; vertical-align:middle; margin-left:4px; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  .log-timestamp { color:#444; font-size:10px; margin-right:6px; flex-shrink:0; }
+  .terminal-header { display:flex; align-items:center; gap:6px; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid #1a1a1a; }
+  .terminal-header span { font-size:10px; color:#444; }
+  .terminal-path { color:#00cfff; font-size:11px; }
+  .terminal-prompt { color:#00ff41; font-size:11px; }
   .report-links { display:flex; gap:8px; flex-wrap:wrap; padding:10px 14px; border-top:1px solid var(--border); }
   .report-link { font-size:10px; color:var(--accent4); border:1px solid rgba(168,85,247,0.3); padding:5px 14px; border-radius:3px; text-decoration:none; letter-spacing:1px; transition:all 0.2s; }
   .report-link:hover { background:rgba(168,85,247,0.08); }
@@ -206,14 +227,20 @@
     </div>
   </div>
 
-  <!-- Live log -->
+  <!-- Terminal Live Log -->
   <div class="log-panel" id="log-panel">
     <div class="log-titlebar">
       <div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div>
-      <span class="log-label">// LIVE LOG</span>
+      <span class="log-label">// LIVE LOG — CYBERSCAN PRO v1.0.0</span>
       <span class="status-pill running" id="status-pill">RUNNING</span>
     </div>
-    <div class="log-body" id="log-body"></div>
+    <div class="log-body" id="log-body">
+      <div class="terminal-header">
+        <span class="terminal-path">root@cyberscan:~</span>
+        <span class="terminal-prompt">$</span>
+        <span style="color:#888;">./cyberscan --target [target] --scan full</span>
+      </div>
+    </div>
     <div class="report-links" id="report-links" style="display:none"></div>
   </div>
 </main>
@@ -245,7 +272,11 @@ async function startScan() {
 
   document.getElementById("run-btn").disabled = true;
   document.getElementById("log-panel").style.display = "block";
-  document.getElementById("log-body").innerHTML = "";
+  document.getElementById("log-body").innerHTML = `<div class="terminal-header">
+    <span class="terminal-path">root@cyberscan:~</span>
+    <span class="terminal-prompt">$</span>
+    <span style="color:#888;">./cyberscan --target ${target} --scan full</span>
+  </div><div class="log-line info">Initializing scan engine...</div>`;
   document.getElementById("report-links").style.display = "none";
   document.getElementById("progress-wrap").style.display = "block";
   document.getElementById("progress-fill").style.width = "0%";
@@ -306,15 +337,33 @@ async function pollStatus(sessionId) {
     return;
   }
 
-  // Update log
+  // Update terminal log
   const box = document.getElementById("log-body");
-  box.innerHTML = data.log.map(l => {
+  const header = `<div class="terminal-header">
+    <span class="terminal-path">root@cyberscan:~</span>
+    <span class="terminal-prompt">$</span>
+    <span style="color:#888;">./cyberscan --target scan --full</span>
+  </div>`;
+
+  const lines = data.log.map(l => {
     let cls = "log-line";
-    if (l.includes("complete") || l.includes("saved") || l.includes("successfully")) cls += " ok";
-    else if (l.includes("ERROR") || l.includes("error")) cls += " err";
-    else if (l.includes("Running") || l.includes("Launching")) cls += " info";
-    return `<div class="${cls}">${l}</div>`;
+    // Extract timestamp if present [HH:MM:SS]
+    let ts = "";
+    let msg = l;
+    const tsMatch = l.match(/^\[(\d{2}:\d{2}:\d{2})\]/);
+    if (tsMatch) {
+      ts = `<span class="log-timestamp">[${tsMatch[1]}]</span>`;
+      msg = l.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, "");
+    }
+    if (l.includes("complete") || l.includes("saved") || l.includes("successfully") || l.includes("done")) cls += " ok";
+    else if (l.includes("ERROR") || l.includes("error") || l.includes("failed") || l.includes("skipped")) cls += " err";
+    else if (l.includes("Running") || l.includes("Launching") || l.includes("Starting") || l.includes("scan complete")) cls += " info";
+    else if (l.includes("WARNING") || l.includes("warning") || l.includes("Rate") || l.includes("fallback")) cls += " warn";
+    return `<div class="${cls}">${ts}${msg}</div>`;
   }).join("");
+
+  const cursor = data.status === "running" ? `<div class="log-line"><span class="log-cursor"></span></div>` : "";
+  box.innerHTML = header + lines + cursor;
   box.scrollTop = box.scrollHeight;
 
   // Update progress
