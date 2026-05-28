@@ -180,10 +180,17 @@ class ReportGenerator:
 
     def _context(self):
         counts = self._severity_counts()
+        # Find screenshot path
+        import glob
+        ss_dir  = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output", "screenshots")
+        ss_path = os.path.join(ss_dir, f"screenshot_{self.session_id}.png")
+        ss_exists = os.path.exists(ss_path)
+
         return {
             "report_title":    "Vulnerability Assessment Report",
             "target":          self.target,
             "session_id":      self.session_id,
+            "screenshot_path": ss_path if ss_exists else None,
             "generated_at":    self.generated_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
             "total_hosts":     len(self.hosts),
             "total_findings":  len(self.web_findings) + len(self.cve_findings),
@@ -366,6 +373,38 @@ class ReportGenerator:
             ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
         ]))
         story += [guide, PageBreak()]
+
+        # ── SCREENSHOT ────────────────────────────────────────────────────
+        ss_path = ctx.get("screenshot_path")
+        if ss_path and os.path.exists(ss_path):
+            try:
+                from reportlab.platypus import Image as RLImage
+                story += [Paragraph("Target Screenshot", H1), hr(), sp(0.2),
+                          Paragraph(f"Visual capture of <b>{ctx['target']}</b> at time of scan.", BD)]
+
+                # Browser chrome bar
+                chrome = Table([[
+                    Paragraph(f"  {ctx['target']}", S("URL", fontSize=9,
+                        textColor=colors.HexColor("#888"), fontName="Helvetica"))
+                ]], colWidths=[17*cm])
+                chrome.setStyle(TableStyle([
+                    ("BACKGROUND",    (0,0),(-1,-1), colors.HexColor("#1a1a1a")),
+                    ("TOPPADDING",    (0,0),(-1,-1), 6),
+                    ("BOTTOMPADDING", (0,0),(-1,-1), 6),
+                ]))
+                story.append(chrome)
+
+                # Screenshot image
+                img = RLImage(ss_path, width=17*cm, height=9*cm, kind="proportional")
+                story += [img, sp(0.4), PageBreak()]
+            except Exception as e:
+                logger.warning(f"Could not embed screenshot in PDF: {e}")
+                story += [Paragraph(f"Screenshot available at: /screenshots/{ctx['session_id']}", BD),
+                          PageBreak()]
+        else:
+            story += [Paragraph("Screenshot", H1), hr(), sp(0.2),
+                      Paragraph("No screenshot was captured for this scan. Open the scan results page and click CAPTURE to generate one.", BD),
+                      PageBreak()]
 
         # ── EXECUTIVE SUMMARY ──────────────────────────────────────────────
         story += [Paragraph("Executive Summary", H1), hr(), sp(0.2)]

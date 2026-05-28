@@ -116,6 +116,34 @@
     </div>
   </div>
 
+  <!-- TARGET SCREENSHOT -->
+  <section style="padding:0;overflow:hidden;">
+    <div style="background:var(--navy);padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
+      <h2 style="color:white;border:none;margin:0;padding:0;font-size:15px;">📸 Target Screenshot</h2>
+      <span style="font-size:11px;color:rgba(255,255,255,0.5);">{{ target }}</span>
+    </div>
+    <div style="padding:0;background:#0a0a0a;">
+      <!-- Browser chrome bar -->
+      <div style="background:#1a1a1a;padding:8px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #333;">
+        <div style="display:flex;gap:5px;">
+          <div style="width:10px;height:10px;border-radius:50%;background:#ff5f57;"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#ffbd2e;"></div>
+          <div style="width:10px;height:10px;border-radius:50%;background:#28ca41;"></div>
+        </div>
+        <div style="flex:1;background:#111;border-radius:4px;padding:4px 12px;font-size:11px;color:#888;font-family:monospace;">
+          {{ target if target.startswith('http') else 'http://' + target }}
+        </div>
+      </div>
+      <!-- Screenshot image -->
+      <div id="screenshot-area" style="min-height:200px;display:flex;align-items:center;justify-content:center;">
+        <img src="/screenshots/{{ session_id }}"
+             style="width:100%;display:block;max-height:500px;object-fit:contain;"
+             onload="document.getElementById('screenshot-area').style.background='#000';"
+             onerror="this.parentElement.innerHTML='<div style='padding:40px;text-align:center;color:#444;font-family:monospace;font-size:12px;'>📸 Screenshot not available.<br><span style='font-size:10px;'>Open scan details and click CAPTURE to generate.</span></div>'">
+      </div>
+    </div>
+  </section>
+
   <!-- WHAT THIS REPORT MEANS -->
   <section>
     <h2>📋 What This Report Means — A Simple Guide</h2>
@@ -153,6 +181,29 @@
       <span class="sev-chip sev-{{ sev }}">{{ sev }}: {{ severity_counts[sev] }}</span>
       {% endfor %}
     </div>
+    <div class="risk-guide">
+      <div class="risk-level critical">
+        <div class="rl-score" style="color:#C00000">CRITICAL</div>
+        <div class="rl-label">🚨 Fix in 24h</div>
+        <div class="rl-desc">Attackers can fully compromise the system or steal all data. Fix immediately.</div>
+      </div>
+      <div class="risk-level high">
+        <div class="rl-score" style="color:#E74C3C">HIGH</div>
+        <div class="rl-label">🔴 Fix in 7 days</div>
+        <div class="rl-desc">Significant damage or data breach likely. Fix within one week.</div>
+      </div>
+      <div class="risk-level medium">
+        <div class="rl-score" style="color:#E67E22">MEDIUM</div>
+        <div class="rl-label">🟠 Fix in 30 days</div>
+        <div class="rl-desc">Moderate risk requiring specific conditions to exploit.</div>
+      </div>
+      <div class="risk-level low">
+        <div class="rl-score" style="color:#2980B9">LOW</div>
+        <div class="rl-label">🔵 Fix when possible</div>
+        <div class="rl-desc">Minor risk with limited direct impact on the system.</div>
+      </div>
+    </div>
+
     <p>A vulnerability assessment was conducted against <strong>{{ target }}</strong> on {{ generated_at }}. The scan discovered <strong>{{ total_hosts }}</strong> live host(s) with <strong>{{ total_findings }}</strong> total security findings. The overall risk is rated <span class="risk-badge risk-{{ risk_rating }}">{{ risk_rating }}</span>.</p>
     {% if severity_counts['Critical'] > 0 %}
     <p style="color:#C00000; font-weight:bold; padding:10px; background:#fff0f0; border-radius:4px; border-left:4px solid #C00000;">🚨 {{ severity_counts['Critical'] }} CRITICAL issue(s) found — these require immediate attention within 24 hours to prevent potential compromise.</p>
