@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Targets — CyberScan Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#060c14;--bg2:#0a1220;--bg3:#0f1a2e;--accent:#00c8ff;--accent2:#00ff9d;--accent3:#ff6b35;--text:#a8c4d8;--text2:#3d5a70;--border:rgba(0,200,255,0.12);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Share Tech Mono",monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+  body.light{--bg:#f0f4f8;--bg2:#fff;--bg3:#e8edf2;--text:#2c3e50;--text2:#7f8c8d;--border:rgba(0,100,200,0.15);}
+  .sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);padding:24px 0;flex-shrink:0;display:flex;flex-direction:column;}
+  .sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+  .sidebar-logo h2{font-family:"Rajdhani",sans-serif;font-size:22px;font-weight:700;color:#fff;}
+  .sidebar-logo h2 span{color:var(--accent);}
+  .sidebar-logo p{font-size:9px;color:var(--text2);}
+  .nav-section{padding:6px 20px;font-size:8px;letter-spacing:3px;color:var(--text2);margin-top:10px;}
+  .nav-link{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--text2);text-decoration:none;font-size:11px;letter-spacing:1px;transition:all 0.2s;border-left:2px solid transparent;}
+  .nav-link:hover,.nav-link.active{color:var(--accent);border-left-color:var(--accent);background:rgba(0,200,255,0.03);}
+  .nav-icon{font-size:13px;width:16px;text-align:center;}
+  .sidebar-footer{padding:16px 20px;font-size:9px;color:var(--text2);border-top:1px solid var(--border);margin-top:auto;}
+  .main{flex:1;padding:32px;overflow-y:auto;}
+  .page-eyebrow{font-size:8px;letter-spacing:4px;color:var(--text2);margin-bottom:8px;}
+  .page-title{font-family:"Rajdhani",sans-serif;font-size:30px;font-weight:700;color:#fff;margin-bottom:6px;}
+  .page-sub{font-size:11px;color:var(--text2);margin-bottom:24px;}
+  .top-bar{display:flex;gap:12px;margin-bottom:24px;align-items:center;}
+  .filter-input{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 12px;color:var(--text);font-family:"Share Tech Mono",monospace;font-size:11px;outline:none;flex:1;}
+  .filter-input:focus{border-color:var(--accent);}
+  .btn{padding:8px 16px;background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.3);border-radius:4px;font-family:"Share Tech Mono",monospace;font-size:11px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;}
+  .btn:hover{background:rgba(0,200,255,0.2);}
+  .btn-scan{background:rgba(0,255,157,0.1);color:var(--accent2);border-color:rgba(0,255,157,0.3);}
+  .btn-danger{background:rgba(255,60,60,0.1);color:#ff4444;border-color:rgba(255,60,60,0.3);}
+  .targets-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;}
+  .target-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;transition:all 0.2s;}
+  .target-card:hover{border-color:rgba(0,200,255,0.3);transform:translateY(-2px);}
+  .target-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;}
+  .target-name{font-family:"Rajdhani",sans-serif;font-size:18px;font-weight:700;color:#fff;}
+  .target-ip{font-size:10px;color:var(--text2);margin-top:2px;}
+  .risk-pill{padding:4px 12px;border-radius:20px;font-size:9px;font-weight:bold;letter-spacing:1px;}
+  .risk-CRITICAL{background:rgba(192,0,0,0.2);color:#e74c3c;border:1px solid rgba(192,0,0,0.3);}
+  .risk-HIGH{background:rgba(230,100,0,0.2);color:#e67e22;border:1px solid rgba(230,100,0,0.3);}
+  .risk-MEDIUM{background:rgba(230,180,0,0.2);color:#f1c40f;border:1px solid rgba(230,180,0,0.3);}
+  .risk-LOW{background:rgba(0,150,220,0.2);color:#2980b9;border:1px solid rgba(0,150,220,0.3);}
+  .risk-NONE{background:rgba(100,100,100,0.2);color:#888;border:1px solid rgba(100,100,100,0.3);}
+  .target-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
+  .target-stat{text-align:center;background:var(--bg3);border-radius:4px;padding:8px 4px;}
+  .target-stat-num{font-family:"Rajdhani",sans-serif;font-size:20px;font-weight:700;}
+  .target-stat-label{font-size:8px;color:var(--text2);letter-spacing:1px;}
+  .target-trend{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);margin-bottom:14px;}
+  .trend-up{color:#e74c3c;}
+  .trend-down{color:var(--accent2);}
+  .trend-same{color:var(--text2);}
+  .target-scans{margin-bottom:14px;}
+  .scan-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(0,200,255,0.05);font-size:10px;}
+  .scan-row:last-child{border-bottom:none;}
+  .scan-date{color:var(--text2);}
+  .scan-badge{padding:2px 8px;border-radius:3px;font-size:9px;font-weight:bold;}
+  .scan-completed{background:rgba(0,255,157,0.1);color:var(--accent2);}
+  .scan-error{background:rgba(255,60,60,0.1);color:#ff4444;}
+  .target-actions{display:flex;gap:8px;}
+  .empty{text-align:center;padding:60px;color:var(--text2);}
+  @media(max-width:768px){body{flex-direction:column;}.sidebar{width:100%;}.targets-grid{grid-template-columns:1fr;}.main{padding:16px;}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>CyberScan<span>Pro</span></h2>
+    <p>FUPRE · FYP · OBEH E.O</p>
+  </div>
+  <div class="nav-section">// ASSESSMENT</div>
+  <a href="/" class="nav-link"><span class="nav-icon">⬡</span> Dashboard</a>
+  <a href="/scan/new" class="nav-link"><span class="nav-icon">▶</span> New Scan</a>
+  <a href="/history" class="nav-link"><span class="nav-icon">☰</span> Scan History</a>
+  <a href="/reports" class="nav-link"><span class="nav-icon">📄</span> Reports</a>
+  <div class="nav-section">// ANALYSIS</div>
+  <a href="/compare" class="nav-link"><span class="nav-icon">⇄</span> Compare Scans</a>
+  <a href="/targets" class="nav-link active"><span class="nav-icon">◎</span> Targets</a>
+  <div class="nav-section">// SYSTEM</div>
+  <a href="/schedules" class="nav-link"><span class="nav-icon">⏱</span> Schedules</a>
+  <a href="/settings" class="nav-link"><span class="nav-icon">⚙</span> Settings</a>
+  <div class="nav-section">// ACCOUNT</div>
+  <a href="/logout" class="nav-link"><span class="nav-icon">→</span> Logout</a>
+  <div class="sidebar-footer">ETHICAL USE ONLY · v1.0.0</div>
+</aside>
+
+<div class="main">
+  <div class="page-eyebrow">// TARGETS</div>
+  <div class="page-title">Scan Targets</div>
+  <div class="page-sub">All unique targets scanned — with history, risk trends, and quick scan access</div>
+
+  <div class="top-bar">
+    <input class="filter-input" type="text" id="search" placeholder="Search targets..." oninput="filterTargets()">
+    <a href="/scan/new" class="btn btn-scan">▶ NEW SCAN</a>
+  </div>
+
+  <div class="targets-grid" id="targets-grid">
+    {% if targets %}
+      {% for t in targets %}
+      <div class="target-card" data-name="{{ t.name }}">
+        <div class="target-header">
+          <div>
+            <div class="target-name">{{ t.name }}</div>
+            <div class="target-ip">{{ t.ip or 'IP not resolved' }} · {{ t.scan_count }} scan(s)</div>
+          </div>
+          <span class="risk-pill risk-{{ t.latest_risk }}">{{ t.latest_risk }}</span>
+        </div>
+
+        <!-- Stats -->
+        <div class="target-stats">
+          <div class="target-stat">
+            <div class="target-stat-num" style="color:#e74c3c;">{{ t.total_critical }}</div>
+            <div class="target-stat-label">CRITICAL</div>
+          </div>
+          <div class="target-stat">
+            <div class="target-stat-num" style="color:#e67e22;">{{ t.total_high }}</div>
+            <div class="target-stat-label">HIGH</div>
+          </div>
+          <div class="target-stat">
+            <div class="target-stat-num" style="color:#f1c40f;">{{ t.total_medium }}</div>
+            <div class="target-stat-label">MEDIUM</div>
+          </div>
+          <div class="target-stat">
+            <div class="target-stat-num" style="color:#2980b9;">{{ t.total_low }}</div>
+            <div class="target-stat-label">LOW</div>
+          </div>
+        </div>
+
+        <!-- Risk Trend -->
+        <div class="target-trend">
+          {% if t.trend == 'worse' %}
+          <span class="trend-up">↑</span> Risk increasing — more vulnerabilities found in latest scan
+          {% elif t.trend == 'better' %}
+          <span class="trend-down">↓</span> Risk improving — fewer vulnerabilities than previous scan
+          {% else %}
+          <span class="trend-same">→</span> Risk stable — similar findings across scans
+          {% endif %}
+        </div>
+
+        <!-- Recent Scans -->
+        <div class="target-scans">
+          <div style="font-size:9px;letter-spacing:2px;color:var(--text2);margin-bottom:8px;">RECENT SCANS</div>
+          {% for s in t.recent_scans[:3] %}
+          <div class="scan-row">
+            <span class="scan-date">{{ s.started_at[:16].replace('T',' ') if s.started_at else 'N/A' }}</span>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <span>{{ s.total_findings }} findings</span>
+              <span class="scan-badge scan-{{ s.status }}">{{ s.status.upper() }}</span>
+              <a href="/scan/{{ s.id }}" style="color:var(--accent);font-size:10px;text-decoration:none;">VIEW</a>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+
+        <!-- Actions -->
+        <div class="target-actions">
+          <a href="/scan/new?target={{ t.name }}" class="btn btn-scan" style="flex:1;justify-content:center;">▶ SCAN NOW</a>
+          <a href="/history?target={{ t.name }}" class="btn" style="flex:1;justify-content:center;">☰ HISTORY</a>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <div class="empty" style="grid-column:1/-1;">
+        <div style="font-size:40px;">◎</div>
+        <p style="margin-top:12px;">No targets scanned yet.</p>
+        <p style="margin-top:8px;"><a href="/scan/new" style="color:var(--accent);">Run your first scan →</a></p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<script>
+function filterTargets() {
+  const q = document.getElementById("search").value.toLowerCase();
+  document.querySelectorAll(".target-card").forEach(card => {
+    card.style.display = card.dataset.name.toLowerCase().includes(q) ? "" : "none";
+  });
+}
+if (localStorage.getItem("theme") === "light") document.body.classList.add("light");
+</script>
+</body>
+</html>

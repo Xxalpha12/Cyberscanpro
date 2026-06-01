@@ -17,6 +17,7 @@
   .sidebar-logo p { font-size:9px; color:var(--text2); }
   .nav-section { padding:6px 20px; font-size:8px; letter-spacing:3px; color:var(--text2); margin-top:10px; }
   .nav-link { display:flex; align-items:center; gap:10px; padding:9px 20px; color:var(--text2); text-decoration:none; font-size:11px; letter-spacing:1px; transition:all 0.2s; border-left:2px solid transparent; }
+    .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
   .nav-link:hover, .nav-link.active { color:var(--accent); border-left-color:var(--accent); }
   .main { flex:1; padding:32px; overflow-y:auto; }
   .page-eyebrow { font-size:8px; letter-spacing:4px; color:var(--text2); margin-bottom:8px; }
@@ -56,14 +57,19 @@
     <h2>CyberScan<span>Pro</span></h2>
     <p>FUPRE · FYP · OBEH E.O</p>
   </div>
-  <div class="nav-section">// NAVIGATION</div>
-  <a href="/" class="nav-link">Dashboard</a>
-  <a href="/scan/new" class="nav-link">New Scan</a>
-  <a href="/compare" class="nav-link active">Compare Scans</a>
-  <a href="/schedules" class="nav-link">Schedules</a>
-  <a href="/export/csv" class="nav-link">Reports</a>
+  <div class="nav-section">// ASSESSMENT</div>
+  <a href="/" class="nav-link {%% if page=='home' %%}active{%% endif %%}"><span class="nav-icon">⬡</span> Dashboard</a>
+  <a href="/scan/new" class="nav-link {%% if page=='new_scan' %%}active{%% endif %%}"><span class="nav-icon">▶</span> New Scan</a>
+  <a href="/history" class="nav-link {%% if page=='history' %%}active{%% endif %%}"><span class="nav-icon">☰</span> Scan History</a>
+  <a href="/reports" class="nav-link {%% if page=='reports' %%}active{%% endif %%}"><span class="nav-icon">📄</span> Reports</a>
+  <div class="nav-section">// ANALYSIS</div>
+  <a href="/compare" class="nav-link {%% if page=='compare' %%}active{%% endif %%}"><span class="nav-icon">⇄</span> Compare Scans</a>
+  <a href="/targets" class="nav-link {%% if page=='targets' %%}active{%% endif %%}"><span class="nav-icon">◎</span> Targets</a>
+  <div class="nav-section">// SYSTEM</div>
+  <a href="/schedules" class="nav-link {%% if page=='schedules' %%}active{%% endif %%}"><span class="nav-icon">⏱</span> Schedules</a>
+  <a href="/settings" class="nav-link {%% if page=='settings' %%}active{%% endif %%}"><span class="nav-icon">⚙</span> Settings</a>
   <div class="nav-section">// ACCOUNT</div>
-  <a href="/logout" class="nav-link">Logout</a>
+  <a href="/logout" class="nav-link"><span class="nav-icon">→</span> Logout</a>
 </aside>
 
 <div class="main">

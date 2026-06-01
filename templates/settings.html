@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings — CyberScan Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#060c14;--bg2:#0a1220;--bg3:#0f1a2e;--accent:#00c8ff;--accent2:#00ff9d;--accent3:#ff6b35;--text:#a8c4d8;--text2:#3d5a70;--border:rgba(0,200,255,0.12);}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:"Share Tech Mono",monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
+  body.light{--bg:#f0f4f8;--bg2:#fff;--bg3:#e8edf2;--text:#2c3e50;--text2:#7f8c8d;--border:rgba(0,100,200,0.15);}
+  .sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);padding:24px 0;flex-shrink:0;display:flex;flex-direction:column;}
+  .sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+  .sidebar-logo h2{font-family:"Rajdhani",sans-serif;font-size:22px;font-weight:700;color:#fff;}
+  .sidebar-logo h2 span{color:var(--accent);}
+  .sidebar-logo p{font-size:9px;color:var(--text2);}
+  .nav-section{padding:6px 20px;font-size:8px;letter-spacing:3px;color:var(--text2);margin-top:10px;}
+  .nav-link{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--text2);text-decoration:none;font-size:11px;letter-spacing:1px;transition:all 0.2s;border-left:2px solid transparent;}
+  .nav-link:hover,.nav-link.active{color:var(--accent);border-left-color:var(--accent);background:rgba(0,200,255,0.03);}
+  .nav-icon{font-size:13px;width:16px;text-align:center;}
+  .sidebar-footer{padding:16px 20px;font-size:9px;color:var(--text2);border-top:1px solid var(--border);margin-top:auto;}
+  .main{flex:1;padding:32px;overflow-y:auto;max-width:900px;}
+  .page-eyebrow{font-size:8px;letter-spacing:4px;color:var(--text2);margin-bottom:8px;}
+  .page-title{font-family:"Rajdhani",sans-serif;font-size:30px;font-weight:700;color:#fff;margin-bottom:6px;}
+  .page-sub{font-size:11px;color:var(--text2);margin-bottom:28px;}
+  .settings-section{background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:20px;overflow:hidden;}
+  .section-header{padding:14px 20px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+  .section-icon{font-size:16px;}
+  .section-title{font-family:"Rajdhani",sans-serif;font-size:16px;font-weight:700;color:#fff;}
+  .section-sub{font-size:10px;color:var(--text2);margin-left:auto;}
+  .setting-row{padding:16px 20px;border-bottom:1px solid rgba(0,200,255,0.05);display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:center;}
+  .setting-row:last-child{border-bottom:none;}
+  .setting-label{font-size:11px;color:#fff;font-weight:bold;margin-bottom:4px;}
+  .setting-desc{font-size:10px;color:var(--text2);line-height:1.5;}
+  .setting-control{display:flex;flex-direction:column;gap:6px;}
+  .setting-input{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 12px;color:var(--text);font-family:"Share Tech Mono",monospace;font-size:11px;outline:none;width:100%;}
+  .setting-input:focus{border-color:var(--accent);}
+  .setting-input.masked{-webkit-text-security:disc;}
+  .status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;}
+  .status-ok{background:var(--accent2);}
+  .status-warn{background:var(--accent3);}
+  .status-err{background:#e74c3c;}
+  .btn{padding:8px 16px;background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.3);border-radius:4px;font-family:"Share Tech Mono",monospace;font-size:11px;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:6px;}
+  .btn:hover{background:rgba(0,200,255,0.2);}
+  .btn-save{background:rgba(0,255,157,0.1);color:var(--accent2);border-color:rgba(0,255,157,0.3);}
+  .btn-test{background:rgba(255,165,0,0.1);color:orange;border-color:rgba(255,165,0,0.3);}
+  .btn-danger{background:rgba(255,60,60,0.1);color:#ff4444;border-color:rgba(255,60,60,0.3);}
+  .toggle{position:relative;display:inline-block;width:44px;height:22px;}
+  .toggle input{opacity:0;width:0;height:0;}
+  .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--bg3);border:1px solid var(--border);border-radius:22px;transition:0.3s;}
+  .toggle-slider:before{position:absolute;content:"";height:16px;width:16px;left:2px;bottom:2px;background:var(--text2);border-radius:50%;transition:0.3s;}
+  input:checked + .toggle-slider{background:rgba(0,200,255,0.2);border-color:var(--accent);}
+  input:checked + .toggle-slider:before{transform:translateX(22px);background:var(--accent);}
+  .info-badge{display:inline-block;padding:3px 10px;border-radius:3px;font-size:9px;background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.2);}
+  .warn-badge{background:rgba(255,107,53,0.1);color:var(--accent3);border-color:rgba(255,107,53,0.2);}
+  .ok-badge{background:rgba(0,255,157,0.1);color:var(--accent2);border-color:rgba(0,255,157,0.2);}
+  .msg{font-size:10px;padding:8px 12px;border-radius:4px;margin-top:8px;display:none;}
+  .msg.show{display:block;}
+  .msg-ok{background:rgba(0,255,157,0.1);color:var(--accent2);border:1px solid rgba(0,255,157,0.2);}
+  .msg-err{background:rgba(255,60,60,0.1);color:#ff4444;border:1px solid rgba(255,60,60,0.2);}
+  @media(max-width:768px){body{flex-direction:column;}.sidebar{width:100%;}.setting-row{grid-template-columns:1fr;}.main{padding:16px;}}
+</style>
+</head>
+<body>
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h2>CyberScan<span>Pro</span></h2>
+    <p>FUPRE · FYP · OBEH E.O</p>
+  </div>
+  <div class="nav-section">// ASSESSMENT</div>
+  <a href="/" class="nav-link"><span class="nav-icon">⬡</span> Dashboard</a>
+  <a href="/scan/new" class="nav-link"><span class="nav-icon">▶</span> New Scan</a>
+  <a href="/history" class="nav-link"><span class="nav-icon">☰</span> Scan History</a>
+  <a href="/reports" class="nav-link"><span class="nav-icon">📄</span> Reports</a>
+  <div class="nav-section">// ANALYSIS</div>
+  <a href="/compare" class="nav-link"><span class="nav-icon">⇄</span> Compare Scans</a>
+  <a href="/targets" class="nav-link"><span class="nav-icon">◎</span> Targets</a>
+  <div class="nav-section">// SYSTEM</div>
+  <a href="/schedules" class="nav-link"><span class="nav-icon">⏱</span> Schedules</a>
+  <a href="/settings" class="nav-link active"><span class="nav-icon">⚙</span> Settings</a>
+  <div class="nav-section">// ACCOUNT</div>
+  <a href="/logout" class="nav-link"><span class="nav-icon">→</span> Logout</a>
+  <div class="sidebar-footer">ETHICAL USE ONLY · v1.0.0</div>
+</aside>
+
+<div class="main">
+  <div class="page-eyebrow">// SETTINGS</div>
+  <div class="page-title">System Configuration</div>
+  <div class="page-sub">Configure CyberScan Pro — API keys, email, scanning preferences, and account settings</div>
+
+  <!-- System Status -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">⬡</span>
+      <span class="section-title">System Status</span>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Scan Engine</div>
+        <div class="setting-desc">Network scanning backend currently in use</div>
+      </div>
+      <div>
+        <span class="status-dot {{ 'status-ok' if nmap_available else 'status-warn' }}"></span>
+        {% if nmap_available %}
+        <span class="ok-badge">Nmap Available</span>
+        {% else %}
+        <span class="warn-badge">Socket Mode (Nmap not available on cloud)</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Database</div>
+        <div class="setting-desc">Storage backend for scan data</div>
+      </div>
+      <div>
+        <span class="status-dot status-ok"></span>
+        {% if use_postgres %}
+        <span class="ok-badge">PostgreSQL (Persistent)</span>
+        {% else %}
+        <span class="warn-badge">SQLite (Local — data may reset on redeploy)</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">NVD API</div>
+        <div class="setting-desc">National Vulnerability Database connection</div>
+      </div>
+      <div>
+        <span class="status-dot {{ 'status-ok' if nvd_key else 'status-warn' }}"></span>
+        {% if nvd_key %}
+        <span class="ok-badge">API Key Configured</span>
+        {% else %}
+        <span class="warn-badge">No API Key — Rate Limited (5 requests/30s)</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Email (SMTP)</div>
+        <div class="setting-desc">Report email delivery status</div>
+      </div>
+      <div>
+        <span class="status-dot {{ 'status-ok' if smtp_configured else 'status-err' }}"></span>
+        {% if smtp_configured %}
+        <span class="ok-badge">Configured — {{ smtp_user }}</span>
+        {% else %}
+        <span class="warn-badge">Not configured — set SMTP vars in Render</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Screenshot API</div>
+        <div class="setting-desc">Visual screenshot capture service</div>
+      </div>
+      <div>
+        <span class="status-dot {{ 'status-ok' if screenshot_key else 'status-warn' }}"></span>
+        {% if screenshot_key %}
+        <span class="ok-badge">Configured</span>
+        {% else %}
+        <span class="warn-badge">No key — using text preview fallback</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- API Keys -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">🔑</span>
+      <span class="section-title">API Keys</span>
+      <span class="section-sub">Set these in Render → Environment Variables</span>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">NVD API Key</div>
+        <div class="setting-desc">Get a free key at nvd.nist.gov/developers/request-an-api-key<br>Increases rate limit from 5 to 50 requests per 30 seconds</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: NVD_API_KEY</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">
+          {{ '✅ Configured' if nvd_key else '❌ Not set' }}
+        </div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Screenshot API Key</div>
+        <div class="setting-desc">Get a free key at screenshotone.com<br>Enables real browser screenshots instead of text preview</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: SCREENSHOT_API_KEY</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">
+          {{ '✅ Configured' if screenshot_key else '❌ Not set' }}
+        </div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Sync API Key</div>
+        <div class="setting-desc">Secures the local-to-cloud sync endpoint<br>Set same key on both local and cloud instances</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: SYNC_API_KEY</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">
+          {{ '✅ Configured' if sync_key else '❌ Not set' }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Email Configuration -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">📧</span>
+      <span class="section-title">Email Configuration</span>
+      <span class="section-sub">Set these in Render → Environment Variables</span>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">SMTP Host</div>
+        <div class="setting-desc">Mail server address</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: SMTP_HOST</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">Example: smtp.gmail.com</div>
+        <div style="font-size:10px;color:var(--text2);">Current: {{ smtp_host or 'Not set' }}</div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">SMTP Port</div>
+        <div class="setting-desc">Mail server port (587 for TLS, 465 for SSL)</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: SMTP_PORT</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">Current: {{ smtp_port or '587 (default)' }}</div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">SMTP Username</div>
+        <div class="setting-desc">Your Gmail address</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: SMTP_USER</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">Current: {{ smtp_user or 'Not set' }}</div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">SMTP Password</div>
+        <div class="setting-desc">Gmail App Password (not your regular password)<br>Get it: Google Account → Security → App Passwords</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: SMTP_PASS</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">{{ '✅ Configured' if smtp_pass else '❌ Not set' }}</div>
+      </div>
+    </div>
+    <div style="padding:14px 20px;">
+      <button class="btn btn-test" onclick="testEmail()">📧 SEND TEST EMAIL</button>
+      <input class="setting-input" id="test-email" placeholder="Enter email to test..." style="width:260px;margin-left:10px;">
+      <div class="msg" id="email-msg"></div>
+    </div>
+  </div>
+
+  <!-- Scan Settings -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">⚡</span>
+      <span class="section-title">Scan Settings</span>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Max Concurrent Threads</div>
+        <div class="setting-desc">Number of parallel port scan threads<br>Higher = faster but more resource intensive</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: SCAN_THREADS</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">Current: {{ scan_threads or '100' }} threads</div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Max CIDR Hosts</div>
+        <div class="setting-desc">Maximum hosts to scan in a CIDR range<br>Prevents timeouts on large subnets</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: MAX_CIDR_HOSTS</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">Current: {{ max_cidr or '50' }} hosts</div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Scan Timeout</div>
+        <div class="setting-desc">Maximum seconds to wait for each port response</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: SCAN_TIMEOUT</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">Current: {{ scan_timeout or '1' }} second(s)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Settings -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">👤</span>
+      <span class="section-title">Account Settings</span>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Login Username</div>
+        <div class="setting-desc">Username for CyberScan Pro dashboard login</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: NETSCAN_USER</div>
+        <div style="font-size:10px;color:var(--text2);margin-top:4px;">Current: {{ login_user or 'admin' }}</div>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Login Password</div>
+        <div class="setting-desc">Password for dashboard login<br>Change from default "admin123" immediately</div>
+      </div>
+      <div class="setting-control">
+        <div class="info-badge">Render Env: NETSCAN_PASS</div>
+        {% if login_pass == 'admin123' %}
+        <div style="font-size:10px;color:#e74c3c;margin-top:4px;">⚠️ Using default password — change this!</div>
+        {% else %}
+        <div style="font-size:10px;color:var(--accent2);margin-top:4px;">✅ Custom password set</div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <div class="settings-section">
+    <div class="section-header">
+      <span class="section-icon">ℹ️</span>
+      <span class="section-title">About CyberScan Pro</span>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Version</div>
+        <div class="setting-desc">Current system version</div>
+      </div>
+      <div><span class="info-badge">v1.0.0</span></div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Author</div>
+        <div class="setting-desc">Developed as FUPRE Final Year Project</div>
+      </div>
+      <div style="font-size:11px;color:var(--text);">Obeh Emmanuel Onoriode<br><span style="color:var(--text2);font-size:10px;">COS/9581/2022 · Computer Science · FUPRE</span></div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Live URL</div>
+        <div class="setting-desc">Public deployment</div>
+      </div>
+      <div>
+        <a href="https://netscanpro-6pci.onrender.com" target="_blank"
+           style="color:var(--accent);font-size:11px;">netscanpro-6pci.onrender.com</a>
+      </div>
+    </div>
+    <div class="setting-row">
+      <div>
+        <div class="setting-label">Source Code</div>
+        <div class="setting-desc">GitHub repository</div>
+      </div>
+      <div>
+        <a href="https://github.com/Xxalpha12/Cyberscanpro" target="_blank"
+           style="color:var(--accent);font-size:11px;">github.com/Xxalpha12/Cyberscanpro</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+async function testEmail() {
+  const email = document.getElementById("test-email").value;
+  const msg   = document.getElementById("email-msg");
+  if (!email) { msg.textContent = "Enter an email address first."; msg.className="msg msg-err show"; return; }
+  msg.textContent = "Sending test email..."; msg.className="msg msg-ok show";
+  try {
+    const res  = await fetch("/api/test-email", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({email})
+    });
+    const data = await res.json();
+    if (data.success) {
+      msg.textContent = "✅ Test email sent! Check your inbox.";
+      msg.className = "msg msg-ok show";
+    } else {
+      msg.textContent = "❌ Failed: " + (data.error || "SMTP not configured in Render environment variables.");
+      msg.className = "msg msg-err show";
+    }
+  } catch(e) {
+    msg.textContent = "❌ Error: " + e.message;
+    msg.className = "msg msg-err show";
+  }
+}
+if (localStorage.getItem("theme") === "light") document.body.classList.add("light");
+</script>
+</body>
+</html>

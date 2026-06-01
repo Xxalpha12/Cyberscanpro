@@ -885,5 +885,219 @@ def risk_chart_data():
     return jsonify(chart_data)
 
 
+
+# ── REPORTS PAGE ─────────────────────────────────────────────────────────────
+
+@app.route("/reports")
+@login_required
+def reports_page():
+    import glob, os
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    os.makedirs(output_dir, exist_ok=True)
+
+    db = Database()
+    sessions = db.get_all_sessions()
+    db.close()
+
+    # Build session lookup for risk ratings
+    session_risks = {}
+    session_targets = {}
+    db2 = Database()
+    for s in sessions:
+        counts = db2.get_severity_counts(s["id"])
+        risk = "CRITICAL" if counts["Critical"] > 0 else                "HIGH"     if counts["High"] > 0     else                "MEDIUM"   if counts["Medium"] > 0   else                "LOW"      if counts["Low"] > 0       else "NONE"
+        session_risks[s["id"]]   = risk
+        session_targets[s["id"]] = s["target"]
+    db2.close()
+
+    # Scan output directory for report files
+    reports = []
+    if os.path.exists(output_dir):
+        for f in sorted(os.listdir(output_dir), reverse=True):
+            if not (f.endswith(".pdf") or f.endswith(".html")):
+                continue
+            filepath = os.path.join(output_dir, f)
+            size_kb  = os.path.getsize(filepath) // 1024
+
+            # Extract session_id from filename
+            parts = f.replace("cyberscanpro_report_","").replace("netscampro_report_","").split("_")
+            session_id = parts[0] if parts else ""
+
+            # Determine type
+            if f.endswith(".pdf"):
+                rtype = "pdf"
+            elif "checklist" in f.lower():
+                rtype = "checklist"
+            else:
+                rtype = "html"
+
+            # Get date from filename or file mtime
+            try:
+                import datetime
+                mtime = os.path.getmtime(filepath)
+                date  = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+            except:
+                date = "Unknown"
+
+            reports.append({
+                "filename":   f,
+                "type":       rtype,
+                "target":     session_targets.get(session_id, session_id[:8] if session_id else "Unknown"),
+                "session_id": session_id,
+                "risk":       session_risks.get(session_id, "NONE"),
+                "date":       date,
+                "size":       f"{size_kb} KB",
+            })
+
+    pdf_count   = sum(1 for r in reports if r["type"] == "pdf")
+    html_count  = sum(1 for r in reports if r["type"] == "html")
+    sess_ids    = set(r["session_id"] for r in reports)
+
+    return render_template("reports.html",
+        reports=reports,
+        total_reports=len(reports),
+        pdf_count=pdf_count,
+        html_count=html_count,
+        sessions_with_reports=len(sess_ids),
+        page="reports", title="Reports"
+    )
+
+
+@app.route("/api/report/<filename>/delete", methods=["POST"])
+@login_required
+def delete_report(filename):
+    import re
+    if not re.match(r"^[\w\-\.]+$", filename):
+        return jsonify({"error": "Invalid filename"}), 400
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    filepath   = os.path.join(output_dir, filename)
+    if os.path.exists(filepath):
+        os.remove(filepath)
+        return jsonify({"success": True})
+    return jsonify({"error": "File not found"}), 404
+
+
+# ── TARGETS PAGE ──────────────────────────────────────────────────────────────
+
+@app.route("/targets")
+@login_required
+def targets_page():
+    db = Database()
+    sessions = db.get_all_sessions()
+
+    # Group sessions by target
+    target_map = {}
+    for s in sessions:
+        tgt = s["target"]
+        if tgt not in target_map:
+            target_map[tgt] = []
+        target_map[tgt].append(s)
+
+    targets = []
+    for tgt, scans in target_map.items():
+        # Get findings for each scan
+        total_c = total_h = total_m = total_l = 0
+        latest_risk = "NONE"
+        latest_ip   = ""
+
+        for s in scans:
+            counts = db.get_severity_counts(s["id"])
+            total_c += counts["Critical"]
+            total_h += counts["High"]
+            total_m += counts["Medium"]
+            total_l += counts["Low"]
+
+        # Latest scan risk
+        if scans:
+            latest = scans[0]
+            counts = db.get_severity_counts(latest["id"])
+            latest_risk = "CRITICAL" if counts["Critical"] > 0 else                           "HIGH"     if counts["High"] > 0     else                           "MEDIUM"   if counts["Medium"] > 0   else                           "LOW"      if counts["Low"] > 0       else "NONE"
+            # Get IP from hosts
+            hosts = db.get_hosts(latest["id"])
+            if hosts:
+                latest_ip = hosts[0].get("ip","")
+
+        # Risk trend (compare last 2 scans)
+        trend = "stable"
+        if len(scans) >= 2:
+            c1 = db.get_severity_counts(scans[0]["id"])
+            c2 = db.get_severity_counts(scans[1]["id"])
+            score1 = c1["Critical"]*25 + c1["High"]*10 + c1["Medium"]*5 + c1["Low"]*1
+            score2 = c2["Critical"]*25 + c2["High"]*10 + c2["Medium"]*5 + c2["Low"]*1
+            if score1 > score2:
+                trend = "worse"
+            elif score1 < score2:
+                trend = "better"
+
+        # Add total_findings to each scan
+        enriched_scans = []
+        for s in scans:
+            total = db.get_total_findings(s["id"])
+            enriched_scans.append({**dict(s), "total_findings": total})
+
+        targets.append({
+            "name":           tgt,
+            "ip":             latest_ip,
+            "scan_count":     len(scans),
+            "latest_risk":    latest_risk,
+            "total_critical": total_c,
+            "total_high":     total_h,
+            "total_medium":   total_m,
+            "total_low":      total_l,
+            "trend":          trend,
+            "recent_scans":   enriched_scans[:5],
+        })
+
+    # Sort by latest risk severity
+    risk_order = {"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3,"NONE":4}
+    targets.sort(key=lambda x: risk_order.get(x["latest_risk"], 4))
+
+    db.close()
+    return render_template("targets.html",
+        targets=targets,
+        page="targets", title="Targets"
+    )
+
+
+# ── SETTINGS PAGE ─────────────────────────────────────────────────────────────
+
+@app.route("/settings")
+@login_required
+def settings_page():
+    import shutil
+    return render_template("settings.html",
+        nmap_available    = bool(shutil.which("nmap")),
+        use_postgres      = bool(os.environ.get("DATABASE_URL","")),
+        nvd_key           = bool(os.environ.get("NVD_API_KEY","")),
+        smtp_configured   = bool(os.environ.get("SMTP_USER","") and os.environ.get("SMTP_PASS","")),
+        smtp_host         = os.environ.get("SMTP_HOST","smtp.gmail.com"),
+        smtp_port         = os.environ.get("SMTP_PORT","587"),
+        smtp_user         = os.environ.get("SMTP_USER",""),
+        smtp_pass         = os.environ.get("SMTP_PASS",""),
+        screenshot_key    = bool(os.environ.get("SCREENSHOT_API_KEY","")),
+        sync_key          = bool(os.environ.get("SYNC_API_KEY","")),
+        scan_threads      = os.environ.get("SCAN_THREADS","100"),
+        max_cidr          = os.environ.get("MAX_CIDR_HOSTS","50"),
+        scan_timeout      = os.environ.get("SCAN_TIMEOUT","1"),
+        login_user        = os.environ.get("NETSCAN_USER","admin"),
+        login_pass        = os.environ.get("NETSCAN_PASS","admin123"),
+        page="settings", title="Settings"
+    )
+
+
+@app.route("/api/test-email", methods=["POST"])
+@login_required
+def test_email():
+    data      = request.get_json()
+    recipient = data.get("email","")
+    if not recipient:
+        return jsonify({"error": "No email provided"}), 400
+    try:
+        _send_report_email(recipient, "Test Target", "test-session-id", [])
+        return jsonify({"success": True})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 def _ts():
     return datetime.now().strftime("%H:%M:%S")

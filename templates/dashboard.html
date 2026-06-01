@@ -40,7 +40,9 @@
   .nav-section { font-size:8px; letter-spacing:4px; color:var(--text2); padding:12px 20px 6px; }
   .nav-link { display:flex; align-items:center; gap:10px; padding:9px 20px; color:var(--text2); text-decoration:none; font-size:11px; letter-spacing:1px; transition:all 0.2s; border-left:2px solid transparent; }
   .nav-link::before { content:'> '; color:var(--text2); transition:color 0.2s; }
+    .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
   .nav-link:hover { color:var(--accent); background:rgba(0,200,255,0.04); border-left-color:rgba(0,200,255,0.4); }
+    .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
   .nav-link:hover::before { color:var(--accent); }
   .nav-link.active { color:var(--accent); background:rgba(0,200,255,0.06); border-left-color:var(--accent); }
   .nav-link.active::before { content:'█ '; color:var(--accent); }
@@ -234,15 +236,19 @@
     <div class="sys-row"><span class="sys-key">NMAP</span><span class="sys-val">SOCKET MODE</span></div>
   </div>
   <nav>
-    <div class="nav-section">// NAVIGATION</div>
-        <a href="/" class="nav-link {% if page=='home' %}active{% endif %}">Dashboard</a>
-    <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}">New Scan</a>
-    <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}">Scan History</a>
-    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}">Compare Scans</a>
-    <a href="/schedules" class="nav-link {% if page=='schedules' %}active{% endif %}">Schedules</a>
-    <a href="/export/csv" class="nav-link">Export CSV</a>
-    <div class="nav-section">// ACCOUNT</div>
-    <a href="/logout" class="nav-link">Logout</a>
+    <div class="nav-section">// ASSESSMENT</div>
+  <a href="/" class="nav-link {%% if page=='home' %%}active{%% endif %%}"><span class="nav-icon">⬡</span> Dashboard</a>
+  <a href="/scan/new" class="nav-link {%% if page=='new_scan' %%}active{%% endif %%}"><span class="nav-icon">▶</span> New Scan</a>
+  <a href="/history" class="nav-link {%% if page=='history' %%}active{%% endif %%}"><span class="nav-icon">☰</span> Scan History</a>
+  <a href="/reports" class="nav-link {%% if page=='reports' %%}active{%% endif %%}"><span class="nav-icon">📄</span> Reports</a>
+  <div class="nav-section">// ANALYSIS</div>
+  <a href="/compare" class="nav-link {%% if page=='compare' %%}active{%% endif %%}"><span class="nav-icon">⇄</span> Compare Scans</a>
+  <a href="/targets" class="nav-link {%% if page=='targets' %%}active{%% endif %%}"><span class="nav-icon">◎</span> Targets</a>
+  <div class="nav-section">// SYSTEM</div>
+  <a href="/schedules" class="nav-link {%% if page=='schedules' %%}active{%% endif %%}"><span class="nav-icon">⏱</span> Schedules</a>
+  <a href="/settings" class="nav-link {%% if page=='settings' %%}active{%% endif %%}"><span class="nav-icon">⚙</span> Settings</a>
+  <div class="nav-section">// ACCOUNT</div>
+  <a href="/logout" class="nav-link"><span class="nav-icon">→</span> Logout</a>
   </nav>
   <div class="term-widget">
     <div class="term-titlebar">
