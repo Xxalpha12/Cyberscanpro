@@ -32,7 +32,9 @@ class Database:
         if USE_POSTGRES:
             self.conn = psycopg2.connect(
                 DATABASE_URL,
-                cursor_factory=psycopg2.extras.RealDictCursor
+                cursor_factory=psycopg2.extras.RealDictCursor,
+                sslmode="require",
+                connect_timeout=10,
             )
             self.conn.autocommit = False
             self._pg = True
