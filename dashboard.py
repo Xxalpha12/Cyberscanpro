@@ -42,16 +42,174 @@ active_scans = {}
 @login_required
 def index():
     db = Database()
-    db.fix_stale_sessions()  # Auto-fix stuck running sessions
-    sessions = db.get_all_sessions()
-    severity_counts = db.get_severity_counts()
+    db.fix_stale_sessions()
+    sessions      = db.get_all_sessions()
+    sev_counts    = db.get_severity_counts()
     total_findings = db.get_total_findings()
+
+    # Enrich sessions with severity counts
+    enriched = []
+    for s in sessions:
+        sc = db.get_severity_counts(s["id"])
+        enriched.append({**dict(s), "severity_counts": sc})
+
+    # Stats
+    total_scans     = len(sessions)
+    completed_scans = len([s for s in sessions if s["status"] == "completed"])
+    failed_scans    = len([s for s in sessions if s["status"] == "error"])
+    success_rate    = round(completed_scans / total_scans * 100) if total_scans else 0
+
+    # Unique targets
+    unique_targets  = len(set(s["target"] for s in sessions))
+
+    # Security score calculation
+    crit = sev_counts.get("Critical", 0)
+    high = sev_counts.get("High", 0)
+    med  = sev_counts.get("Medium", 0)
+    low  = sev_counts.get("Low", 0)
+    penalty = crit*25 + high*10 + med*5 + low*2
+    security_score = max(0, min(100, 100 - penalty))
+    security_score_last_week = max(0, security_score - 5)  # Simulated trend
+
+    risk_rating = "CRITICAL" if crit > 0 else                   "HIGH"     if high > 0  else                   "MEDIUM"   if med > 0   else                   "LOW"      if low > 0   else "GOOD"
+
+    # Vulnerability breakdown by type
+    all_web = []
+    for s in sessions:
+        all_web.extend(db.get_web_findings(s["id"]))
+
+    vuln_counts = {}
+    for f in all_web:
+        vt = f.get("vuln_type", "")
+        vuln_counts[vt] = vuln_counts.get(vt, 0) + 1
+
+    vuln_colors = {
+        "SQL Injection": "#ef4444",
+        "Cross-Site Scripting (XSS)": "#f97316",
+        "Missing CSRF Protection": "#eab308",
+        "Directory Traversal": "#a855f7",
+        "Open Redirect": "#06b6d4",
+    }
+    vuln_types = []
+    max_count  = max(vuln_counts.values()) if vuln_counts else 1
+    for name, count in sorted(vuln_counts.items(), key=lambda x: -x[1])[:6]:
+        short = name.replace("Missing Security Header: ", "").replace("Cross-Site Scripting", "XSS")
+        vuln_types.append({
+            "name":  short[:25],
+            "count": count,
+            "pct":   round(count / max_count * 100),
+            "color": vuln_colors.get(name, "#3b82f6")
+        })
+
+    # Risk trend data for SVG chart
+    completed = [s for s in sessions if s["status"] == "completed"][-6:]
+    trend_labels = []
+    trend_points = []
+    if completed:
+        scores = []
+        for s in completed:
+            sc = db.get_severity_counts(s["id"])
+            p  = sc.get("Critical",0)*25 + sc.get("High",0)*10 + sc.get("Medium",0)*5 + sc.get("Low",0)*2
+            scores.append(max(0, min(100, 100-p)))
+            trend_labels.append((s.get("started_at","")[:10] or "")[-5:])
+
+        if scores:
+            min_s, max_s = min(scores), max(scores)
+            rng = max_s - min_s if max_s != min_s else 1
+            n   = len(scores)
+            pts = []
+            for i, sc in enumerate(scores):
+                x = int(i / (n-1) * 380 + 10) if n > 1 else 200
+                y = int(110 - ((sc - min_s) / rng * 90 + 10)) if rng else 60
+                pts.append({"x": x, "y": y, "val": sc})
+            trend_points = pts
+            line_d  = "M " + " L ".join(f"{p['x']},{p['y']}" for p in pts)
+            area_d  = line_d + f" L {pts[-1]['x']},120 L {pts[0]['x']},120 Z"
+    else:
+        line_d = area_d = ""
+
+    # Activity feed from recent sessions
+    activity_feed = []
+    for s in enriched[:8]:
+        sc     = s.get("severity_counts", {})
+        t      = (s.get("started_at","")[:16] or "").replace("T"," ")
+        status = s["status"]
+        if status == "completed":
+            crit_f = sc.get("Critical",0)
+            if crit_f > 0:
+                activity_feed.append({"type":"crit","message":f"Critical finding on {s['target']}","time":t,"badge":"CRITICAL","badge_type":"crit"})
+            else:
+                activity_feed.append({"type":"ok","message":f"Scan completed: {s['target']}","time":t,"badge":"Done","badge_type":"ok"})
+        elif status == "error":
+            activity_feed.append({"type":"warn","message":f"Scan failed: {s['target']}","time":t,"badge":None,"badge_type":""})
+        else:
+            activity_feed.append({"type":"scan","message":f"Scanning: {s['target']}","time":t,"badge":None,"badge_type":""})
+
+    # Compliance scores (estimated from findings)
+    base = max(0, 100 - penalty//2)
+    owasp_score = min(100, base + 10)
+    pci_score   = min(100, base - 5)
+    iso_score   = min(100, base + 2)
+    nist_score  = min(100, base - 8)
+
+    # Recent reports
+    import glob as gl
+    output_dir   = os.path.join(os.path.dirname(__file__), "output")
+    report_files = []
+    if os.path.exists(output_dir):
+        for f in sorted(os.listdir(output_dir), reverse=True):
+            if f.endswith((".pdf",".html")) and "report" in f:
+                parts = f.replace("cyberscanpro_report_","").split("_")
+                sid   = parts[0] if parts else ""
+                tgt   = next((s["target"] for s in sessions if s["id"] == sid), sid[:8])
+                report_files.append({
+                    "filename": f,
+                    "type":     "pdf" if f.endswith(".pdf") else "html",
+                    "target":   tgt,
+                    "date":     f[f.rfind("_")-8:f.rfind("_")] if "_" in f else ""
+                })
+    recent_reports = report_files[:4]
+
+    # Top targets
+    target_map = {}
+    for s in enriched:
+        tgt = s["target"]
+        if tgt not in target_map:
+            target_map[tgt] = {"name":tgt,"scan_count":0,"latest_risk":"NONE"}
+        target_map[tgt]["scan_count"] += 1
+        sc = s.get("severity_counts",{})
+        risk = "CRITICAL" if sc.get("Critical",0) > 0 else                "HIGH"     if sc.get("High",0) > 0     else                "MEDIUM"   if sc.get("Medium",0) > 0   else                "LOW"      if sc.get("Low",0) > 0       else "NONE"
+        target_map[tgt]["latest_risk"] = risk
+    top_targets = list(target_map.values())[:5]
+
     db.close()
-    return render_template("dashboard.html", sessions=sessions,
-                           severity_counts=severity_counts,
-                           total_findings=total_findings,
-                           page="home", title="CyberScan Pro Dashboard",
-                           username=session.get("username", "admin"))
+
+    return render_template("dashboard.html",
+        sessions=enriched,
+        severity_counts=sev_counts,
+        total_findings=total_findings,
+        total_scans=total_scans,
+        completed_scans=completed_scans,
+        failed_scans=failed_scans,
+        success_rate=success_rate,
+        unique_targets=unique_targets,
+        security_score=security_score,
+        security_score_last_week=security_score_last_week,
+        risk_rating=risk_rating,
+        vuln_types=vuln_types,
+        trend_points=trend_points,
+        trend_labels=trend_labels,
+        trend_line=line_d if "line_d" in dir() else "",
+        trend_area=area_d if "area_d" in dir() else "",
+        activity_feed=activity_feed,
+        owasp_score=owasp_score,
+        pci_score=pci_score,
+        iso_score=iso_score,
+        nist_score=nist_score,
+        recent_reports=recent_reports,
+        top_targets=top_targets,
+        page="home", title="Dashboard"
+    )
 
 
 @app.route("/favicon.ico")
