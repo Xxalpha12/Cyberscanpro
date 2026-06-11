@@ -9,10 +9,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:      #0f172a;
-  --bg2:     #1e293b;
-  --bg3:     #243044;
-  --border:  #1e3a5f;
+  --bg:      #060c14;
+  --bg2:     #0a1220;
+  --bg3:     #0f1a2e;
+  --border:  rgba(0,200,255,0.12);
   --text:    #f1f5f9;
   --text2:   #64748b;
   --text3:   #94a3b8;
@@ -456,7 +456,7 @@ body.light {
     {% endif %}
 
     <!-- ROW 1: Security Score + Findings -->
-    <div class="row row-2">
+    <div class="row">
 
       <!-- Security Score -->
       <div class="card">
@@ -641,90 +641,7 @@ body.light {
 
     </div>
 
-    <!-- ROW 4: Risk trend + Compliance -->
-    <div class="row row-2">
-
-      <!-- Risk Trend Chart -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">📈 Risk Trend</span>
-          <span style="font-size:11px;color:var(--text2);">Last 6 scans</span>
-        </div>
-        <div class="card-body">
-          <div class="trend-chart">
-            <svg class="trend-svg" viewBox="0 0 400 120" preserveAspectRatio="none">
-              <defs>
-                <linearGradient id="tg" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.3"/>
-                  <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
-                </linearGradient>
-              </defs>
-              {% if trend_points %}
-              <path d="{{ trend_area }}" fill="url(#tg)"/>
-              <path d="{{ trend_line }}" fill="none" stroke="#3b82f6" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-              {% for pt in trend_points %}
-              <circle cx="{{ pt.x }}" cy="{{ pt.y }}" r="4" fill="#3b82f6"/>
-              {% endfor %}
-              {% else %}
-              <text x="200" y="60" text-anchor="middle" fill="#64748b" font-size="12">Run scans to see risk trend</text>
-              {% endif %}
-            </svg>
-          </div>
-          <!-- Labels -->
-          {% if trend_labels %}
-          <div style="display:flex;justify-content:space-between;margin-top:8px;">
-            {% for label in trend_labels %}
-            <span style="font-size:10px;color:var(--text2);">{{ label }}</span>
-            {% endfor %}
-          </div>
-          {% endif %}
-        </div>
-      </div>
-
-      <!-- Compliance Tracking -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">✅ Compliance</span>
-          <span style="font-size:11px;color:var(--text2);">Estimated coverage</span>
-        </div>
-        <div class="card-body">
-          <div class="compliance-list">
-            <div class="compliance-item">
-              <div class="compliance-header">
-                <span class="compliance-name">OWASP Top 10</span>
-                <span class="compliance-pct" style="color:var(--green);">{{ owasp_score }}%</span>
-              </div>
-              <div class="compliance-bar"><div class="compliance-fill" style="width:{{ owasp_score }}%;background:var(--green);"></div></div>
-            </div>
-            <div class="compliance-item">
-              <div class="compliance-header">
-                <span class="compliance-name">PCI DSS</span>
-                <span class="compliance-pct" style="color:var(--yellow);">{{ pci_score }}%</span>
-              </div>
-              <div class="compliance-bar"><div class="compliance-fill" style="width:{{ pci_score }}%;background:var(--yellow);"></div></div>
-            </div>
-            <div class="compliance-item">
-              <div class="compliance-header">
-                <span class="compliance-name">ISO 27001</span>
-                <span class="compliance-pct" style="color:var(--blue);">{{ iso_score }}%</span>
-              </div>
-              <div class="compliance-bar"><div class="compliance-fill" style="width:{{ iso_score }}%;background:var(--blue);"></div></div>
-            </div>
-            <div class="compliance-item">
-              <div class="compliance-header">
-                <span class="compliance-name">NIST CSF</span>
-                <span class="compliance-pct" style="color:var(--purple);">{{ nist_score }}%</span>
-              </div>
-              <div class="compliance-bar"><div class="compliance-fill" style="width:{{ nist_score }}%;background:var(--purple);"></div></div>
-            </div>
-          </div>
-          <p style="font-size:10px;color:var(--text2);margin-top:14px;line-height:1.5;">Scores estimated based on vulnerability findings from completed scans.</p>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- ROW 5: Recent scans + AI recommendations -->
+        <!-- ROW 5: Recent scans + AI recommendations -->
     <div class="row row-2">
 
       <!-- Recent Scans -->
