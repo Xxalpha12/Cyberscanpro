@@ -1259,3 +1259,82 @@ def test_email():
 
 def _ts():
     return datetime.now().strftime("%H:%M:%S")
+
+
+# ── NOTIFICATIONS API ─────────────────────────────────────────────────────────
+
+@app.route("/api/notifications")
+@login_required
+def api_notifications():
+    db     = Database()
+    counts = db.get_severity_counts()
+    db.close()
+    notifs = []
+    if counts["Critical"] > 0:
+        notifs.append({"message": f"{counts['Critical']} Critical vulnerability(ies) found — immediate action required", "type": "critical"})
+    if counts["High"] > 0:
+        notifs.append({"message": f"{counts['High']} High severity finding(s) — address within 7 days", "type": "high"})
+    return jsonify(notifs)
+
+
+# ── ACTIVITY FEED API ─────────────────────────────────────────────────────────
+
+@app.route("/api/activity-feed")
+@login_required
+def api_activity_feed():
+    db       = Database()
+    sessions = db.get_all_sessions()
+    feed     = []
+    for s in sessions[:10]:
+        sc     = db.get_severity_counts(s["id"])
+        t      = (s.get("started_at","")[:16] or "").replace("T"," ")
+        status = s["status"]
+        if status == "completed":
+            if sc.get("Critical",0) > 0:
+                feed.append({"type":"crit","message":f"Critical finding on {s['target']}","time":t,"badge":"CRITICAL","badge_type":"crit"})
+            else:
+                feed.append({"type":"ok","message":f"Scan completed: {s['target']}","time":t,"badge":"Done","badge_type":"ok"})
+        elif status == "error":
+            feed.append({"type":"warn","message":f"Scan failed: {s['target']}","time":t,"badge":"Failed","badge_type":"warn"})
+        elif status == "running":
+            feed.append({"type":"scan","message":f"Scanning in progress: {s['target']}","time":t,"badge":None,"badge_type":""})
+    db.close()
+    return jsonify(feed)
+
+
+# ── SEVERITY COUNTS API ───────────────────────────────────────────────────────
+
+@app.route("/api/severity-counts")
+@login_required
+def api_severity_counts():
+    db     = Database()
+    counts = db.get_severity_counts()
+    db.close()
+    return jsonify(counts)
+
+
+# ── SESSIONS API ──────────────────────────────────────────────────────────────
+
+@app.route("/api/sessions")
+@login_required
+def api_sessions():
+    db       = Database()
+    sessions = db.get_all_sessions()
+    result   = []
+    for s in sessions[:10]:
+        sc = db.get_severity_counts(s["id"])
+        result.append({
+            "id":       s["id"],
+            "target":   s["target"],
+            "status":   s["status"],
+            "started_at": s.get("started_at",""),
+            "severity_counts": sc
+        })
+    db.close()
+    return jsonify(result)
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
