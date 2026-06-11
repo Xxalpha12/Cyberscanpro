@@ -39,7 +39,7 @@ body {
 }
 
 /* ── SIDEBAR ──────────────────────────────────────── */
-.sidebar {
+.sidebar { position: relative; z-index: 1;
   width: 240px;
   background: var(--bg2);
   border-right: 1px solid var(--border);
@@ -108,7 +108,7 @@ body {
 }
 
 /* ── MAIN ─────────────────────────────────────────── */
-.main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+.main { position: relative; z-index: 1; flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
 
 /* Top bar */
 .topbar {
@@ -323,7 +323,7 @@ body {
 }
 
 @media (max-width: 768px) {
-  .sidebar { display: none; }
+  .sidebar { position: relative; z-index: 1; display: none; }
   .sidebar.open { display: flex; position: fixed; left: 0; top: 0; bottom: 0; z-index: 100; width: 240px; }
   .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 99; }
   .overlay.show { display: block; }
@@ -369,6 +369,12 @@ body.light {
 <body>
 
 <!-- Mobile overlay -->
+<!-- Background layers (same as login) -->
+<div style="position:fixed;inset:0;z-index:0;background-image:linear-gradient(rgba(0,200,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;"></div>
+<div style="position:fixed;inset:0;z-index:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.03) 3px,rgba(0,0,0,0.03) 4px);pointer-events:none;animation:scanmove 15s linear infinite;"></div>
+<div style="position:fixed;z-index:0;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,255,0.04) 0%,transparent 70%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;"></div>
+<style>@keyframes scanmove{from{background-position:0 0}to{background-position:0 100%}}</style>
+
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
 <!-- ── SIDEBAR ───────────────────────────────────────── -->
