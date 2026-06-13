@@ -3,196 +3,312 @@
 <head>
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>Reports — CyberScan Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-  :root{--bg:#060c14;--bg2:#0a1220;--bg3:#0f1a2e;--accent:#00c8ff;--accent2:#00ff9d;--accent3:#ff6b35;--text:#a8c4d8;--text2:#3d5a70;--border:rgba(0,200,255,0.12);}
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+  <style>
+  /* ── ROOT ── */
+  :root{
+    --bg:#020810;--bg2:#060c14;--bg3:#0a1220;--bg4:#0d1826;
+    --border:rgba(0,200,255,0.1);--border2:rgba(0,200,255,0.06);
+    --accent:#00c8ff;--green:#00ff9d;--red:#ef4444;
+    --orange:#f97316;--yellow:#eab308;--blue:#3b82f6;--purple:#a855f7;
+    --text:#e2eaf4;--text2:#304560;--text3:#4d6a85;
+    --mono:'Share Tech Mono',monospace;--sans:'Inter',sans-serif;
+  }
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:"Share Tech Mono",monospace;background:var(--bg);color:var(--text);min-height:100vh;display:flex;}
-  body.light{--bg:#f0f4f8;--bg2:#fff;--bg3:#e8edf2;--text:#2c3e50;--text2:#7f8c8d;--border:rgba(0,100,200,0.15);}
-  .sidebar{width:220px;background:var(--bg2);border-right:1px solid var(--border);padding:24px 0;flex-shrink:0;display:flex;flex-direction:column;}
-  .sidebar-logo{padding:0 20px 20px;border-bottom:1px solid var(--border);margin-bottom:16px;}
-  .sidebar-logo h2{font-family:"Rajdhani",sans-serif;font-size:22px;font-weight:700;color:#fff;}
-  .sidebar-logo h2 span{color:var(--accent);}
-  .sidebar-logo p{font-size:9px;color:var(--text2);}
-  .nav-section{padding:6px 20px;font-size:8px;letter-spacing:3px;color:var(--text2);margin-top:10px;}
-  .nav-link{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--text2);text-decoration:none;font-size:11px;letter-spacing:1px;transition:all 0.2s;border-left:2px solid transparent;}
-  .nav-link:hover,.nav-link.active{color:var(--accent);border-left-color:var(--accent);background:rgba(0,200,255,0.03);}
-  .nav-icon{font-size:13px;width:16px;text-align:center;}
-  .sidebar-footer{padding:16px 20px;font-size:9px;color:var(--text2);border-top:1px solid var(--border);margin-top:auto;}
-  .main{flex:1;padding:32px;overflow-y:auto;}
-  .page-eyebrow{font-size:8px;letter-spacing:4px;color:var(--text2);margin-bottom:8px;}
-  .page-title{font-family:"Rajdhani",sans-serif;font-size:30px;font-weight:700;color:#fff;margin-bottom:6px;}
-  .page-sub{font-size:11px;color:var(--text2);margin-bottom:24px;}
-  .stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px;}
-  .stat-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center;}
-  .stat-num{font-family:"Rajdhani",sans-serif;font-size:26px;font-weight:700;}
-  .stat-label{font-size:9px;letter-spacing:2px;color:var(--text2);margin-top:4px;}
-  .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
-  .filter-input{background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:8px 12px;color:var(--text);font-family:"Share Tech Mono",monospace;font-size:11px;outline:none;}
-  .filter-input:focus{border-color:var(--accent);}
-  .btn{padding:8px 16px;background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.3);border-radius:4px;font-family:"Share Tech Mono",monospace;font-size:11px;cursor:pointer;transition:all 0.2s;text-decoration:none;display:inline-flex;align-items:center;gap:6px;}
-  .btn:hover{background:rgba(0,200,255,0.2);}
-  .btn-pdf{background:rgba(255,107,53,0.1);color:var(--accent3);border-color:rgba(255,107,53,0.3);}
-  .btn-html{background:rgba(0,200,255,0.1);color:var(--accent);border-color:rgba(0,200,255,0.3);}
-  .btn-check{background:rgba(0,255,157,0.1);color:var(--accent2);border-color:rgba(0,255,157,0.3);}
-  .btn-danger{background:rgba(255,60,60,0.1);color:#ff4444;border-color:rgba(255,60,60,0.3);}
-  .reports-grid{display:grid;gap:14px;}
-  .report-card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px;display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;transition:all 0.2s;}
-  .report-card:hover{border-color:rgba(0,200,255,0.3);background:rgba(0,200,255,0.02);}
-  .report-card.pdf-card{border-left:3px solid var(--accent3);}
-  .report-card.html-card{border-left:3px solid var(--accent);}
-  .report-card.check-card{border-left:3px solid var(--accent2);}
-  .report-type{font-size:9px;letter-spacing:2px;color:var(--text2);margin-bottom:6px;}
-  .report-name{font-size:13px;color:#fff;font-weight:bold;margin-bottom:4px;}
-  .report-meta{font-size:10px;color:var(--text2);}
-  .report-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
-  .sev-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:9px;font-weight:bold;margin-left:8px;}
-  .sev-CRITICAL{background:rgba(192,0,0,0.2);color:#e74c3c;}
-  .sev-HIGH{background:rgba(230,100,0,0.2);color:#e67e22;}
-  .sev-MEDIUM{background:rgba(230,180,0,0.2);color:#f1c40f;}
-  .sev-LOW{background:rgba(0,150,220,0.2);color:#2980b9;}
-  .sev-NONE{background:rgba(100,100,100,0.2);color:#888;}
-  .empty{text-align:center;padding:60px;color:var(--text2);}
-  .empty p{margin-top:12px;font-size:12px;}
-  .group-header{font-size:10px;letter-spacing:3px;color:var(--text2);padding:8px 0;margin-top:16px;margin-bottom:8px;border-bottom:1px solid var(--border);}
-  @media(max-width:768px){body{flex-direction:column;}.sidebar{width:100%;}.stats-bar{grid-template-columns:repeat(2,1fr);}.report-card{grid-template-columns:1fr;}.main{padding:16px;}}
+  html,body{height:100%;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:13px;overflow-x:hidden;}
+
+  /* ── BACKGROUND ── */
+  .bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;}
+  #bg-grid{background-image:linear-gradient(rgba(0,200,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.04) 1px,transparent 1px);background-size:44px 44px;}
+  #bg-scan{background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 3px);animation:scanmove 20s linear infinite;}
+  @keyframes scanmove{from{background-position:0 0}to{background-position:0 100%}}
+  #bg-glow{background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,200,255,0.06) 0%,transparent 70%),radial-gradient(ellipse 40% 30% at 85% 85%,rgba(0,150,255,0.04) 0%,transparent 60%),radial-gradient(ellipse 30% 25% at 10% 60%,rgba(0,255,157,0.03) 0%,transparent 60%);}
+  .corner{position:fixed;z-index:0;pointer-events:none;opacity:0.4;}
+  .c-tl{top:0;left:0;width:100px;height:100px;border-top:1px solid var(--accent);border-left:1px solid var(--accent);}
+  .c-tr{top:0;right:0;width:100px;height:100px;border-top:1px solid var(--accent);border-right:1px solid var(--accent);}
+  .c-bl{bottom:0;left:0;width:60px;height:60px;border-bottom:1px solid var(--accent);border-left:1px solid var(--accent);}
+  .c-br{bottom:0;right:0;width:60px;height:60px;border-bottom:1px solid var(--accent);border-right:1px solid var(--accent);}
+
+  /* ── SIDEBAR ── */
+  .sidebar{width:230px;flex-shrink:0;background:rgba(6,12,20,0.97);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:20;box-shadow:4px 0 30px rgba(0,0,0,0.4);}
+  .sb-top{padding:20px 20px 16px;border-bottom:1px solid var(--border);}
+
+  /* LOGO */
+  .logo{display:flex;align-items:center;gap:11px;}
+  .logo-mark{width:36px;height:36px;flex-shrink:0;position:relative;}
+  .logo-mark svg{width:36px;height:36px;}
+  .logo-text{}
+  .logo-name{font-family:var(--sans);font-size:16px;font-weight:800;color:var(--text);letter-spacing:-0.3px;line-height:1;}
+  .logo-name span{color:var(--accent);}
+  .logo-sub{font-family:var(--mono);font-size:8px;color:var(--text2);margin-top:4px;letter-spacing:2px;}
+
+  /* Status */
+  .sb-status{padding:8px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:7px;font-size:10px;color:var(--text2);font-family:var(--mono);}
+  .pulse-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pdot 2s infinite;}
+  @keyframes pdot{0%,100%{opacity:1}50%{opacity:0.4}}
+
+  /* Search */
+  .sb-search{padding:10px 14px;border-bottom:1px solid var(--border2);}
+  .s-wrap{display:flex;align-items:center;gap:7px;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:7px 11px;}
+  .s-wrap:focus-within{border-color:rgba(0,200,255,0.28);}
+  .s-wrap input{background:none;border:none;outline:none;color:var(--text);font-size:11px;width:100%;font-family:var(--sans);}
+  .s-wrap input::placeholder{color:var(--text2);}
+
+  /* Nav */
+  .sb-nav{flex:1;overflow-y:auto;padding:6px 0;}
+  .nav-sec{font-size:9px;letter-spacing:3px;color:var(--text2);padding:11px 20px 4px;text-transform:uppercase;font-family:var(--mono);}
+  .nav-link{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--text3);text-decoration:none;font-size:12px;font-weight:500;transition:all 0.15s;border-left:2px solid transparent;}
+  .nav-link:hover{color:var(--text);background:rgba(0,200,255,0.04);}
+  .nav-link.active{color:var(--accent);background:rgba(0,200,255,0.07);border-left-color:var(--accent);}
+  .nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+  .sb-foot{padding:14px 20px;border-top:1px solid var(--border);font-size:9px;color:var(--text2);font-family:var(--mono);letter-spacing:1px;}
+
+  /* ── MAIN ── */
+  .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:1;}
+
+  /* Topbar */
+  .topbar{background:rgba(6,12,20,0.96);border-bottom:1px solid var(--border);padding:13px 26px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:15;backdrop-filter:blur(16px);box-shadow:0 2px 20px rgba(0,0,0,0.4);}
+  .tb-title{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text);letter-spacing:2px;}
+  .tb-title span{color:var(--accent);}
+  .tb-sub{font-family:var(--mono);font-size:9px;color:var(--text2);margin-top:4px;letter-spacing:1.5px;}
+  .tb-right{display:flex;align-items:center;gap:10px;}
+  .clock{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 11px;letter-spacing:1px;}
+  .icon-btn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--text3);font-size:14px;transition:all 0.2s;position:relative;}
+  .icon-btn:hover{border-color:rgba(0,200,255,0.3);color:var(--accent);}
+  .notif-dot{position:absolute;top:4px;right:4px;width:7px;height:7px;background:var(--red);border-radius:50%;border:2px solid var(--bg2);}
+  .btn-primary{background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.35);padding:8px 18px;border-radius:7px;font-size:12px;font-weight:700;font-family:var(--mono);letter-spacing:1.5px;cursor:pointer;display:flex;align-items:center;gap:7px;transition:all 0.2s;text-decoration:none;}
+  .btn-primary:hover{background:rgba(0,200,255,0.18);box-shadow:0 0 20px rgba(0,200,255,0.15);transform:translateY(-1px);}
+
+  /* Content */
+  .content{padding:24px 26px;display:flex;flex-direction:column;gap:18px;flex:1;}
+
+  /* Cards */
+  .card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;overflow:hidden;backdrop-filter:blur(8px);transition:border-color 0.2s,box-shadow 0.2s;}
+  .card:hover{border-color:rgba(0,200,255,0.18);box-shadow:0 4px 30px rgba(0,0,0,0.3);}
+  .card-hd{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:rgba(0,200,255,0.015);}
+  .card-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:2px;font-family:var(--mono);}
+  .card-meta{font-size:10px;color:var(--text2);font-family:var(--mono);}
+  .card-bd{padding:18px;}
+
+  /* Grids */
+  .g2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;}
+  .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+
+  /* Badges */
+  .badge{padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono);letter-spacing:0.5px;}
+  .b-c{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
+  .b-h{background:rgba(249,115,22,0.12);color:var(--orange);border:1px solid rgba(249,115,22,0.2);}
+  .b-m{background:rgba(234,179,8,0.12);color:var(--yellow);border:1px solid rgba(234,179,8,0.2);}
+  .b-l{background:rgba(59,130,246,0.12);color:var(--blue);border:1px solid rgba(59,130,246,0.2);}
+  .b-n{background:rgba(77,106,133,0.1);color:var(--text2);border:1px solid rgba(77,106,133,0.15);}
+  .b-ok{background:rgba(0,255,157,0.08);color:var(--green);border:1px solid rgba(0,255,157,0.15);}
+
+  /* Status pills */
+  .pill{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--mono);}
+  .p-completed{background:rgba(0,255,157,0.07);color:var(--green);border:1px solid rgba(0,255,157,0.15);}
+  .p-error{background:rgba(239,68,68,0.07);color:var(--red);border:1px solid rgba(239,68,68,0.15);}
+  .p-running{background:rgba(0,200,255,0.07);color:var(--accent);border:1px solid rgba(0,200,255,0.15);}
+
+  /* Links */
+  .mlink{color:var(--accent);text-decoration:none;font-size:11px;font-family:var(--mono);transition:opacity 0.15s;}
+  .mlink:hover{opacity:0.7;}
+  .view-all{display:block;text-align:center;padding:10px;font-size:10px;color:var(--text2);cursor:pointer;border-top:1px solid var(--border);text-decoration:none;font-family:var(--mono);letter-spacing:2px;transition:all 0.2s;}
+  .view-all:hover{color:var(--accent);background:rgba(0,200,255,0.03);}
+  .empty{padding:32px;text-align:center;color:var(--text2);font-size:12px;line-height:1.9;font-family:var(--mono);}
+
+  /* Mobile */
+  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:18;}
+  .overlay.show{display:block;}
+  .menu-btn{display:none;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:16px;cursor:pointer;align-items:center;}
+  @media(max-width:720px){
+    .sidebar{display:none;}
+    .sidebar.open{display:flex;position:fixed;left:0;top:0;bottom:0;z-index:20;width:230px;}
+    .menu-btn{display:flex !important;}
+    .g2,.g3,.g4{grid-template-columns:1fr;}
+    .content,.topbar{padding:14px 16px;}
+    .content{gap:14px;}
+    .corner{display:none;}
+  }
+  @media(min-width:721px){.menu-btn{display:none !important;}}
+  ::-webkit-scrollbar{width:3px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
+  </style>
+<style>
+.filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+.fi{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:12px;outline:none;transition:border-color 0.2s;}
+.fi:focus{border-color:rgba(0,200,255,0.3);}
+.fi-search{flex:1;min-width:160px;}
+.r-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+.r-stat{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:8px;padding:14px 16px;text-align:center;}
+.r-stat-n{font-size:22px;font-weight:800;font-family:'Share Tech Mono',monospace;color:var(--text);}
+.r-stat-l{font-size:10px;color:var(--text2);margin-top:3px;letter-spacing:1px;text-transform:uppercase;}
+.r-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;}
+.r-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;overflow:hidden;transition:all 0.2s;}
+.r-card:hover{border-color:rgba(0,200,255,0.2);box-shadow:0 4px 24px rgba(0,0,0,0.35);transform:translateY(-2px);}
+.r-card-top{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:flex-start;justify-content:space-between;gap:10px;}
+.r-type-icon{width:36px;height:36px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.r-icon-pdf{background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.2);}
+.r-icon-html{background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);}
+.r-target{font-size:13px;font-weight:700;color:var(--text);font-family:'Share Tech Mono',monospace;margin-bottom:3px;word-break:break-all;}
+.r-date{font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;}
+.r-card-body{padding:12px 16px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.r-card-footer{padding:10px 16px;border-top:1px solid var(--border);display:flex;gap:8px;}
+.btn-open{flex:1;padding:8px;background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.2);border-radius:6px;font-size:11px;font-weight:700;font-family:'Share Tech Mono',monospace;letter-spacing:1px;cursor:pointer;text-decoration:none;text-align:center;transition:all 0.2s;}
+.btn-open:hover{background:rgba(0,200,255,0.16);}
+.btn-del{padding:8px 12px;background:rgba(239,68,68,0.07);color:var(--red);border:1px solid rgba(239,68,68,0.15);border-radius:6px;font-size:11px;font-weight:700;font-family:'Share Tech Mono',monospace;cursor:pointer;transition:all 0.2s;}
+.btn-del:hover{background:rgba(239,68,68,0.15);}
 </style>
 </head>
 <body>
-<aside class="sidebar">
-  <div class="sidebar-logo">
-    <h2>CyberScan<span>Pro</span></h2>
-    <p>FUPRE · FYP · OBEH E.O</p>
+<div class="bg-fixed" id="bg-grid"></div>
+<div class="bg-fixed" id="bg-scan"></div>
+<div class="bg-fixed" id="bg-glow"></div>
+<div class="corner c-tl"></div><div class="corner c-tr"></div>
+<div class="corner c-bl"></div><div class="corner c-br"></div>
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <rect width="36" height="36" rx="8" fill="rgba(0,200,255,0.08)" stroke="rgba(0,200,255,0.25)" stroke-width="1"/>
+          <!-- Shield shape -->
+          <path d="M18 6L8 10V18C8 23.5 12.5 28.5 18 30C23.5 28.5 28 23.5 28 18V10L18 6Z" fill="rgba(0,200,255,0.12)" stroke="rgba(0,200,255,0.6)" stroke-width="1.2" stroke-linejoin="round"/>
+          <!-- Scan lines inside shield -->
+          <line x1="12" y1="16" x2="24" y2="16" stroke="rgba(0,200,255,0.5)" stroke-width="1" stroke-dasharray="2 2"/>
+          <line x1="12" y1="19" x2="24" y2="19" stroke="rgba(0,200,255,0.5)" stroke-width="1" stroke-dasharray="2 2"/>
+          <line x1="12" y1="22" x2="22" y2="22" stroke="rgba(0,200,255,0.3)" stroke-width="1" stroke-dasharray="2 2"/>
+          <!-- Center dot -->
+          <circle cx="18" cy="13" r="2" fill="rgba(0,200,255,0.8)"/>
+          <!-- Corner marks -->
+          <rect x="6" y="6" width="4" height="1" fill="rgba(0,200,255,0.4)"/>
+          <rect x="6" y="6" width="1" height="4" fill="rgba(0,200,255,0.4)"/>
+          <rect x="26" y="6" width="4" height="1" fill="rgba(0,200,255,0.4)"/>
+          <rect x="29" y="6" width="1" height="4" fill="rgba(0,200,255,0.4)"/>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <div class="logo-name">CyberScan<span>Pro</span></div>
+        <div class="logo-sub">SECURITY ASSESSMENT</div>
+      </div>
+    </div>
   </div>
-  <div class="nav-section">// ASSESSMENT</div>
-  <a href="/" class="nav-link"><span class="nav-icon">⬡</span> Dashboard</a>
-  <a href="/scan/new" class="nav-link"><span class="nav-icon">▶</span> New Scan</a>
-  <a href="/history" class="nav-link"><span class="nav-icon">☰</span> Scan History</a>
-  <a href="/reports" class="nav-link active"><span class="nav-icon">📄</span> Reports</a>
-  <div class="nav-section">// ANALYSIS</div>
-  <a href="/compare" class="nav-link"><span class="nav-icon">⇄</span> Compare Scans</a>
-  <a href="/targets" class="nav-link"><span class="nav-icon">◎</span> Targets</a>
-  <div class="nav-section">// SYSTEM</div>
-  <a href="/schedules" class="nav-link"><span class="nav-icon">⏱</span> Schedules</a>
-  <a href="/settings" class="nav-link"><span class="nav-icon">⚙</span> Settings</a>
-  <div class="nav-section">// ACCOUNT</div>
-  <a href="/logout" class="nav-link"><span class="nav-icon">→</span> Logout</a>
-  <div class="sidebar-footer">ETHICAL USE ONLY · v1.0.0</div>
+  <div class="sb-status">
+    <div class="pulse-dot"></div>SYSTEM ONLINE
+  </div>
+  <div class="sb-search">
+    <div class="s-wrap">
+      <span style="color:var(--text2);font-size:12px;">🔍</span>
+      <input type="text" placeholder="Search...">
+    </div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-sec">// Assessment</div>
+    <a href="/" class="nav-link {% if page=='home' %}active{% endif %}"><span class="nav-icon">⬡</span>Dashboard</a>
+    <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="nav-icon">▶</span>New Scan</a>
+    <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}"><span class="nav-icon">☰</span>Scan History</a>
+    <a href="/reports" class="nav-link {% if page=='reports' %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
+    <div class="nav-sec">// Analysis</div>
+    <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">◎</span>Targets</a>
+    <div class="nav-sec">// System</div>
+    <a href="/settings" class="nav-link {% if page=='settings' %}active{% endif %}"><span class="nav-icon">⚙</span>Settings</a>
+    <div class="nav-sec">// Account</div>
+    <a href="/logout" class="nav-link"><span class="nav-icon">→</span>Logout</a>
+  </nav>
+  <div class="sb-foot">ETHICAL USE ONLY · v1.0.0</div>
 </aside>
-
 <div class="main">
-  <div class="page-eyebrow">// REPORTS</div>
-  <div class="page-title">Generated Reports</div>
-  <div class="page-sub">All PDF and HTML vulnerability assessment reports generated by CyberScan Pro</div>
-
-  <!-- Stats -->
-  <div class="stats-bar">
-    <div class="stat-card">
-      <div class="stat-num" style="color:var(--accent)">{{ total_reports }}</div>
-      <div class="stat-label">TOTAL REPORTS</div>
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <div>
+        <div class="tb-title">// GENERATED <span>REPORTS</span></div>
+        <div class="tb-sub">ALL VULNERABILITY ASSESSMENT REPORTS</div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="stat-num" style="color:var(--accent3)">{{ pdf_count }}</div>
-      <div class="stat-label">PDF REPORTS</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" style="color:var(--accent)">{{ html_count }}</div>
-      <div class="stat-label">HTML REPORTS</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" style="color:var(--accent2)">{{ sessions_with_reports }}</div>
-      <div class="stat-label">SCANS REPORTED</div>
+    <div class="tb-right">
+      <div class="clock" id="clock"></div>
     </div>
   </div>
-
-  <!-- Filters -->
-  <div class="filters">
-    <input class="filter-input" type="text" id="search" placeholder="Search by target..." oninput="filterReports()">
-    <select class="filter-input" id="type-filter" onchange="filterReports()">
-      <option value="">All Types</option>
-      <option value="pdf">PDF Only</option>
-      <option value="html">HTML Only</option>
-      <option value="checklist">Checklist Only</option>
-    </select>
-    <select class="filter-input" id="risk-filter" onchange="filterReports()">
-      <option value="">All Risk Levels</option>
-      <option value="CRITICAL">Critical</option>
-      <option value="HIGH">High</option>
-      <option value="MEDIUM">Medium</option>
-      <option value="LOW">Low</option>
-    </select>
-    <button class="btn" onclick="clearFilters()">CLEAR</button>
-  </div>
-
-  <!-- Reports List -->
-  <div class="reports-grid" id="reports-grid">
-    {% if reports %}
+  <div class="content">
+    <div class="r-stats">
+      <div class="r-stat"><div class="r-stat-n">{{ total_reports }}</div><div class="r-stat-l">Total Reports</div></div>
+      <div class="r-stat"><div class="r-stat-n" style="color:var(--orange);">{{ pdf_count }}</div><div class="r-stat-l">PDF Reports</div></div>
+      <div class="r-stat"><div class="r-stat-n" style="color:var(--accent);">{{ html_count }}</div><div class="r-stat-l">HTML Reports</div></div>
+      <div class="r-stat"><div class="r-stat-n" style="color:var(--green);">{{ sessions_with_reports }}</div><div class="r-stat-l">Scans Reported</div></div>
+    </div>
+    <div class="filter-bar">
+      <input class="fi fi-search" type="text" id="q" placeholder="Search by target..." oninput="filterReports()">
+      <select class="fi" id="tf" onchange="filterReports()">
+        <option value="">All Types</option>
+        <option value="pdf">PDF Only</option>
+        <option value="html">HTML Only</option>
+      </select>
+      <select class="fi" id="rf" onchange="filterReports()">
+        <option value="">All Risk</option>
+        <option value="CRITICAL">Critical</option>
+        <option value="HIGH">High</option>
+        <option value="MEDIUM">Medium</option>
+        <option value="LOW">Low</option>
+      </select>
+    </div>
+    <div class="r-grid" id="r-grid">
       {% for r in reports %}
-      <div class="report-card {{ r.type }}-card"
-           data-target="{{ r.target }}"
-           data-type="{{ r.type }}"
-           data-risk="{{ r.risk }}">
-        <div>
-          <div class="report-type">
-            {% if r.type == 'pdf' %}📄 PDF REPORT
-            {% elif r.type == 'html' %}🌐 HTML REPORT
-            {% else %}✅ REMEDIATION CHECKLIST{% endif %}
-            <span class="sev-badge sev-{{ r.risk }}">{{ r.risk }}</span>
+      <div class="r-card" data-target="{{ r.target }}" data-type="{{ r.type }}" data-risk="{{ r.risk }}">
+        <div class="r-card-top">
+          <div class="r-type-icon {{ 'r-icon-pdf' if r.type=='pdf' else 'r-icon-html' }}">
+            {{ '📄' if r.type=='pdf' else '🌐' }}
           </div>
-          <div class="report-name">{{ r.target }}</div>
-          <div class="report-meta">
-            {{ r.date }} &nbsp;·&nbsp; Session: {{ r.session_id[:8] }}
-            &nbsp;·&nbsp; {{ r.size }}
+          <div style="flex:1;">
+            <div class="r-target">{{ r.target }}</div>
+            <div class="r-date">{{ r.date }}</div>
           </div>
+          {% if r.risk == 'CRITICAL' %}<span class="badge b-c">CRITICAL</span>
+          {% elif r.risk == 'HIGH' %}<span class="badge b-h">HIGH</span>
+          {% elif r.risk == 'MEDIUM' %}<span class="badge b-m">MEDIUM</span>
+          {% elif r.risk == 'LOW' %}<span class="badge b-l">LOW</span>
+          {% else %}<span class="badge b-n">NONE</span>{% endif %}
         </div>
-        <div class="report-actions">
-          <a href="/report/{{ r.filename }}" target="_blank"
-             class="btn {% if r.type == 'pdf' %}btn-pdf{% elif r.type == 'html' %}btn-html{% else %}btn-check{% endif %}">
-            {% if r.type == 'pdf' %}📄 OPEN PDF
-            {% elif r.type == 'html' %}🌐 OPEN HTML
-            {% else %}✅ CHECKLIST{% endif %}
+        <div class="r-card-body">
+          <span class="badge" style="background:rgba(255,255,255,0.04);color:var(--text3);border:1px solid var(--border);">{{ r.type|upper }}</span>
+          <span style="font-size:10px;color:var(--text2);font-family:'Share Tech Mono',monospace;">{{ r.size }}</span>
+        </div>
+        <div class="r-card-footer">
+          <a href="/report/{{ r.filename }}" target="_blank" class="btn-open">
+            {{ '📄 OPEN PDF' if r.type=='pdf' else '🌐 OPEN HTML' }}
           </a>
-          <a href="/scan/{{ r.session_id }}" class="btn">VIEW SCAN</a>
-          <button onclick="deleteReport('{{ r.filename }}')" class="btn btn-danger">DEL</button>
+          <a href="/scan/{{ r.session_id }}" class="btn-open" style="background:rgba(255,255,255,0.03);">SCAN</a>
+          <button onclick="delReport('{{ r.filename }}')" class="btn-del">DEL</button>
         </div>
       </div>
+      {% else %}
+      <div class="empty" style="grid-column:1/-1;">No reports generated yet.<br><a href="/scan/new" class="mlink">Run a scan to generate reports →</a></div>
       {% endfor %}
-    {% else %}
-      <div class="empty">
-        <div style="font-size:40px;">📄</div>
-        <p>No reports generated yet.</p>
-        <p style="margin-top:8px;"><a href="/scan/new" style="color:var(--accent);">Run a scan to generate reports →</a></p>
-      </div>
-    {% endif %}
+    </div>
   </div>
 </div>
-
 <script>
-function filterReports() {
-  const q    = document.getElementById("search").value.toLowerCase();
-  const type = document.getElementById("type-filter").value;
-  const risk = document.getElementById("risk-filter").value;
-  document.querySelectorAll(".report-card").forEach(card => {
-    const show = card.dataset.target.toLowerCase().includes(q) &&
-                 (!type || card.dataset.type === type) &&
-                 (!risk || card.dataset.risk === risk);
-    card.style.display = show ? "" : "none";
+function filterReports(){
+  const q=document.getElementById('q').value.toLowerCase();
+  const tf=document.getElementById('tf').value;
+  const rf=document.getElementById('rf').value;
+  document.querySelectorAll('.r-card').forEach(c=>{
+    c.style.display=(c.dataset.target.toLowerCase().includes(q)&&(!tf||c.dataset.type===tf)&&(!rf||c.dataset.risk===rf))?'':'none';
   });
 }
-function clearFilters() {
-  document.getElementById("search").value = "";
-  document.getElementById("type-filter").value = "";
-  document.getElementById("risk-filter").value = "";
-  filterReports();
+async function delReport(f){
+  if(!confirm('Delete '+f+'?'))return;
+  const r=await fetch('/api/report/'+f+'/delete',{method:'POST'});
+  if(r.ok)location.reload();
 }
-async function deleteReport(filename) {
-  if (!confirm(`Delete ${filename}?`)) return;
-  const res = await fetch(`/api/report/${filename}/delete`, {method:"POST"});
-  if (res.ok) location.reload();
-}
-if (localStorage.getItem("theme") === "light") document.body.classList.add("light");
+function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
+(function tick(){const el=document.getElementById('clock');if(el){const n=new Date();el.textContent=n.toLocaleTimeString('en-GB');}setTimeout(tick,1000);})();
 </script>
 </body>
 </html>
