@@ -4,422 +4,389 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#060c14">
+<meta name="theme-color" content="#020810">
 <title>CyberScan Pro — Login</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<!-- Build: 2026-06-13 12:56 -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
-:root {
-  --bg:     #060c14;
-  --bg2:    #0a1220;
-  --bg3:    #0f1a2e;
-  --accent: #00c8ff;
-  --green:  #00ff9d;
-  --red:    #ef4444;
-  --text:   #f1f5f9;
-  --text2:  #3d5a70;
-  --border: rgba(0,200,255,0.12);
+:root{
+  --bg:    #020810;
+  --bg2:   #060c14;
+  --bg3:   #0a1220;
+  --accent:#00c8ff;
+  --green: #00ff9d;
+  --red:   #ef4444;
+  --text:  #e2eaf4;
+  --text2: #304560;
+  --text3: #4d6a85;
+  --border:rgba(0,200,255,0.1);
+  --mono:  'Share Tech Mono',monospace;
+  --sans:  'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;min-height:100dvh;}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  min-height:100vh;
+  min-height:100dvh;
+  padding:16px;
+  position:relative;
+  overflow:hidden;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-html, body {
-  height: 100%; min-height: 100dvh;
-  font-family: 'Inter', sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  overflow-x: hidden;
-}
-
-body {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 16px;
-  position: relative;
-}
-
-/* ── SAME BACKGROUND AS DASHBOARD ────────────────────── */
-.bg-grid {
-  position: fixed; inset: 0; z-index: 0;
+/* ── BACKGROUND (matches dashboard exactly) ── */
+#bg-grid{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:
-    linear-gradient(rgba(0,200,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,200,255,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+    linear-gradient(rgba(0,200,255,0.04) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,200,255,0.04) 1px,transparent 1px);
+  background-size:44px 44px;
 }
-
-/* Scan line effect */
-.bg-scan {
-  position: fixed; inset: 0; z-index: 0;
-  background: repeating-linear-gradient(
-    0deg, transparent, transparent 3px,
-    rgba(0,0,0,0.03) 3px, rgba(0,0,0,0.03) 4px
+#bg-scan{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,transparent,transparent 2px,
+    rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 3px
   );
-  pointer-events: none;
-  animation: scanmove 15s linear infinite;
+  animation:scanmove 20s linear infinite;
 }
-@keyframes scanmove { from{background-position:0 0} to{background-position:0 100%} }
-
-/* Glow orb */
-.bg-glow {
-  position: fixed; z-index: 0;
-  width: 700px; height: 700px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(0,200,255,0.04) 0%, transparent 70%);
-  top: 50%; left: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
+@keyframes scanmove{from{background-position:0 0}to{background-position:0 100%}}
+#bg-glow{
+  position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,200,255,0.06) 0%,transparent 70%),
+    radial-gradient(ellipse 40% 30% at 85% 85%,rgba(0,150,255,0.04) 0%,transparent 60%),
+    radial-gradient(ellipse 30% 25% at 10% 60%,rgba(0,255,157,0.03) 0%,transparent 60%);
 }
-
 /* Corner accents */
-.corner {
-  position: fixed; z-index: 0;
-  width: 200px; height: 200px;
-  pointer-events: none;
-  opacity: 0.4;
-}
-.corner-tl { top: 0; left: 0; border-top: 1px solid var(--accent); border-left: 1px solid var(--accent); }
-.corner-tr { top: 0; right: 0; border-top: 1px solid var(--accent); border-right: 1px solid var(--accent); }
-.corner-bl { bottom: 0; left: 0; border-bottom: 1px solid var(--accent); border-left: 1px solid var(--accent); }
-.corner-br { bottom: 0; right: 0; border-bottom: 1px solid var(--accent); border-right: 1px solid var(--accent); }
+.corner{position:fixed;z-index:0;pointer-events:none;opacity:0.5;}
+.c-tl{top:0;left:0;width:120px;height:120px;border-top:1px solid var(--accent);border-left:1px solid var(--accent);}
+.c-tr{top:0;right:0;width:120px;height:120px;border-top:1px solid var(--accent);border-right:1px solid var(--accent);}
+.c-bl{bottom:0;left:0;width:70px;height:70px;border-bottom:1px solid var(--accent);border-left:1px solid var(--accent);}
+.c-br{bottom:0;right:0;width:70px;height:70px;border-bottom:1px solid var(--accent);border-right:1px solid var(--accent);}
 
-/* ── LAYOUT ───────────────────────────────────────────── */
-.container {
-  position: relative; z-index: 1;
-  width: 100%; max-width: 460px;
-  display: flex; flex-direction: column; gap: 16px;
+/* ── LAYOUT ── */
+.page{
+  position:relative;z-index:1;
+  width:100%;max-width:900px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  min-height:min(600px,90vh);
+  border-radius:16px;
+  overflow:hidden;
+  border:1px solid var(--border);
+  box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(0,200,255,0.05);
+  animation:fadeUp 0.5s ease both;
 }
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
-/* ── TERMINAL BOOT ────────────────────────────────────── */
-.terminal {
-  background: rgba(0,0,0,0.6);
-  border: 1px solid rgba(0,200,255,0.15);
-  border-radius: 10px;
-  overflow: hidden;
-  font-family: 'Share Tech Mono', monospace;
+/* ── LEFT PANEL (branding) ── */
+.left{
+  background:linear-gradient(160deg,rgba(0,200,255,0.06) 0%,rgba(0,10,25,0.95) 60%);
+  border-right:1px solid var(--border);
+  padding:40px 36px;
+  display:flex;flex-direction:column;
+  justify-content:space-between;
+  position:relative;overflow:hidden;
 }
-.terminal-bar {
-  background: #0a0a0a;
-  padding: 8px 14px;
-  display: flex; align-items: center; gap: 8px;
-  border-bottom: 1px solid rgba(0,200,255,0.1);
+.left::before{
+  content:"";position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300c8ff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  pointer-events:none;
 }
-.tdot { width: 10px; height: 10px; border-radius: 50%; }
-.tdot.r { background: #ff5f57; }
-.tdot.y { background: #ffbd2e; }
-.tdot.g { background: #27c93f; }
-.terminal-title {
-  font-size: 10px; color: var(--accent);
-  letter-spacing: 2px; margin-left: 6px;
-}
-.terminal-body {
-  padding: 14px 16px;
-  font-size: clamp(10px, 2.8vw, 12px);
-  line-height: 1.9;
-  min-height: 120px;
-}
-.tline { display: flex; gap: 8px; opacity: 0; animation: tappear 0.1s ease forwards; }
-.tline .prompt { color: var(--accent); flex-shrink: 0; }
-.tline.ok   .msg { color: var(--green); }
-.tline.warn .msg { color: #ffaa00; }
-.tline.err  .msg { color: var(--red); }
-.tline.info .msg { color: var(--accent); }
-.tline.dim  .msg { color: var(--text2); }
-.tline.white .msg { color: var(--text); }
-.cursor-blink {
-  display: inline-block; width: 8px; height: 13px;
-  background: var(--accent);
-  animation: blink 1s step-end infinite;
-  vertical-align: middle; margin-left: 4px;
-}
-@keyframes blink { 50% { opacity: 0; } }
-@keyframes tappear { to { opacity: 1; } }
+/* SVG Logo on left */
+.left-logo{display:flex;align-items:center;gap:12px;margin-bottom:40px;}
+.logo-svg{width:42px;height:42px;flex-shrink:0;}
+.logo-words{}
+.logo-name{font-family:var(--sans);font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.5px;line-height:1;}
+.logo-name span{color:var(--accent);}
+.logo-tag{font-family:var(--mono);font-size:9px;color:var(--text2);margin-top:5px;letter-spacing:2px;}
 
-/* ── LOGIN CARD ───────────────────────────────────────── */
-.card {
-  background: rgba(10,18,32,0.95);
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  overflow: hidden;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 0 0 1px rgba(0,200,255,0.05);
-  animation: fadeUp 0.4s ease both 1.8s;
-  opacity: 0;
-}
-@keyframes fadeUp {
-  from { opacity:0; transform:translateY(12px); }
-  to   { opacity:1; transform:translateY(0); }
-}
+/* Left hero text */
+.left-hero{flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 0;}
+.left-title{font-size:clamp(22px,3.5vw,30px);font-weight:800;color:var(--text);line-height:1.2;margin-bottom:14px;letter-spacing:-0.5px;}
+.left-title span{color:var(--accent);}
+.left-desc{font-size:13px;color:var(--text3);line-height:1.8;max-width:280px;}
 
-.card-top {
-  background: var(--bg3);
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 8px;
-}
-.card-label {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 10px; color: var(--accent);
-  letter-spacing: 2px; margin-left: 6px;
-}
+/* Feature bullets */
+.features{display:flex;flex-direction:column;gap:10px;margin-top:28px;}
+.feat{display:flex;align-items:flex-start;gap:10px;}
+.feat-icon{width:28px;height:28px;border-radius:6px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;}
+.feat-text{}
+.feat-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
+.feat-sub{font-size:11px;color:var(--text2);line-height:1.4;}
 
-.card-body { padding: 24px 22px; }
+/* Left footer */
+.left-foot{font-size:10px;color:var(--text2);font-family:var(--mono);letter-spacing:1px;line-height:1.8;}
+.left-foot span{color:rgba(0,200,255,0.4);}
 
-/* Logo inside card */
-.card-logo {
-  display: flex; align-items: center; gap: 12px;
-  margin-bottom: 22px;
+/* ── RIGHT PANEL (form) ── */
+.right{
+  background:rgba(6,12,20,0.98);
+  padding:40px 36px;
+  display:flex;flex-direction:column;
+  justify-content:center;
 }
-.card-logo-icon {
-  width: 44px; height: 44px;
-  background: linear-gradient(135deg, rgba(0,200,255,0.15), rgba(0,200,255,0.05));
-  border: 1px solid rgba(0,200,255,0.2);
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; flex-shrink: 0;
-}
-.card-logo-text {}
-.card-logo-name {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 18px; font-weight: 700;
-  color: var(--text); letter-spacing: 1px;
-}
-.card-logo-name span { color: var(--accent); }
-.card-logo-sub { font-size: 10px; color: var(--text2); margin-top: 2px; letter-spacing: 1px; }
+.right-header{margin-bottom:32px;}
+.right-eyebrow{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
+.right-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.3px;line-height:1.2;}
+.right-sub{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.6;}
 
 /* Error */
-.error {
-  background: rgba(239,68,68,0.08);
-  border: 1px solid rgba(239,68,68,0.25);
-  border-radius: 8px; padding: 10px 14px;
-  margin-bottom: 18px; font-size: 12px;
-  color: var(--red); display: flex;
-  align-items: center; gap: 8px;
+.error{
+  background:rgba(239,68,68,0.07);
+  border:1px solid rgba(239,68,68,0.2);
+  border-left:3px solid var(--red);
+  border-radius:7px;padding:10px 14px;
+  margin-bottom:20px;font-size:12px;
+  color:var(--red);display:flex;
+  align-items:center;gap:8px;
 }
 
-/* Fields */
-.field { margin-bottom: 16px; }
-.field label {
-  display: block; font-size: 10px; font-weight: 600;
-  color: var(--text2); letter-spacing: 2px;
-  text-transform: uppercase; margin-bottom: 8px;
-  font-family: 'Share Tech Mono', monospace;
+/* Form fields */
+.form{display:flex;flex-direction:column;gap:18px;}
+.field{}
+.field label{
+  display:block;font-size:11px;font-weight:600;
+  color:var(--text3);letter-spacing:0.5px;
+  margin-bottom:8px;
 }
-.input-wrap { position: relative; display: flex; align-items: center; }
-.input-icon {
-  position: absolute; left: 14px;
-  color: var(--text2); font-size: 15px; pointer-events: none;
+.input-wrap{position:relative;display:flex;align-items:center;}
+.input-icon{
+  position:absolute;left:14px;
+  color:var(--text2);font-size:15px;
+  pointer-events:none;flex-shrink:0;
 }
-.field input {
-  width: 100%;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 13px 14px 13px 42px;
-  color: var(--text); font-size: 15px;
-  font-family: 'Share Tech Mono', monospace;
-  outline: none; transition: all 0.2s;
-  -webkit-appearance: none;
+.field input{
+  width:100%;
+  background:var(--bg3);
+  border:1px solid var(--border);
+  border-radius:8px;
+  padding:13px 14px 13px 42px;
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:14px;
+  outline:none;
+  transition:all 0.2s;
+  -webkit-appearance:none;
 }
-.field input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0,200,255,0.08);
-  background: rgba(0,200,255,0.02);
+.field input:focus{
+  border-color:rgba(0,200,255,0.4);
+  background:rgba(0,200,255,0.02);
+  box-shadow:0 0 0 3px rgba(0,200,255,0.07);
 }
-.field input::placeholder { color: var(--text2); font-size: 13px; }
+.field input::placeholder{color:var(--text2);font-size:13px;}
+.eye-btn{
+  position:absolute;right:12px;
+  background:none;border:none;
+  color:var(--text2);cursor:pointer;
+  padding:4px;font-size:15px;
+  transition:color 0.2s;
+}
+.eye-btn:hover{color:var(--accent);}
 
-.toggle-pass {
-  position: absolute; right: 12px;
-  background: none; border: none;
-  color: var(--text2); cursor: pointer; padding: 4px;
-  font-size: 15px; transition: color 0.2s;
+/* Submit */
+.btn-login{
+  width:100%;
+  padding:14px;
+  background:rgba(0,200,255,0.1);
+  color:var(--accent);
+  border:1px solid rgba(0,200,255,0.35);
+  border-radius:8px;
+  font-size:13px;font-weight:700;
+  font-family:var(--sans);
+  letter-spacing:0.5px;
+  cursor:pointer;
+  transition:all 0.2s;
+  margin-top:4px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  -webkit-tap-highlight-color:transparent;
+  touch-action:manipulation;
 }
-.toggle-pass:hover { color: var(--accent); }
+.btn-login:hover{
+  background:rgba(0,200,255,0.18);
+  box-shadow:0 0 30px rgba(0,200,255,0.15);
+  transform:translateY(-1px);
+}
+.btn-login:active{transform:translateY(0);}
 
-/* Submit button */
-.btn-login {
-  width: 100%;
-  background: rgba(0,200,255,0.08);
-  color: var(--accent);
-  border: 1px solid rgba(0,200,255,0.3);
-  border-radius: 8px; padding: 14px;
-  font-size: 13px; font-weight: 700;
-  letter-spacing: 2px;
-  font-family: 'Share Tech Mono', monospace;
-  cursor: pointer; transition: all 0.2s;
-  margin-top: 6px;
-  -webkit-tap-highlight-color: transparent;
-  touch-action: manipulation;
+/* Status footer */
+.right-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-top:28px;padding-top:20px;
+  border-top:1px solid var(--border);
+  flex-wrap:wrap;gap:8px;
 }
-.btn-login:hover {
-  background: rgba(0,200,255,0.15);
-  box-shadow: 0 4px 20px rgba(0,200,255,0.15);
-  transform: translateY(-1px);
-}
-.btn-login:active { transform: translateY(0); }
+.status-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);}
+.s-dot{width:6px;height:6px;border-radius:50%;}
+.s-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green);animation:sdot 2s infinite;}
+.s-dot.blue{background:var(--accent);box-shadow:0 0 6px var(--accent);}
+@keyframes sdot{0%,100%{opacity:1}50%{opacity:0.4}}
+.right-version{font-family:var(--mono);font-size:10px;color:var(--text2);}
 
-/* Footer */
-.card-footer {
-  padding: 12px 22px;
-  background: var(--bg3);
-  border-top: 1px solid var(--border);
-  display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 8px;
+/* ── MOBILE ── */
+@media(max-width:640px){
+  .page{grid-template-columns:1fr;min-height:auto;}
+  .left{display:none;}
+  .right{padding:32px 24px;}
+  .corner{display:none;}
 }
-.footer-status { display: flex; align-items: center; gap: 6px; font-size: 10px; color: var(--text2); }
-.status-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
-  animation: pulse 2s infinite;
+@media(max-width:380px){
+  .right{padding:24px 18px;}
 }
-.footer-version { font-size: 10px; color: var(--text2); font-family: 'Share Tech Mono', monospace; }
-.footer-warn { font-size: 10px; color: rgba(255,170,0,0.6); }
-
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-
-/* Mobile */
-@media (max-width: 480px) {
-  body { align-items: flex-start; padding-top: clamp(20px,6vh,50px); }
-  .card-body { padding: 20px 16px; }
-  .card-top, .card-footer { padding: 10px 16px; }
-  .corner { width: 80px; height: 80px; }
-}
-
-@media (max-height: 600px) and (orientation: landscape) {
-  body { align-items: flex-start; padding-top: 8px; }
-  .terminal { display: none; }
+@media(max-height:600px) and (orientation:landscape){
+  body{align-items:flex-start;padding-top:10px;}
+  .left{display:none;}
 }
 </style>
 </head>
 <body>
 
-<!-- Background layers (same as dashboard) -->
-<div class="bg-grid"></div>
-<div class="bg-scan"></div>
-<div class="bg-glow"></div>
-<div class="corner corner-tl"></div>
-<div class="corner corner-tr"></div>
-<div class="corner corner-bl"></div>
-<div class="corner corner-br"></div>
+<div id="bg-grid"></div>
+<div id="bg-scan"></div>
+<div id="bg-glow"></div>
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+<div class="corner c-bl"></div>
+<div class="corner c-br"></div>
 
-<div class="container">
+<div class="page">
 
-  <!-- Terminal boot sequence -->
-  <div class="terminal" id="terminal">
-    <div class="terminal-bar">
-      <div class="tdot r"></div>
-      <div class="tdot y"></div>
-      <div class="tdot g"></div>
-      <span class="terminal-title">// SYSTEM BOOT</span>
+  <!-- LEFT PANEL -->
+  <div class="left">
+    <div class="left-logo">
+      <svg class="logo-svg" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect width="42" height="42" rx="10" fill="rgba(0,200,255,0.07)" stroke="rgba(0,200,255,0.2)" stroke-width="1"/>
+        <path d="M21 7L9 12V21C9 27.6 14.4 33.6 21 35C27.6 33.6 33 27.6 33 21V12L21 7Z"
+          fill="rgba(0,200,255,0.1)" stroke="rgba(0,200,255,0.6)" stroke-width="1.2" stroke-linejoin="round"/>
+        <line x1="14" y1="19" x2="28" y2="19" stroke="rgba(0,200,255,0.5)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <line x1="14" y1="22" x2="28" y2="22" stroke="rgba(0,200,255,0.5)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <line x1="14" y1="25" x2="25" y2="25" stroke="rgba(0,200,255,0.3)" stroke-width="0.8" stroke-dasharray="2 2"/>
+        <circle cx="21" cy="15" r="2.5" fill="rgba(0,200,255,0.9)"/>
+        <rect x="8" y="8" width="5" height="1" fill="rgba(0,200,255,0.35)"/>
+        <rect x="8" y="8" width="1" height="5" fill="rgba(0,200,255,0.35)"/>
+        <rect x="29" y="8" width="5" height="1" fill="rgba(0,200,255,0.35)"/>
+        <rect x="33" y="8" width="1" height="5" fill="rgba(0,200,255,0.35)"/>
+      </svg>
+      <div class="logo-words">
+        <div class="logo-name">CyberScan<span>Pro</span></div>
+        <div class="logo-tag">SECURITY ASSESSMENT PLATFORM</div>
+      </div>
     </div>
-    <div class="terminal-body" id="terminal-body">
-      <!-- Lines injected by JS -->
+
+    <div class="left-hero">
+      <div class="left-title">Automated<br><span>Vulnerability</span><br>Assessment</div>
+      <div class="left-desc">Professional-grade network and web application security scanning for modern teams.</div>
+
+      <div class="features">
+        <div class="feat">
+          <div class="feat-icon">🔍</div>
+          <div class="feat-text">
+            <div class="feat-name">Network & Port Scanning</div>
+            <div class="feat-sub">Nmap-powered host discovery and service detection</div>
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">🌐</div>
+          <div class="feat-text">
+            <div class="feat-name">OWASP Top 10 Testing</div>
+            <div class="feat-sub">SQLi, XSS, CSRF, headers, and more</div>
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">📊</div>
+          <div class="feat-text">
+            <div class="feat-name">CVE Intelligence</div>
+            <div class="feat-sub">Real-time NVD database with CVSS scoring</div>
+          </div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon">📄</div>
+          <div class="feat-text">
+            <div class="feat-name">Professional Reports</div>
+            <div class="feat-sub">PDF and HTML reports with plain English</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="left-foot">
+      FUPRE FINAL YEAR PROJECT<br>
+      <span>COMPUTER SCIENCE · 2025</span>
     </div>
   </div>
 
-  <!-- Login card -->
-  <div class="card" id="login-card">
-    <div class="card-top">
-      <div class="tdot r"></div>
-      <div class="tdot y"></div>
-      <div class="tdot g"></div>
-      <span class="card-label">// AUTHENTICATION REQUIRED</span>
+  <!-- RIGHT PANEL -->
+  <div class="right">
+    <div class="right-header">
+      <div class="right-eyebrow">// Secure Access</div>
+      <div class="right-title">Welcome back</div>
+      <div class="right-sub">Sign in to access your security dashboard</div>
     </div>
 
-    <div class="card-body">
-      <div class="card-logo">
-        <div class="card-logo-icon">🛡</div>
-        <div class="card-logo-text">
-          <div class="card-logo-name">CyberScan<span>Pro</span></div>
-          <div class="card-logo-sub">SECURITY ASSESSMENT PLATFORM</div>
+    {% if error %}
+    <div class="error">
+      <span>⚠</span>
+      <span>{{ error }} — please try again</span>
+    </div>
+    {% endif %}
+
+    <form class="form" method="POST" autocomplete="off">
+      <div class="field">
+        <label>Username</label>
+        <div class="input-wrap">
+          <span class="input-icon">👤</span>
+          <input type="text" name="username"
+            placeholder="Enter your username"
+            autocomplete="username"
+            autocorrect="off"
+            autocapitalize="none"
+            spellcheck="false"
+            autofocus>
         </div>
       </div>
 
-      {% if error %}
-      <div class="error">⚠ {{ error }}</div>
-      {% endif %}
-
-      <form method="POST" autocomplete="off">
-        <div class="field">
-          <label>// Username</label>
-          <div class="input-wrap">
-            <span class="input-icon">👤</span>
-            <input type="text" name="username"
-                   placeholder="operator_id"
-                   autocomplete="username"
-                   autocorrect="off"
-                   autocapitalize="none"
-                   spellcheck="false"
-                   autofocus>
-          </div>
+      <div class="field">
+        <label>Password</label>
+        <div class="input-wrap">
+          <span class="input-icon">🔒</span>
+          <input type="password" name="password"
+            id="pass"
+            placeholder="Enter your password"
+            autocomplete="current-password">
+          <button type="button" class="eye-btn" onclick="togglePass()">👁</button>
         </div>
-
-        <div class="field">
-          <label>// Password</label>
-          <div class="input-wrap">
-            <span class="input-icon">🔒</span>
-            <input type="password" name="password"
-                   id="pass-input"
-                   placeholder="••••••••••••"
-                   autocomplete="current-password">
-            <button type="button" class="toggle-pass" onclick="togglePass()">👁</button>
-          </div>
-        </div>
-
-        <button type="submit" class="btn-login">▶ AUTHENTICATE</button>
-      </form>
-    </div>
-
-    <div class="card-footer">
-      <div class="footer-status">
-        <div class="status-dot"></div>
-        System Online · Secure
       </div>
-      <div class="footer-version">v1.0.0</div>
-      <div class="footer-warn">⚠ Authorized Use Only</div>
+
+      <button type="submit" class="btn-login">
+        Sign In <span>→</span>
+      </button>
+    </form>
+
+    <div class="right-foot">
+      <div class="status-item">
+        <div class="s-dot ok"></div>
+        System Online
+      </div>
+      <div class="status-item">
+        <div class="s-dot blue"></div>
+        Encrypted Connection
+      </div>
+      <div class="right-version">v1.0.0</div>
     </div>
   </div>
 
 </div>
 
 <script>
-// Terminal boot lines
-const LINES = [
-  { cls: "info",  text: "CyberScan Pro v1.0.0 initializing...",        delay: 100  },
-  { cls: "dim",   text: "Loading vulnerability modules...",             delay: 400  },
-  { cls: "ok",    text: "[OK] Network scanner engine loaded",           delay: 700  },
-  { cls: "ok",    text: "[OK] Web vulnerability tester loaded",         delay: 950  },
-  { cls: "ok",    text: "[OK] CVE database connection established",      delay: 1200 },
-  { cls: "ok",    text: "[OK] Report generator ready",                  delay: 1450 },
-  { cls: "warn",  text: "[!!] Authentication required to proceed",       delay: 1700 },
-  { cls: "white", text: "Enter credentials below to access the system.", delay: 1900 },
-];
-
-const body = document.getElementById("terminal-body");
-
-LINES.forEach((line, i) => {
-  setTimeout(() => {
-    // Remove cursor from previous line
-    const prev = body.querySelector(".cursor-blink");
-    if (prev) prev.remove();
-
-    const el = document.createElement("div");
-    el.className = "tline " + line.cls;
-    el.style.animationDelay = "0s";
-    el.innerHTML = `<span class="prompt">></span><span class="msg">${line.text}</span>`;
-
-    // Add cursor to last line
-    if (i === LINES.length - 1) {
-      el.innerHTML += `<span class="cursor-blink"></span>`;
-    }
-    body.appendChild(el);
-    body.scrollTop = body.scrollHeight;
-  }, line.delay);
-});
-
-function togglePass() {
-  const inp = document.getElementById("pass-input");
-  inp.type = inp.type === "password" ? "text" : "password";
+function togglePass(){
+  const i=document.getElementById('pass');
+  i.type=i.type==='password'?'text':'password';
 }
 </script>
 </body>
