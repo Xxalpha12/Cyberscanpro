@@ -428,11 +428,23 @@ async function launchScan(){
   addLine('info', 'Initiating ' + scanType + ' scan...');
 
   try{
-    const res  = await fetch('/scan/start',{
+    const res = await fetch('/scan/start',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body: JSON.stringify({target, scan_type:scanType, email, port_range:portRange})
     });
+
+    // Check content type before parsing
+    const contentType = res.headers.get('content-type')||'';
+    if(!contentType.includes('application/json')){
+      const text = await res.text();
+      addLine('err','[ERROR] Server returned unexpected response (HTTP '+res.status+')');
+      addLine('err','Check Render logs for Python errors');
+      console.error('Non-JSON response:', text.substring(0,200));
+      btn.disabled=false; btn.textContent='▶ LAUNCH ASSESSMENT';
+      return;
+    }
+
     const data = await res.json();
     if(data.session_id){
       SESSION_ID = data.session_id;
@@ -444,6 +456,7 @@ async function launchScan(){
     }
   }catch(e){
     addLine('err','[ERROR] ' + e.message);
+    addLine('warn','Check your internet connection and try again');
     btn.disabled=false; btn.textContent='▶ LAUNCH ASSESSMENT';
   }
 }
@@ -463,7 +476,9 @@ function pollStatus(){
   if(POLL) clearInterval(POLL);
   POLL = setInterval(async()=>{
     try{
-      const res  = await fetch('/api/scan-status/' + SESSION_ID);
+      const res = await fetch('/api/scan-status/' + SESSION_ID);
+      const contentType = res.headers.get('content-type')||'';
+      if(!contentType.includes('application/json')){return;}
       const data = await res.json();
 
       // Update log

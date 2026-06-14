@@ -226,6 +226,7 @@ def new_scan():
     return render_template("new_scan.html", page="new_scan", title="New Scan")
 
 
+@app.route("/scan/start", methods=["POST"])
 @app.route("/scan/run", methods=["POST"])
 @login_required
 def run_scan():
@@ -448,6 +449,7 @@ def run_scan():
     return jsonify({"session_id": session_id, "status": "started"})
 
 
+@app.route("/api/scan-status/<session_id>")
 @app.route("/scan/<session_id>/status")
 @login_required
 def scan_status(session_id):
@@ -770,6 +772,35 @@ CyberScan Pro | FUPRE Final Year Project | Obeh Emmanuel Onoriode
 
 # ── API ───────────────────────────────────────────────────
 
+@app.route("/api/severity-counts")
+@login_required
+def api_severity_counts():
+    db = Database()
+    counts   = db.get_severity_counts()
+    total    = db.get_total_findings()
+    sessions = db.get_all_sessions()
+    db.close()
+    return jsonify({
+        "severity_counts": counts,
+        "total_findings":  total,
+        "session_count":   len(sessions),
+        "completed": len([s for s in sessions if s["status"] == "completed"]),
+        "running":   len([s for s in sessions if s["status"] == "running"]),
+        "errors":    len([s for s in sessions if s["status"] == "error"])
+    })
+
+
+@app.route("/api/sessions")
+@login_required
+def api_sessions():
+    db = Database()
+    sessions = db.get_all_sessions()
+    db.close()
+    return jsonify(sessions)
+
+
+# ── LOCAL → CLOUD SYNC ───────────────────────────────────────────────────────
+
 @app.route("/api/sync", methods=["POST"])
 def api_sync():
     """
@@ -963,6 +994,36 @@ def save_notes(session_id):
 
 
 # ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
+
+@app.route("/api/notifications")
+@login_required
+def get_notifications():
+    db = Database()
+    sessions = db.get_all_sessions()
+    notifications = []
+    for s in sessions:
+        if s["status"] != "completed":
+            continue
+        counts = db.get_severity_counts(s["id"])
+        if counts["Critical"] > 0:
+            notifications.append({
+                "type":       "critical",
+                "message":    f"{counts['Critical']} CRITICAL vulnerability found on {s['target']}",
+                "session_id": s["id"],
+                "time":       s.get("started_at","")
+            })
+        elif counts["High"] > 0:
+            notifications.append({
+                "type":       "high",
+                "message":    f"{counts['High']} HIGH severity finding on {s['target']}",
+                "session_id": s["id"],
+                "time":       s.get("started_at","")
+            })
+    db.close()
+    return jsonify(notifications[:10])
+
+
+# ── RISK CHART ────────────────────────────────────────────────────────────────
 
 @app.route("/api/risk-chart")
 @login_required
