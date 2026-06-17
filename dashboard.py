@@ -114,17 +114,13 @@ def index():
             trend_labels.append((s.get("started_at","")[:10] or "")[-5:])
 
         if scores:
-            min_s, max_s = min(scores), max(scores)
-            rng = max_s - min_s if max_s != min_s else 1
             n   = len(scores)
             pts = []
             for i, sc in enumerate(scores):
-                x = int(i / (n-1) * 380 + 10) if n > 1 else 200
-                y = int(110 - ((sc - min_s) / rng * 90 + 10)) if rng else 60
-                pts.append({"x": x, "y": y, "val": sc})
+                pts.append({"x": i, "y": i, "val": sc})
             trend_points = pts
-            line_d  = "M " + " L ".join(f"{p['x']},{p['y']}" for p in pts)
-            area_d  = line_d + f" L {pts[-1]['x']},120 L {pts[0]['x']},120 Z"
+            line_d = ""
+            area_d = ""
     else:
         line_d = area_d = ""
 
@@ -206,7 +202,7 @@ def index():
         pci_score=pci_score,
         iso_score=iso_score,
         nist_score=nist_score,
-        recent_reports=recent_reports,
+        recent_reports=[],
         top_targets=top_targets,
         page="home", title="Dashboard"
     )

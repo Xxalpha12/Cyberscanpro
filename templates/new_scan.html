@@ -134,7 +134,20 @@
     .corner{display:none;}
   }
   @media(min-width:721px){.menu-btn{display:none !important;}}
-  ::-webkit-scrollbar{width:3px;}
+  
+/* Page animations */
+body{animation:pagein 0.3s ease both;}
+@keyframes pagein{from{opacity:0}to{opacity:1}}
+.card,.form-card,.s-section,.r-card,.t-item,.stat-mini{
+  animation:cardIn 0.4s ease both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.topbar{animation:topIn 0.3s ease both;}
+@keyframes topIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.sidebar{animation:sideIn 0.3s ease both;}
+@keyframes sideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+
+::-webkit-scrollbar{width:3px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
   </style>
@@ -183,7 +196,20 @@
 .term-title{font-size:10px;color:var(--accent);letter-spacing:2px;margin-left:4px;}
 .term-status{margin-left:auto;font-size:10px;}
 .term-body{padding:14px 16px;min-height:200px;max-height:340px;overflow-y:auto;font-size:11px;line-height:1.9;}
-.term-body::-webkit-scrollbar{width:3px;}
+.term-body
+/* Page animations */
+body{animation:pagein 0.3s ease both;}
+@keyframes pagein{from{opacity:0}to{opacity:1}}
+.card,.form-card,.s-section,.r-card,.t-item,.stat-mini{
+  animation:cardIn 0.4s ease both;
+}
+@keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.topbar{animation:topIn 0.3s ease both;}
+@keyframes topIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.sidebar{animation:sideIn 0.3s ease both;}
+@keyframes sideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:translateX(0)}}
+
+::-webkit-scrollbar{width:3px;}
 .term-body::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.2);}
 .tline{display:flex;gap:8px;animation:tappear 0.1s ease both;}
 .tline .pr{color:var(--accent);flex-shrink:0;}
@@ -205,11 +231,432 @@
 </style>
 </head>
 <body>
+<!-- ══ PRELOADER ══ -->
+<div id="preloader">
+  <div class="pre-inner">
+    <div class="pre-logo">
+      <img src="/favicon.ico" class="pre-icon" id="pre-icon" alt="">
+      <div class="pre-rings">
+        <div class="pre-ring r1"></div>
+        <div class="pre-ring r2"></div>
+        <div class="pre-ring r3"></div>
+      </div>
+    </div>
+    <div class="pre-name">CyberScan<span>Pro</span></div>
+    <div class="pre-bar-wrap"><div class="pre-bar" id="pre-bar"></div></div>
+    <div class="pre-status" id="pre-status">Initializing...</div>
+  </div>
+</div>
+
+<style>
+#preloader{
+  position:fixed;inset:0;z-index:9999;
+  background:#020810;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 0.5s ease, visibility 0.5s ease;
+}
+#preloader.done{opacity:0;visibility:hidden;pointer-events:none;}
+.pre-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.pre-logo{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
+.pre-icon{width:40px;height:40px;z-index:2;position:relative;image-rendering:crisp-edges;}
+.pre-rings{position:absolute;inset:0;}
+.pre-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid transparent;
+  animation:prerotate 2s linear infinite;
+}
+.r1{inset:0;border-top-color:rgba(0,200,255,0.8);border-right-color:rgba(0,200,255,0.2);animation-duration:1.2s;}
+.r2{inset:8px;border-top-color:rgba(0,255,157,0.6);border-left-color:rgba(0,255,157,0.1);animation-duration:1.8s;animation-direction:reverse;}
+.r3{inset:16px;border-bottom-color:rgba(0,200,255,0.4);animation-duration:2.4s;}
+@keyframes prerotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.pre-name{
+  font-family:'Share Tech Mono',monospace;
+  font-size:18px;font-weight:700;
+  color:#e2eaf4;letter-spacing:2px;
+}
+.pre-name span{color:#00c8ff;}
+.pre-bar-wrap{
+  width:180px;height:2px;
+  background:rgba(0,200,255,0.1);
+  border-radius:2px;overflow:hidden;
+}
+.pre-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#00c8ff,#00ff9d);
+  border-radius:2px;
+  transition:width 0.3s ease;
+  box-shadow:0 0 8px rgba(0,200,255,0.5);
+}
+.pre-status{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:#304560;
+  letter-spacing:2px;
+}
+</style>
+
+<script>
+(function(){
+  const steps = [
+    {w:20,  t:'Loading modules...'},
+    {w:45,  t:'Connecting to database...'},
+    {w:70,  t:'Checking CVE feed...'},
+    {w:90,  t:'Almost ready...'},
+    {w:100, t:'Done'},
+  ];
+  let i = 0;
+  const bar = document.getElementById('pre-bar');
+  const stat = document.getElementById('pre-status');
+  const iv = setInterval(()=>{
+    if(i >= steps.length){ clearInterval(iv); return; }
+    bar.style.width = steps[i].w + '%';
+    stat.textContent = steps[i].t;
+    i++;
+  }, 200);
+  window.addEventListener('load', ()=>{
+    setTimeout(()=>{
+      bar.style.width = '100%';
+      stat.textContent = 'Ready';
+      setTimeout(()=>{
+        document.getElementById('preloader').classList.add('done');
+      }, 400);
+    }, 300);
+  });
+})();
+</script>
+
 <div class="bg-fixed" id="bg-grid"></div>
+<!-- ══ PRELOADER ══ -->
+<div id="preloader">
+  <div class="pre-inner">
+    <div class="pre-logo">
+      <img src="/favicon.ico" class="pre-icon" id="pre-icon" alt="">
+      <div class="pre-rings">
+        <div class="pre-ring r1"></div>
+        <div class="pre-ring r2"></div>
+        <div class="pre-ring r3"></div>
+      </div>
+    </div>
+    <div class="pre-name">CyberScan<span>Pro</span></div>
+    <div class="pre-bar-wrap"><div class="pre-bar" id="pre-bar"></div></div>
+    <div class="pre-status" id="pre-status">Initializing...</div>
+  </div>
+</div>
+
+<style>
+#preloader{
+  position:fixed;inset:0;z-index:9999;
+  background:#020810;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 0.5s ease, visibility 0.5s ease;
+}
+#preloader.done{opacity:0;visibility:hidden;pointer-events:none;}
+.pre-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.pre-logo{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
+.pre-icon{width:40px;height:40px;z-index:2;position:relative;image-rendering:crisp-edges;}
+.pre-rings{position:absolute;inset:0;}
+.pre-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid transparent;
+  animation:prerotate 2s linear infinite;
+}
+.r1{inset:0;border-top-color:rgba(0,200,255,0.8);border-right-color:rgba(0,200,255,0.2);animation-duration:1.2s;}
+.r2{inset:8px;border-top-color:rgba(0,255,157,0.6);border-left-color:rgba(0,255,157,0.1);animation-duration:1.8s;animation-direction:reverse;}
+.r3{inset:16px;border-bottom-color:rgba(0,200,255,0.4);animation-duration:2.4s;}
+@keyframes prerotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.pre-name{
+  font-family:'Share Tech Mono',monospace;
+  font-size:18px;font-weight:700;
+  color:#e2eaf4;letter-spacing:2px;
+}
+.pre-name span{color:#00c8ff;}
+.pre-bar-wrap{
+  width:180px;height:2px;
+  background:rgba(0,200,255,0.1);
+  border-radius:2px;overflow:hidden;
+}
+.pre-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#00c8ff,#00ff9d);
+  border-radius:2px;
+  transition:width 0.3s ease;
+  box-shadow:0 0 8px rgba(0,200,255,0.5);
+}
+.pre-status{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:#304560;
+  letter-spacing:2px;
+}
+</style>
+
+<script>
+(function(){
+  const steps = [
+    {w:20,  t:'Loading modules...'},
+    {w:45,  t:'Connecting to database...'},
+    {w:70,  t:'Checking CVE feed...'},
+    {w:90,  t:'Almost ready...'},
+    {w:100, t:'Done'},
+  ];
+  let i = 0;
+  const bar = document.getElementById('pre-bar');
+  const stat = document.getElementById('pre-status');
+  const iv = setInterval(()=>{
+    if(i >= steps.length){ clearInterval(iv); return; }
+    bar.style.width = steps[i].w + '%';
+    stat.textContent = steps[i].t;
+    i++;
+  }, 200);
+  window.addEventListener('load', ()=>{
+    setTimeout(()=>{
+      bar.style.width = '100%';
+      stat.textContent = 'Ready';
+      setTimeout(()=>{
+        document.getElementById('preloader').classList.add('done');
+      }, 400);
+    }, 300);
+  });
+})();
+</script>
+
 <div class="bg-fixed" id="bg-scan"></div>
+<!-- ══ PRELOADER ══ -->
+<div id="preloader">
+  <div class="pre-inner">
+    <div class="pre-logo">
+      <img src="/favicon.ico" class="pre-icon" id="pre-icon" alt="">
+      <div class="pre-rings">
+        <div class="pre-ring r1"></div>
+        <div class="pre-ring r2"></div>
+        <div class="pre-ring r3"></div>
+      </div>
+    </div>
+    <div class="pre-name">CyberScan<span>Pro</span></div>
+    <div class="pre-bar-wrap"><div class="pre-bar" id="pre-bar"></div></div>
+    <div class="pre-status" id="pre-status">Initializing...</div>
+  </div>
+</div>
+
+<style>
+#preloader{
+  position:fixed;inset:0;z-index:9999;
+  background:#020810;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 0.5s ease, visibility 0.5s ease;
+}
+#preloader.done{opacity:0;visibility:hidden;pointer-events:none;}
+.pre-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.pre-logo{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
+.pre-icon{width:40px;height:40px;z-index:2;position:relative;image-rendering:crisp-edges;}
+.pre-rings{position:absolute;inset:0;}
+.pre-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid transparent;
+  animation:prerotate 2s linear infinite;
+}
+.r1{inset:0;border-top-color:rgba(0,200,255,0.8);border-right-color:rgba(0,200,255,0.2);animation-duration:1.2s;}
+.r2{inset:8px;border-top-color:rgba(0,255,157,0.6);border-left-color:rgba(0,255,157,0.1);animation-duration:1.8s;animation-direction:reverse;}
+.r3{inset:16px;border-bottom-color:rgba(0,200,255,0.4);animation-duration:2.4s;}
+@keyframes prerotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.pre-name{
+  font-family:'Share Tech Mono',monospace;
+  font-size:18px;font-weight:700;
+  color:#e2eaf4;letter-spacing:2px;
+}
+.pre-name span{color:#00c8ff;}
+.pre-bar-wrap{
+  width:180px;height:2px;
+  background:rgba(0,200,255,0.1);
+  border-radius:2px;overflow:hidden;
+}
+.pre-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#00c8ff,#00ff9d);
+  border-radius:2px;
+  transition:width 0.3s ease;
+  box-shadow:0 0 8px rgba(0,200,255,0.5);
+}
+.pre-status{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:#304560;
+  letter-spacing:2px;
+}
+</style>
+
+<script>
+(function(){
+  const steps = [
+    {w:20,  t:'Loading modules...'},
+    {w:45,  t:'Connecting to database...'},
+    {w:70,  t:'Checking CVE feed...'},
+    {w:90,  t:'Almost ready...'},
+    {w:100, t:'Done'},
+  ];
+  let i = 0;
+  const bar = document.getElementById('pre-bar');
+  const stat = document.getElementById('pre-status');
+  const iv = setInterval(()=>{
+    if(i >= steps.length){ clearInterval(iv); return; }
+    bar.style.width = steps[i].w + '%';
+    stat.textContent = steps[i].t;
+    i++;
+  }, 200);
+  window.addEventListener('load', ()=>{
+    setTimeout(()=>{
+      bar.style.width = '100%';
+      stat.textContent = 'Ready';
+      setTimeout(()=>{
+        document.getElementById('preloader').classList.add('done');
+      }, 400);
+    }, 300);
+  });
+})();
+</script>
+
 <div class="bg-fixed" id="bg-glow"></div>
 <div class="corner c-tl"></div><div class="corner c-tr"></div>
 <div class="corner c-bl"></div><div class="corner c-br"></div>
+<!-- ══ AI ANIMATION CANVAS ══ -->
+<canvas id="ai-canvas"></canvas>
+<style>
+#ai-canvas{
+  position:fixed;inset:0;z-index:0;
+  pointer-events:none;
+  opacity:0.6;
+}
+</style>
+<script>
+(function(){
+  const canvas = document.getElementById('ai-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [], particles = [], frame = 0;
+
+  function resize(){
+    W = canvas.width  = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+
+  // Neural network nodes
+  function initNodes(){
+    nodes = [];
+    const count = Math.floor((W * H) / 22000);
+    for(let i = 0; i < Math.max(count, 20); i++){
+      nodes.push({
+        x: Math.random() * W,
+        y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.3,
+        vy: (Math.random() - 0.5) * 0.3,
+        r:  Math.random() * 1.5 + 0.5,
+        pulse: Math.random() * Math.PI * 2,
+        speed: 0.02 + Math.random() * 0.02,
+        alpha: 0.3 + Math.random() * 0.4,
+      });
+    }
+  }
+
+  // Data particles moving along edges
+  function spawnParticle(n1, n2){
+    if(particles.length > 60) return;
+    particles.push({
+      x: n1.x, y: n1.y,
+      tx: n2.x, ty: n2.y,
+      t: 0, speed: 0.008 + Math.random() * 0.012,
+      color: Math.random() > 0.7 ? '#00ff9d' : '#00c8ff',
+    });
+  }
+
+  function draw(){
+    ctx.clearRect(0, 0, W, H);
+    frame++;
+
+    // Update nodes
+    nodes.forEach(n => {
+      n.x += n.vx; n.y += n.vy;
+      n.pulse += n.speed;
+      if(n.x < 0||n.x > W) n.vx *= -1;
+      if(n.y < 0||n.y > H) n.vy *= -1;
+    });
+
+    // Draw edges between nearby nodes
+    for(let i = 0; i < nodes.length; i++){
+      for(let j = i+1; j < nodes.length; j++){
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const maxDist = Math.min(W, H) * 0.22;
+        if(dist < maxDist){
+          const alpha = (1 - dist/maxDist) * 0.12;
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = `rgba(0,200,255,${alpha})`;
+          ctx.lineWidth = 0.5;
+          ctx.stroke();
+          // Randomly spawn data particles
+          if(frame % 120 === 0 && Math.random() < 0.15){
+            spawnParticle(a, b);
+          }
+        }
+      }
+    }
+
+    // Draw nodes
+    nodes.forEach(n => {
+      const pulse = Math.sin(n.pulse) * 0.5 + 0.5;
+      const r = n.r + pulse * 0.8;
+      const alpha = n.alpha * (0.5 + pulse * 0.5);
+      // Outer glow
+      const grad = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,r*4);
+      grad.addColorStop(0, `rgba(0,200,255,${alpha * 0.3})`);
+      grad.addColorStop(1, 'rgba(0,200,255,0)');
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r*4, 0, Math.PI*2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+      // Core dot
+      ctx.beginPath();
+      ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(0,200,255,${alpha})`;
+      ctx.fill();
+    });
+
+    // Draw + update particles
+    particles = particles.filter(p => p.t < 1);
+    particles.forEach(p => {
+      p.t += p.speed;
+      const t = p.t;
+      const x = p.x + (p.tx - p.x) * t;
+      const y = p.y + (p.ty - p.y) * t;
+      ctx.beginPath();
+      ctx.arc(x, y, 1.5, 0, Math.PI*2);
+      ctx.fillStyle = p.color;
+      ctx.shadowColor = p.color;
+      ctx.shadowBlur = 6;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+    });
+
+    // Occasional scan line effect
+    if(frame % 300 === 0){
+      const scanY = Math.random() * H;
+      ctx.beginPath();
+      ctx.moveTo(0, scanY);
+      ctx.lineTo(W, scanY);
+      ctx.strokeStyle = 'rgba(0,200,255,0.08)';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', ()=>{ resize(); initNodes(); });
+  resize();
+  initNodes();
+  draw();
+})();
+</script>
+
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 <aside class="sidebar" id="sidebar">
   <div class="sb-top">
