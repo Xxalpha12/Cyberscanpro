@@ -535,6 +535,28 @@ def delete_scan(session_id):
     return jsonify({"success": True})
 
 
+@app.route("/report/<filetype>/<session_id>")
+@login_required
+def download_report_by_session(filetype, session_id):
+    """Find and serve the most recent report file for a session by type (pdf/html)."""
+    import re
+    if not re.match(r'^[\w\-]+$', session_id):
+        abort(400)
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    if not os.path.exists(output_dir):
+        abort(404)
+    ext = ".pdf" if filetype == "pdf" else ".html"
+    matches = sorted(
+        [f for f in os.listdir(output_dir) if session_id in f and f.endswith(ext)],
+        reverse=True
+    )
+    if not matches:
+        abort(404)
+    filepath = os.path.join(output_dir, matches[0])
+    mimetype = "application/pdf" if ext == ".pdf" else "text/html"
+    return send_file(filepath, as_attachment=False, mimetype=mimetype)
+
+
 @app.route("/report/<filename>")
 @login_required
 def download_report(filename):
@@ -1116,6 +1138,78 @@ def api_sessions():
         })
     db.close()
     return jsonify(result)
+
+
+
+
+# ── REPORTS PAGE ─────────────────────────────────────────────────────────────
+
+@app.route("/reports")
+@login_required
+def reports_page():
+    import glob
+    output_dir = os.path.join(os.path.dirname(__file__), "output")
+    os.makedirs(output_dir, exist_ok=True)
+
+    db = Database()
+    sessions = db.get_all_sessions()
+
+    session_targets = {s["id"]: s["target"] for s in sessions}
+    session_risks    = {}
+    for s in sessions:
+        counts = db.get_severity_counts(s["id"])
+        risk = "CRITICAL" if counts.get("Critical",0) > 0 else \
+               "HIGH"     if counts.get("High",0) > 0     else \
+               "MEDIUM"   if counts.get("Medium",0) > 0   else \
+               "LOW"      if counts.get("Low",0) > 0       else "NONE"
+        session_risks[s["id"]] = risk
+    db.close()
+
+    reports = []
+    if os.path.exists(output_dir):
+        for f in sorted(os.listdir(output_dir), reverse=True):
+            if not (f.endswith(".pdf") or f.endswith(".html")):
+                continue
+            filepath = os.path.join(output_dir, f)
+            size_kb  = os.path.getsize(filepath) // 1024
+
+            # Extract session_id — handles cyberscanpro_report_<id>_<timestamp>.ext
+            parts = f.replace("cyberscanpro_report_", "").replace("netscampro_report_", "")
+            session_id = parts.split("_")[0] if parts else ""
+
+            rtype = "pdf" if f.endswith(".pdf") else "html"
+
+            try:
+                import datetime as dt
+                mtime = os.path.getmtime(filepath)
+                date  = dt.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                date = "Unknown"
+
+            target_name = session_targets.get(session_id, session_id[:12] if session_id else "Unknown target")
+
+            reports.append({
+                "filename":   f,
+                "type":       rtype,
+                "target":     target_name,
+                "session_id": session_id,
+                "risk":       session_risks.get(session_id, "NONE"),
+                "date":       date,
+                "size":       f"{size_kb} KB",
+            })
+
+    pdf_count  = sum(1 for r in reports if r["type"] == "pdf")
+    html_count = sum(1 for r in reports if r["type"] == "html")
+    sess_ids   = set(r["session_id"] for r in reports)
+
+    return render_template("reports.html",
+        reports=reports,
+        total_reports=len(reports),
+        pdf_count=pdf_count,
+        html_count=html_count,
+        sessions_with_reports=len(sess_ids),
+        page="reports", title="Reports"
+    )
 
 
 @app.route("/logout")
