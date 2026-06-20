@@ -1212,6 +1212,111 @@ def reports_page():
     )
 
 
+
+
+# ── GLOBAL SEARCH API ─────────────────────────────────────────────────────────
+
+@app.route("/api/search")
+@login_required
+def api_search():
+    q = request.args.get("q", "").strip()
+    if not q:
+        return jsonify({"results": []})
+
+    results = []
+    db = Database()
+    sessions = db.get_all_sessions()
+
+    # Parse search operators
+    filter_type = None
+    query = q
+    if ":" in q:
+        prefix, rest = q.split(":", 1)
+        if prefix.lower() in ("target", "cve", "risk", "report"):
+            filter_type = prefix.lower()
+            query = rest.strip()
+
+    query_lower = query.lower()
+
+    # Search targets/sessions
+    if filter_type in (None, "target"):
+        seen_targets = set()
+        for s in sessions:
+            if query_lower in s["target"].lower() and s["target"] not in seen_targets:
+                seen_targets.add(s["target"])
+                counts = db.get_severity_counts(s["id"])
+                risk = "CRITICAL" if counts.get("Critical",0) > 0 else \
+                       "HIGH" if counts.get("High",0) > 0 else \
+                       "MEDIUM" if counts.get("Medium",0) > 0 else \
+                       "LOW" if counts.get("Low",0) > 0 else "NONE"
+                badge_colors = {
+                    "CRITICAL": ("rgba(239,68,68,0.15)", "#ef4444"),
+                    "HIGH": ("rgba(249,115,22,0.15)", "#f97316"),
+                    "MEDIUM": ("rgba(234,179,8,0.15)", "#eab308"),
+                    "LOW": ("rgba(59,130,246,0.15)", "#3b82f6"),
+                    "NONE": ("rgba(100,116,139,0.15)", "#64748b"),
+                }
+                bg, color = badge_colors.get(risk, badge_colors["NONE"])
+                results.append({
+                    "icon": "🌐", "title": s["target"],
+                    "subtitle": f"Target · Last scanned {s.get('started_at','')[:10]}",
+                    "url": f"/scan/{s['id']}",
+                    "badge": risk, "badge_bg": bg, "badge_color": color,
+                })
+
+    # Search by risk level
+    if filter_type == "risk":
+        for s in sessions:
+            counts = db.get_severity_counts(s["id"])
+            risk = "critical" if counts.get("Critical",0)>0 else \
+                   "high" if counts.get("High",0)>0 else \
+                   "medium" if counts.get("Medium",0)>0 else \
+                   "low" if counts.get("Low",0)>0 else "none"
+            if query_lower in risk:
+                results.append({
+                    "icon": "⚠️", "title": s["target"],
+                    "subtitle": f"Risk level: {risk.upper()}",
+                    "url": f"/scan/{s['id']}",
+                    "badge": risk.upper(), "badge_bg": "rgba(239,68,68,0.15)", "badge_color": "#ef4444",
+                })
+
+    # Search CVEs
+    if filter_type in (None, "cve"):
+        for s in sessions:
+            cves = db.get_cve_findings(s["id"])
+            for c in cves:
+                if query_lower in c.get("cve_id","").lower():
+                    results.append({
+                        "icon": "🔴", "title": c.get("cve_id",""),
+                        "subtitle": f"Found on {s['target']} · CVSS {c.get('cvss_score','N/A')}",
+                        "url": f"/scan/{s['id']}",
+                        "badge": c.get("severity","").upper(), "badge_bg": "rgba(239,68,68,0.15)", "badge_color": "#ef4444",
+                    })
+
+    # Search reports
+    if filter_type in (None, "report"):
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
+        if os.path.exists(output_dir):
+            session_targets = {s["id"]: s["target"] for s in sessions}
+            for f in os.listdir(output_dir):
+                if not (f.endswith(".pdf") or f.endswith(".html")):
+                    continue
+                parts = f.replace("cyberscanpro_report_","").split("_")
+                sid = parts[0] if parts else ""
+                target = session_targets.get(sid, "")
+                if query_lower in target.lower():
+                    results.append({
+                        "icon": "📄" if f.endswith(".pdf") else "🌐",
+                        "title": target,
+                        "subtitle": f"{'PDF' if f.endswith('.pdf') else 'HTML'} Report",
+                        "url": f"/report/{f}",
+                        "badge": None,
+                    })
+
+    db.close()
+    return jsonify({"results": results[:20]})
+
+
 @app.route("/logout")
 def logout():
     session.clear()

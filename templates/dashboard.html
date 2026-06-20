@@ -576,6 +576,57 @@ nav{flex:1;overflow-y:auto;padding:8px 0;}
 @media(min-width:721px){.menu-btn{display:none !important;}}
 
 
+
+/* ── PROFESSIONAL RISK TREND ── */
+.risk-trend-card{margin-bottom:0;}
+.rt-range-toggle{display:flex;gap:4px;background:var(--bg3);border-radius:6px;padding:3px;}
+.rt-range-btn{background:none;border:none;color:var(--text2);font-size:10px;font-weight:700;font-family:var(--mono);padding:5px 10px;border-radius:4px;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;}
+.rt-range-btn:hover{color:var(--text);}
+.rt-range-btn.active{background:rgba(0,200,255,0.12);color:var(--accent);}
+
+.rt-summary{display:flex;align-items:center;gap:0;margin-bottom:18px;padding:14px 16px;background:var(--bg3);border-radius:8px;border:1px solid var(--border2);}
+.rt-sum-item{flex:1;text-align:center;}
+.rt-sum-label{font-size:8px;color:var(--text2);letter-spacing:1.5px;font-family:var(--mono);margin-bottom:5px;}
+.rt-sum-val{font-size:20px;font-weight:800;font-family:var(--mono);transition:all 0.4s;}
+.rt-sum-divider{width:1px;height:30px;background:var(--border);flex-shrink:0;}
+
+.chart-wrap{position:relative;width:100%;height:220px;}
+.chart-wrap canvas{display:block;width:100%;height:100%;cursor:crosshair;}
+.chart-tooltip{
+  position:absolute;pointer-events:none;
+  background:rgba(6,12,20,0.98);
+  border:1px solid rgba(0,200,255,0.3);
+  border-radius:8px;padding:10px 14px;
+  font-family:var(--mono);font-size:11px;
+  opacity:0;transition:opacity 0.15s;
+  box-shadow:0 8px 30px rgba(0,0,0,0.5);
+  z-index:10;white-space:nowrap;
+  transform:translate(-50%,-100%);
+  margin-top:-12px;
+}
+.chart-tooltip.show{opacity:1;}
+.ct-date{color:var(--text2);font-size:9px;margin-bottom:4px;letter-spacing:0.5px;}
+.ct-score{color:var(--accent);font-size:16px;font-weight:800;}
+.ct-target{color:var(--text3);font-size:9px;margin-top:3px;}
+.chart-crosshair{
+  position:absolute;top:0;bottom:0;width:1px;
+  background:rgba(0,200,255,0.2);
+  pointer-events:none;opacity:0;
+  transition:opacity 0.15s;
+}
+.chart-crosshair.show{opacity:1;}
+
+.chart-empty{height:220px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text2);font-size:12px;}
+.chart-empty-icon{font-size:36px;opacity:0.25;}
+
+.rt-sev-bar{margin-top:18px;}
+.rt-sev-bar-label{font-size:9px;color:var(--text2);letter-spacing:1.5px;font-family:var(--mono);margin-bottom:8px;}
+.rt-sev-bar-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;display:flex;}
+.rt-sev-seg{height:100%;transition:width 1s ease;}
+.rt-sev-legend{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;}
+.rt-sev-legend span{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:6px;font-family:var(--mono);}
+.rt-sev-legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
+
 /* ── ANIMATIONS ── */
 .card{animation:cardIn 0.4s ease both;}
 .card:nth-child(1){animation-delay:0.05s;}
@@ -1062,74 +1113,122 @@ body{animation:pagein 0.3s ease both;}
 
     </div>
 
-    <!-- ROW 2: Risk Trend + Live Feed -->
-    <div class="g2">
-
-      <!-- Risk Trend -->
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title">📈 Risk Trend</span>
-          <span class="card-meta">{{ trend_points|length if trend_points else 0 }} data points</span>
+    <!-- Risk Trend — Full Width Professional Chart -->
+    <div class="card risk-trend-card">
+      <div class="card-hd">
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span class="card-title">📈 Risk Trend Analysis</span>
+          <span class="live-badge"><div class="live-dot"></div>LIVE</span>
         </div>
-        <div class="card-bd">
-          {% if trend_points and trend_points|length > 1 %}
-          <div class="chart-wrap">
-            <canvas id="riskChart"></canvas>
-          </div>
-          {% if trend_labels %}
-          <div class="chart-xlabels">
-            {% for l in trend_labels %}<span>{{ l }}</span>{% endfor %}
-          </div>
-          {% endif %}
-          <div class="sev-mini">
-            <div class="sev-box">
-              <div class="sev-box-n" style="color:var(--red);">{{ severity_counts.Critical }}</div>
-              <div class="sev-box-l">CRITICAL</div>
-            </div>
-            <div class="sev-box">
-              <div class="sev-box-n" style="color:var(--orange);">{{ severity_counts.High }}</div>
-              <div class="sev-box-l">HIGH</div>
-            </div>
-            <div class="sev-box">
-              <div class="sev-box-n" style="color:var(--yellow);">{{ severity_counts.Medium }}</div>
-              <div class="sev-box-l">MEDIUM</div>
-            </div>
-          </div>
-          {% else %}
-          <div class="chart-empty">
-            <span style="font-size:32px;opacity:0.3;">📊</span>
-            <span>Run multiple scans to see risk trend</span>
-            <a href="/scan/new" class="btn-scan" style="margin-top:4px;font-size:11px;padding:8px 16px;">▶ Start Scanning</a>
-          </div>
-          {% endif %}
+        <div class="rt-range-toggle">
+          <button class="rt-range-btn active" data-range="all">All</button>
+          <button class="rt-range-btn" data-range="7">7 Scans</button>
+          <button class="rt-range-btn" data-range="14">14 Scans</button>
         </div>
       </div>
+      <div class="card-bd">
+        {% if trend_points and trend_points|length > 1 %}
 
-      <!-- Live Feed -->
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title">⚡ Live Activity</span>
-          <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+        <!-- Summary stats row -->
+        <div class="rt-summary">
+          <div class="rt-sum-item">
+            <div class="rt-sum-label">CURRENT SCORE</div>
+            <div class="rt-sum-val" id="rt-current" style="color:var(--accent);">{{ security_score }}</div>
+          </div>
+          <div class="rt-sum-divider"></div>
+          <div class="rt-sum-item">
+            <div class="rt-sum-label">AVERAGE</div>
+            <div class="rt-sum-val" id="rt-avg" style="color:var(--text);">—</div>
+          </div>
+          <div class="rt-sum-divider"></div>
+          <div class="rt-sum-item">
+            <div class="rt-sum-label">PEAK</div>
+            <div class="rt-sum-val" id="rt-peak" style="color:var(--green);">—</div>
+          </div>
+          <div class="rt-sum-divider"></div>
+          <div class="rt-sum-item">
+            <div class="rt-sum-label">LOWEST</div>
+            <div class="rt-sum-val" id="rt-low" style="color:var(--red);">—</div>
+          </div>
+          <div class="rt-sum-divider"></div>
+          <div class="rt-sum-item">
+            <div class="rt-sum-label">TREND</div>
+            <div class="rt-sum-val" id="rt-direction">—</div>
+          </div>
         </div>
-        <div class="feed" id="live-feed">
-          {% for item in activity_feed %}
-          <div class="feed-item">
-            <div class="feed-dot fd-{{ item.type }}"></div>
-            <div class="feed-body">
-              <div class="feed-msg">{{ item.message }}</div>
-              <div class="feed-t">{{ item.time }}</div>
-            </div>
-            {% if item.badge %}
-            <span class="feed-tag ft-{{ item.badge_type }}">{{ item.badge }}</span>
+
+        <!-- Chart with tooltip -->
+        <div class="chart-wrap" id="chart-wrap">
+          <canvas id="riskChart"></canvas>
+          <div class="chart-tooltip" id="chart-tooltip">
+            <div class="ct-date" id="ct-date"></div>
+            <div class="ct-score" id="ct-score"></div>
+            <div class="ct-target" id="ct-target"></div>
+          </div>
+          <div class="chart-crosshair" id="chart-crosshair"></div>
+        </div>
+
+        {% if trend_labels %}
+        <div class="chart-xlabels">
+          {% for l in trend_labels %}<span>{{ l }}</span>{% endfor %}
+        </div>
+        {% endif %}
+
+        <!-- Severity breakdown mini bar -->
+        <div class="rt-sev-bar">
+          <div class="rt-sev-bar-label">CURRENT FINDINGS DISTRIBUTION</div>
+          <div class="rt-sev-bar-track">
+            {% set total = severity_counts.Critical + severity_counts.High + severity_counts.Medium + severity_counts.Low %}
+            {% if total > 0 %}
+            <div class="rt-sev-seg" style="width:{{ (severity_counts.Critical/total*100)|round(1) }}%;background:var(--red);" title="Critical: {{ severity_counts.Critical }}"></div>
+            <div class="rt-sev-seg" style="width:{{ (severity_counts.High/total*100)|round(1) }}%;background:var(--orange);" title="High: {{ severity_counts.High }}"></div>
+            <div class="rt-sev-seg" style="width:{{ (severity_counts.Medium/total*100)|round(1) }}%;background:var(--yellow);" title="Medium: {{ severity_counts.Medium }}"></div>
+            <div class="rt-sev-seg" style="width:{{ (severity_counts.Low/total*100)|round(1) }}%;background:var(--blue);" title="Low: {{ severity_counts.Low }}"></div>
+            {% else %}
+            <div class="rt-sev-seg" style="width:100%;background:var(--green);opacity:0.3;"></div>
             {% endif %}
           </div>
-          {% else %}
-          <div class="empty">No activity yet.<br><a href="/scan/new" class="mlink">Launch first scan →</a></div>
-          {% endfor %}
+          <div class="rt-sev-legend">
+            <span><i style="background:var(--red);"></i>Critical {{ severity_counts.Critical }}</span>
+            <span><i style="background:var(--orange);"></i>High {{ severity_counts.High }}</span>
+            <span><i style="background:var(--yellow);"></i>Medium {{ severity_counts.Medium }}</span>
+            <span><i style="background:var(--blue);"></i>Low {{ severity_counts.Low }}</span>
+          </div>
         </div>
-        <a href="/history" class="view-all">VIEW ALL ACTIVITY →</a>
-      </div>
 
+        {% else %}
+        <div class="chart-empty">
+          <div class="chart-empty-icon">📊</div>
+          <span>Run at least 2 scans to unlock risk trend analysis</span>
+          <a href="/scan/new" class="btn-scan" style="margin-top:10px;font-size:11px;padding:8px 16px;">▶ Start Scanning</a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Live Feed -->
+    <div class="card">
+      <div class="card-hd">
+        <span class="card-title">⚡ Live Activity</span>
+        <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+      </div>
+      <div class="feed" id="live-feed">
+        {% for item in activity_feed %}
+        <div class="feed-item">
+          <div class="feed-dot fd-{{ item.type }}"></div>
+          <div class="feed-body">
+            <div class="feed-msg">{{ item.message }}</div>
+            <div class="feed-t">{{ item.time }}</div>
+          </div>
+          {% if item.badge %}
+          <span class="feed-tag ft-{{ item.badge_type }}">{{ item.badge }}</span>
+          {% endif %}
+        </div>
+        {% else %}
+        <div class="empty">No activity yet.<br><a href="/scan/new" class="mlink">Launch first scan →</a></div>
+        {% endfor %}
+      </div>
+      <a href="/history" class="view-all">VIEW ALL ACTIVITY →</a>
     </div>
 
     <!-- ROW 3: Recent Scans -->
@@ -1280,83 +1379,484 @@ async function loadNotifs(){
   }catch(e){alert("Could not load notifications.");}
 }
 
-// Risk Trend Canvas Chart
+// ── PROFESSIONAL RISK TREND CHART ──────────────────────────────────────
 {% if trend_points and trend_points|length > 1 %}
 (function(){
-  const canvas=document.getElementById("riskChart");
-  if(!canvas)return;
-  const ctx=canvas.getContext("2d");
-  const scores={{ trend_points|tojson }}.map(p=>p.val!==undefined?p.val:100-p.y/1.2);
+  const canvas = document.getElementById("riskChart");
+  if(!canvas) return;
+  const ctx = canvas.getContext("2d");
+  const wrap = document.getElementById("chart-wrap");
+  const tooltip = document.getElementById("chart-tooltip");
+  const crosshair = document.getElementById("chart-crosshair");
+
+  const rawPoints = {{ trend_points | tojson }};
+  const labels    = {{ trend_labels | tojson if trend_labels else '[]' }};
+  const scores    = rawPoints.map(p => p.val !== undefined ? p.val : (100 - p.y/1.2));
+
+  // Summary stats
+  const avg  = Math.round(scores.reduce((a,b)=>a+b,0) / scores.length);
+  const peak = Math.max(...scores);
+  const low  = Math.min(...scores);
+  const direction = scores[scores.length-1] - scores[0];
+
+  document.getElementById('rt-avg').textContent  = avg;
+  document.getElementById('rt-peak').textContent  = peak;
+  document.getElementById('rt-low').textContent   = low;
+  const dirEl = document.getElementById('rt-direction');
+  if(direction > 2){
+    dirEl.innerHTML = '<span style="color:var(--green)">▲ Improving</span>';
+  } else if(direction < -2){
+    dirEl.innerHTML = '<span style="color:var(--red)">▼ Declining</span>';
+  } else {
+    dirEl.innerHTML = '<span style="color:var(--text2)">→ Stable</span>';
+  }
+
+  let animProgress = 0;
+  let hoverIndex = -1;
+  const n = scores.length;
+  let X, Y, PAD;
+
+  function getColor(s){
+    return s>=80?"#00ff9d":s>=60?"#eab308":s>=40?"#f97316":"#ef4444";
+  }
+
+  function computeScales(){
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    PAD = {l:14, r:14, t:24, b:10};
+    const min = Math.max(0, Math.min(...scores) - 14);
+    const max = Math.min(100, Math.max(...scores) + 14);
+    const rng = max - min || 1;
+    X = i => PAD.l + (i/(n-1)) * (W - PAD.l - PAD.r);
+    Y = s => PAD.t + (1 - (s-min)/rng) * (H - PAD.t - PAD.b);
+    return {min, max, rng, W, H};
+  }
 
   function draw(){
-    const W=canvas.offsetWidth, H=canvas.offsetHeight;
-    canvas.width=W*devicePixelRatio; canvas.height=H*devicePixelRatio;
-    ctx.scale(devicePixelRatio,devicePixelRatio);
+    const W = canvas.offsetWidth, H = canvas.offsetHeight;
+    canvas.width  = W * devicePixelRatio;
+    canvas.height = H * devicePixelRatio;
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.scale(devicePixelRatio, devicePixelRatio);
     ctx.clearRect(0,0,W,H);
 
-    const PAD={l:10,r:10,t:18,b:8};
-    const min=Math.max(0,Math.min(...scores)-12);
-    const max=Math.min(100,Math.max(...scores)+12);
-    const rng=max-min||1;
-    const n=scores.length;
+    const {min, max, rng} = computeScales();
 
-    const X=i=>PAD.l+(i/(n-1))*(W-PAD.l-PAD.r);
-    const Y=s=>PAD.t+(1-(s-min)/rng)*(H-PAD.t-PAD.b);
+    // Animated reveal count
+    const visibleN = Math.max(2, Math.ceil(animProgress * n));
+    const visScores = scores.slice(0, visibleN);
+    const vn = visScores.length;
+    const vX = i => PAD.l + (i/(n-1)) * (W - PAD.l - PAD.r);
 
-    // Horizontal grid lines
-    ctx.setLineDash([3,5]);
-    ctx.lineWidth=0.5;
+    // Horizontal grid lines + axis labels
+    ctx.setLineDash([2,5]);
+    ctx.lineWidth = 0.5;
     [0,25,50,75,100].forEach(pct=>{
-      const y=Y(min+(pct/100)*rng);
-      if(y<PAD.t||y>H-PAD.b)return;
-      ctx.strokeStyle="rgba(0,200,255,0.07)";
-      ctx.beginPath();ctx.moveTo(PAD.l,y);ctx.lineTo(W-PAD.r,y);ctx.stroke();
+      const y = Y(min + (pct/100)*rng);
+      if(y < PAD.t-2 || y > H-PAD.b+2) return;
+      ctx.strokeStyle = "rgba(0,200,255,0.06)";
+      ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(W-PAD.r, y); ctx.stroke();
+      ctx.fillStyle = "rgba(48,69,96,0.8)";
+      ctx.font = "9px 'Share Tech Mono'";
+      ctx.textAlign = "left";
+      ctx.fillText(pct, 0, y+3);
     });
     ctx.setLineDash([]);
 
-    // Gradient fill
-    const grad=ctx.createLinearGradient(0,PAD.t,0,H);
-    grad.addColorStop(0,"rgba(0,200,255,0.18)");
-    grad.addColorStop(1,"rgba(0,200,255,0)");
-    ctx.beginPath();
-    ctx.moveTo(X(0),Y(scores[0]));
-    for(let i=1;i<n;i++){
-      const cx=(X(i-1)+X(i))/2;
-      ctx.bezierCurveTo(cx,Y(scores[i-1]),cx,Y(scores[i]),X(i),Y(scores[i]));
-    }
-    ctx.lineTo(X(n-1),H);ctx.lineTo(X(0),H);ctx.closePath();
-    ctx.fillStyle=grad;ctx.fill();
-
-    // Line
-    ctx.beginPath();
-    ctx.moveTo(X(0),Y(scores[0]));
-    for(let i=1;i<n;i++){
-      const cx=(X(i-1)+X(i))/2;
-      ctx.bezierCurveTo(cx,Y(scores[i-1]),cx,Y(scores[i]),X(i),Y(scores[i]));
-    }
-    ctx.strokeStyle="rgba(0,200,255,0.9)";
-    ctx.lineWidth=2; ctx.lineJoin="round"; ctx.stroke();
-
-    // Dots + labels
-    scores.forEach((s,i)=>{
-      const c=s>=80?"#00ff9d":s>=60?"#eab308":s>=40?"#f97316":"#ef4444";
-      // Glow
-      ctx.shadowColor=c; ctx.shadowBlur=10;
-      ctx.beginPath();ctx.arc(X(i),Y(s),5,0,Math.PI*2);
-      ctx.fillStyle=c; ctx.fill();
-      ctx.shadowBlur=0;
-      // Score label
-      ctx.fillStyle="#e2eaf4";
-      ctx.font=`700 10px 'Share Tech Mono'`;
-      ctx.textAlign="center";
-      ctx.fillText(s,X(i),Y(s)-11);
+    // Severity zone bands (subtle background tint)
+    const zones = [
+      {from:80, to:100, color:"rgba(0,255,157,0.02)"},
+      {from:60, to:80,  color:"rgba(234,179,8,0.02)"},
+      {from:40, to:60,  color:"rgba(249,115,22,0.02)"},
+      {from:0,  to:40,  color:"rgba(239,68,68,0.02)"},
+    ];
+    zones.forEach(z=>{
+      const y1 = Y(Math.min(z.to,max));
+      const y2 = Y(Math.max(z.from,min));
+      if(y2 <= PAD.t || y1 >= H-PAD.b) return;
+      ctx.fillStyle = z.color;
+      ctx.fillRect(PAD.l, Math.max(y1,PAD.t), W-PAD.l-PAD.r, Math.min(y2,H-PAD.b)-Math.max(y1,PAD.t));
     });
+
+    if(vn < 2) { requestAnimationFrame(animate); return; }
+
+    // Gradient fill under curve
+    const grad = ctx.createLinearGradient(0, PAD.t, 0, H-PAD.b);
+    grad.addColorStop(0, "rgba(0,200,255,0.20)");
+    grad.addColorStop(1, "rgba(0,200,255,0)");
+    ctx.beginPath();
+    ctx.moveTo(vX(0), Y(visScores[0]));
+    for(let i=1;i<vn;i++){
+      const cx = (vX(i-1)+vX(i))/2;
+      ctx.bezierCurveTo(cx, Y(visScores[i-1]), cx, Y(visScores[i]), vX(i), Y(visScores[i]));
+    }
+    ctx.lineTo(vX(vn-1), H-PAD.b);
+    ctx.lineTo(vX(0), H-PAD.b);
+    ctx.closePath();
+    ctx.fillStyle = grad;
+    ctx.fill();
+
+    // Main line with glow
+    ctx.shadowColor = "rgba(0,200,255,0.5)";
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(vX(0), Y(visScores[0]));
+    for(let i=1;i<vn;i++){
+      const cx = (vX(i-1)+vX(i))/2;
+      ctx.bezierCurveTo(cx, Y(visScores[i-1]), cx, Y(visScores[i]), vX(i), Y(visScores[i]));
+    }
+    ctx.strokeStyle = "rgba(0,200,255,0.95)";
+    ctx.lineWidth = 2.5;
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Dots with severity color
+    visScores.forEach((s,i)=>{
+      const c = getColor(s);
+      const isHover = i === hoverIndex;
+      const r = isHover ? 7 : 4.5;
+      ctx.shadowColor = c;
+      ctx.shadowBlur = isHover ? 16 : 8;
+      ctx.beginPath();
+      ctx.arc(vX(i), Y(s), r, 0, Math.PI*2);
+      ctx.fillStyle = c;
+      ctx.fill();
+      ctx.shadowBlur = 0;
+      // White center ring
+      ctx.beginPath();
+      ctx.arc(vX(i), Y(s), isHover ? 3 : 2, 0, Math.PI*2);
+      ctx.fillStyle = "#020810";
+      ctx.fill();
+    });
+
+    if(animProgress < 1){
+      animProgress += 0.025;
+      requestAnimationFrame(animate);
+    }
   }
 
-  draw();
-  window.addEventListener("resize",draw);
+  function animate(){ draw(); }
+
+  // Mouse interaction
+  wrap.addEventListener('mousemove', (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const W = canvas.offsetWidth;
+    const step = (W - PAD.l - PAD.r) / (n-1);
+    let idx = Math.round((mouseX - PAD.l) / step);
+    idx = Math.max(0, Math.min(n-1, idx));
+
+    if(idx !== hoverIndex){
+      hoverIndex = idx;
+      draw();
+    }
+
+    const x = X(idx);
+    const y = Y(scores[idx]);
+    crosshair.style.left = x + 'px';
+    crosshair.classList.add('show');
+
+    tooltip.style.left = x + 'px';
+    tooltip.style.top  = y + 'px';
+    tooltip.classList.add('show');
+    document.getElementById('ct-date').textContent  = labels[idx] || ('Scan ' + (idx+1));
+    document.getElementById('ct-score').textContent = scores[idx] + ' / 100';
+    document.getElementById('ct-target').textContent = getColor(scores[idx]) === '#ef4444' ? 'Critical Risk' :
+                                                         getColor(scores[idx]) === '#f97316' ? 'High Risk' :
+                                                         getColor(scores[idx]) === '#eab308' ? 'Medium Risk' : 'Low Risk';
+  });
+
+  wrap.addEventListener('mouseleave', ()=>{
+    hoverIndex = -1;
+    tooltip.classList.remove('show');
+    crosshair.classList.remove('show');
+    draw();
+  });
+
+  // Touch support for mobile
+  wrap.addEventListener('touchstart', (e)=>{
+    const rect = canvas.getBoundingClientRect();
+    const touchX = e.touches[0].clientX - rect.left;
+    const W = canvas.offsetWidth;
+    const step = (W - PAD.l - PAD.r) / (n-1);
+    let idx = Math.round((touchX - PAD.l) / step);
+    idx = Math.max(0, Math.min(n-1, idx));
+    hoverIndex = idx;
+    draw();
+    const x = X(idx), y = Y(scores[idx]);
+    crosshair.style.left = x + 'px'; crosshair.classList.add('show');
+    tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px'; tooltip.classList.add('show');
+    document.getElementById('ct-date').textContent  = labels[idx] || ('Scan ' + (idx+1));
+    document.getElementById('ct-score').textContent = scores[idx] + ' / 100';
+  }, {passive:true});
+
+  window.addEventListener('resize', ()=>{ animProgress = 1; draw(); });
+
+  // Animate count-up for current score
+  const curEl = document.getElementById('rt-current');
+  if(curEl){
+    const target = parseInt(curEl.textContent) || 0;
+    let cur = 0;
+    const civ = setInterval(()=>{
+      cur += Math.ceil(target/20);
+      if(cur >= target){ cur = target; clearInterval(civ); }
+      curEl.textContent = cur;
+    }, 30);
+  }
+
+  computeScales();
+  requestAnimationFrame(animate);
 })();
 {% endif %}
+
+// Range toggle buttons (cosmetic filter — re-draws same data, placeholder for future server-side filtering)
+document.querySelectorAll('.rt-range-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.rt-range-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
 </script>
+<!-- ══ SEARCH OVERLAY ══ -->
+<div id="search-overlay">
+  <canvas id="space-canvas"></canvas>
+  <div class="search-box-wrap">
+    <button class="search-close" onclick="closeSearch()">✕</button>
+    <div class="search-input-row">
+      <span class="search-icon-big">🔍</span>
+      <input type="text" id="global-search-input" placeholder="Search targets, scans, reports, vulnerabilities..." autocomplete="off">
+      <span class="search-kbd">ESC</span>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="search-hint">
+        <div class="sh-row"><span class="sh-kbd">target:</span> search by domain or IP — e.g. <i>target:soap.fupre.edu.ng</i></div>
+        <div class="sh-row"><span class="sh-kbd">cve:</span> find a specific CVE — e.g. <i>cve:CVE-2024-1234</i></div>
+        <div class="sh-row"><span class="sh-kbd">risk:</span> filter by severity — e.g. <i>risk:critical</i></div>
+        <div class="sh-row"><span class="sh-kbd">report:</span> find reports by target name</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+#search-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:radial-gradient(ellipse at center, #050a14 0%, #000003 100%);
+  display:none;align-items:flex-start;justify-content:center;
+  padding-top:8vh;
+  opacity:0;transition:opacity 0.3s ease;
+}
+#search-overlay.show{display:flex;opacity:1;}
+#space-canvas{position:absolute;inset:0;z-index:0;}
+.search-box-wrap{
+  position:relative;z-index:2;
+  width:100%;max-width:640px;
+  padding:0 20px;
+  animation:searchIn 0.3s ease both;
+}
+@keyframes searchIn{from{opacity:0;transform:translateY(-12px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.search-close{
+  position:absolute;top:-46px;right:20px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(0,200,255,0.2);
+  color:#e2eaf4;width:32px;height:32px;border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all 0.2s;
+}
+.search-close:hover{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#ef4444;}
+.search-input-row{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(6,12,20,0.92);
+  border:1px solid rgba(0,200,255,0.25);
+  border-radius:14px;padding:18px 22px;
+  box-shadow:0 0 60px rgba(0,200,255,0.15),0 20px 60px rgba(0,0,0,0.6);
+  backdrop-filter:blur(20px);
+}
+.search-icon-big{font-size:20px;flex-shrink:0;}
+#global-search-input{
+  flex:1;background:none;border:none;outline:none;
+  color:#e2eaf4;font-family:'Inter',sans-serif;font-size:16px;
+}
+#global-search-input::placeholder{color:#304560;}
+.search-kbd{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:#4d6a85;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  padding:3px 8px;border-radius:5px;flex-shrink:0;
+}
+.search-results{
+  margin-top:14px;
+  background:rgba(6,12,20,0.88);
+  border:1px solid rgba(0,200,255,0.12);
+  border-radius:14px;overflow:hidden;
+  backdrop-filter:blur(20px);
+  max-height:50vh;overflow-y:auto;
+}
+.search-hint{padding:20px 22px;display:flex;flex-direction:column;gap:10px;}
+.sh-row{font-size:12px;color:#4d6a85;font-family:'Share Tech Mono',monospace;}
+.sh-kbd{color:#00c8ff;font-weight:700;}
+.sh-row i{color:#94a3b8;font-style:normal;}
+.sr-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 22px;border-bottom:1px solid rgba(0,200,255,0.06);
+  cursor:pointer;transition:background 0.15s;text-decoration:none;color:inherit;
+}
+.sr-item:hover{background:rgba(0,200,255,0.06);}
+.sr-item:last-child{border-bottom:none;}
+.sr-icon{width:32px;height:32px;border-radius:8px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sr-main{flex:1;min-width:0;}
+.sr-title{font-size:13px;font-weight:600;color:#e2eaf4;font-family:'Share Tech Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sr-sub{font-size:11px;color:#4d6a85;margin-top:2px;}
+.sr-badge{padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;font-family:'Share Tech Mono',monospace;flex-shrink:0;}
+.sr-no-results{padding:40px 22px;text-align:center;color:#304560;font-size:12px;font-family:'Share Tech Mono',monospace;}
+</style>
+
+<script>
+// ── SPACE BACKGROUND CANVAS ──────────────────────────────────────────────────
+(function(){
+  const canvas = document.getElementById('space-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [], shootingStars = [];
+
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+
+  function initStars(){
+    stars = [];
+    for(let i=0;i<200;i++){
+      stars.push({
+        x: Math.random()*W, y: Math.random()*H,
+        r: Math.random()*1.3 + 0.2,
+        baseAlpha: Math.random()*0.6 + 0.2,
+        twinkleSpeed: 0.01 + Math.random()*0.02,
+        phase: Math.random()*Math.PI*2,
+        depth: Math.random(), // parallax depth
+      });
+    }
+  }
+
+  function maybeSpawnShootingStar(){
+    if(Math.random() < 0.003 && shootingStars.length < 2){
+      const y = Math.random() * H * 0.5;
+      shootingStars.push({
+        x: Math.random()*W*0.3, y, len: 80+Math.random()*60,
+        speed: 8+Math.random()*6, angle: Math.PI/5, life: 1,
+      });
+    }
+  }
+
+  let frame = 0;
+  function draw(){
+    frame++;
+    ctx.clearRect(0,0,W,H);
+
+    // Nebula glow patches
+    const g1 = ctx.createRadialGradient(W*0.2,H*0.3,0,W*0.2,H*0.3,W*0.4);
+    g1.addColorStop(0,'rgba(0,150,255,0.04)'); g1.addColorStop(1,'transparent');
+    ctx.fillStyle = g1; ctx.fillRect(0,0,W,H);
+
+    const g2 = ctx.createRadialGradient(W*0.8,H*0.7,0,W*0.8,H*0.7,W*0.35);
+    g2.addColorStop(0,'rgba(168,85,247,0.03)'); g2.addColorStop(1,'transparent');
+    ctx.fillStyle = g2; ctx.fillRect(0,0,W,H);
+
+    // Stars with twinkle
+    stars.forEach(s=>{
+      const tw = Math.sin(frame * s.twinkleSpeed + s.phase) * 0.4 + 0.6;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,220,255,${s.baseAlpha * tw})`;
+      ctx.fill();
+      // Occasional glow on bright ones
+      if(s.r > 1){
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r*3, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(0,200,255,${0.03 * tw})`;
+        ctx.fill();
+      }
+    });
+
+    // Shooting stars
+    maybeSpawnShootingStar();
+    shootingStars = shootingStars.filter(s=>s.life > 0);
+    shootingStars.forEach(s=>{
+      const dx = Math.cos(s.angle)*s.speed, dy = Math.sin(s.angle)*s.speed;
+      s.x += dx; s.y += dy; s.life -= 0.012;
+      const grad = ctx.createLinearGradient(s.x, s.y, s.x - dx*s.len/s.speed, s.y - dy*s.len/s.speed);
+      grad.addColorStop(0, `rgba(255,255,255,${s.life})`);
+      grad.addColorStop(1, 'rgba(0,200,255,0)');
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - dx*s.len/s.speed, s.y - dy*s.len/s.speed);
+      ctx.strokeStyle = grad; ctx.lineWidth = 1.5; ctx.stroke();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', ()=>{ resize(); initStars(); });
+  resize(); initStars(); draw();
+})();
+
+// ── SEARCH LOGIC ──────────────────────────────────────────────────────────────
+function openSearch(){
+  document.getElementById('search-overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('global-search-input').focus(), 100);
+  document.body.style.overflow = 'hidden';
+}
+function closeSearch(){
+  document.getElementById('search-overlay').classList.remove('show');
+  document.body.style.overflow = '';
+  document.getElementById('global-search-input').value = '';
+}
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') closeSearch();
+  if((e.ctrlKey || e.metaKey) && e.key === 'k'){ e.preventDefault(); openSearch(); }
+});
+document.getElementById('search-overlay')?.addEventListener('click', (e)=>{
+  if(e.target.id === 'search-overlay') closeSearch();
+});
+
+let searchTimeout;
+document.getElementById('global-search-input')?.addEventListener('input', (e)=>{
+  clearTimeout(searchTimeout);
+  const q = e.target.value.trim();
+  if(!q){
+    document.getElementById('search-results').innerHTML = `
+      <div class="search-hint">
+        <div class="sh-row"><span class="sh-kbd">target:</span> search by domain or IP — e.g. <i>target:soap.fupre.edu.ng</i></div>
+        <div class="sh-row"><span class="sh-kbd">cve:</span> find a specific CVE — e.g. <i>cve:CVE-2024-1234</i></div>
+        <div class="sh-row"><span class="sh-kbd">risk:</span> filter by severity — e.g. <i>risk:critical</i></div>
+        <div class="sh-row"><span class="sh-kbd">report:</span> find reports by target name</div>
+      </div>`;
+    return;
+  }
+  searchTimeout = setTimeout(()=>runSearch(q), 250);
+});
+
+async function runSearch(q){
+  const resultsEl = document.getElementById('search-results');
+  resultsEl.innerHTML = '<div class="sr-no-results">Searching...</div>';
+  try{
+    const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+    const data = await res.json();
+    if(!data.results || data.results.length === 0){
+      resultsEl.innerHTML = '<div class="sr-no-results">No results for "' + q + '"</div>';
+      return;
+    }
+    resultsEl.innerHTML = data.results.map(r => `
+      <a href="${r.url}" class="sr-item">
+        <div class="sr-icon">${r.icon}</div>
+        <div class="sr-main">
+          <div class="sr-title">${r.title}</div>
+          <div class="sr-sub">${r.subtitle}</div>
+        </div>
+        ${r.badge ? `<span class="sr-badge" style="background:${r.badge_bg};color:${r.badge_color};">${r.badge}</span>` : ''}
+      </a>
+    `).join('');
+  }catch(e){
+    resultsEl.innerHTML = '<div class="sr-no-results">Search error — try again</div>';
+  }
+}
+</script>
+
 </body>
 </html>

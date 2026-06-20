@@ -91,6 +91,36 @@
 
   .disclaimer { font-size:11px; color:#888; font-style:italic; padding:14px; background:#f9f9f9; border-radius:6px; border:1px solid #eee; margin-top:30px; line-height:1.6; }
 
+  
+  /* ── MOBILE RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .page { padding: 20px 16px; max-width: 100%; }
+    .meta-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .pe-grid { grid-template-columns: 1fr; gap: 10px; }
+    .risk-guide { grid-template-columns: 1fr 1fr; gap: 8px; }
+    table { font-size: 11px; }
+    table th, table td { padding: 6px 8px !important; }
+    .tech-details table td:first-child { width: 90px; font-size: 10px; }
+    .finding-header { flex-direction: column; align-items: flex-start; gap: 8px; }
+    .sev-bar { gap: 6px; }
+    h1 { font-size: 22px !important; }
+    h2 { font-size: 17px !important; }
+    h3 { font-size: 14px !important; }
+    .priority-list li { font-size: 11px; padding: 10px 12px; }
+    /* Make tables horizontally scrollable instead of breaking layout */
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+    table { min-width: 480px; }
+  }
+
+  @media (max-width: 480px) {
+    .page { padding: 16px 12px; }
+    .meta-grid { grid-template-columns: 1fr; }
+    .risk-guide { grid-template-columns: 1fr; }
+    body { font-size: 13px; }
+    h1 { font-size: 19px !important; }
+    h2 { font-size: 15px !important; }
+  }
+
   @media print {
     body { background:white; }
     .page { padding:0; }
@@ -220,12 +250,12 @@
   <section>
     <h2>🔬 How the Scan Was Conducted</h2>
     <p>CyberScan Pro performed the following assessment phases against <strong>{{ target }}</strong>:</p>
-    <table style="margin-top:12px;">
+    <div class="table-wrap"><table style="margin-top:12px;">
       <tr><th>Phase</th><th>What Was Done</th><th>What We Were Looking For</th></tr>
       {% for phase, desc, looked in methodology %}
       <tr><td><strong>{{ phase }}</strong></td><td>{{ desc }}</td><td>{{ looked }}</td></tr>
       {% endfor %}
-    </table>
+    </table></div>
   </section>
 
   <!-- DISCOVERED HOSTS -->
@@ -236,7 +266,7 @@
     {% for host in hosts %}
     <h3>{{ host.ip }}{% if host.hostname and host.hostname != 'N/A' %} — {{ host.hostname }}{% endif %}</h3>
     {% if host.ports %}
-    <table>
+    <div class="table-wrap"><table>
       <tr><th>Port</th><th>Service</th><th>Version</th><th>Risk Level</th></tr>
       {% for p in host.ports %}
       <tr>
@@ -265,7 +295,7 @@
         </td>
       </tr>
       {% endfor %}
-    </table>
+    </table></div>
 
     <!-- Detailed port explanations -->
     <div style="margin-top:16px;">
@@ -398,11 +428,11 @@
       <!-- Technical Details -->
       <div class="tech-details">
         <p style="font-size:11px; color:#888; margin-bottom:8px; font-weight:bold;">📋 TECHNICAL DETAILS (for developers)</p>
-        <table>
+        <div class="table-wrap"><table>
           <tr><td>Affected URL</td><td style="word-break:break-all; font-family:monospace; font-size:11px;">{{ f.url }}</td></tr>
           {% if f.evidence %}<tr><td>Evidence</td><td style="font-family:monospace; font-size:11px; word-break:break-all; color:#c00;">{{ f.evidence }}</td></tr>{% endif %}
           <tr><td>Recommendation</td><td>{{ f.recommendation }}</td></tr>
-        </table>
+        </table></div>
       </div>
     </div>
     {% endfor %}
@@ -459,13 +489,13 @@
 
       <div class="tech-details">
         <p style="font-size:11px; color:#888; margin-bottom:8px; font-weight:bold;">📋 TECHNICAL DETAILS</p>
-        <table>
+        <div class="table-wrap"><table>
           <tr><td>CVE ID</td><td>{{ f.cve_id }}</td></tr>
           <tr><td>Affected Software</td><td>{{ f.service }}</td></tr>
           <tr><td>Location</td><td>{{ f.host_ip }}:{{ f.port }}</td></tr>
           <tr><td>CVSS Score</td><td><strong>{{ f.cvss_score }}/10</strong> ({{ f.severity }})</td></tr>
           {% if f.reference %}<tr><td>Full Details</td><td><a href="{{ f.reference }}" style="color:#2980B9;">{{ f.reference }}</a></td></tr>{% endif %}
-        </table>
+        </table></div>
       </div>
     </div>
     {% endfor %}
