@@ -17,7 +17,7 @@
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;}
-body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:13px;overflow-x:hidden;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;overflow-x:hidden;}
 
 /* ── BACKGROUND ── */
 .bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;}
@@ -50,7 +50,28 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .pre-status{font-family:var(--mono);font-size:10px;color:#304560;letter-spacing:2px;}
 
 /* ── SIDEBAR ── */
-.sidebar{width:230px;flex-shrink:0;background:rgba(6,12,20,0.97);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:20;box-shadow:4px 0 30px rgba(0,0,0,0.4);}
+.sidebar{
+  width:260px;flex-shrink:0;
+  background:rgba(6,12,20,0.98);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;height:100vh;
+  overflow-y:auto;z-index:50;
+  box-shadow:8px 0 40px rgba(0,0,0,0.5);
+  transform:translateX(-100%);
+  transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  backdrop-filter:blur(20px);
+}
+.sidebar.open{transform:translateX(0);}
+.sidebar.open .nav-link{animation:navItemIn 0.4s ease both;}
+.sidebar.open .nav-link:nth-child(1){animation-delay:0.05s;}
+.sidebar.open .nav-link:nth-child(2){animation-delay:0.08s;}
+.sidebar.open .nav-link:nth-child(3){animation-delay:0.11s;}
+.sidebar.open .nav-link:nth-child(4){animation-delay:0.14s;}
+.sidebar.open .nav-link:nth-child(5){animation-delay:0.17s;}
+.sidebar.open .nav-link:nth-child(6){animation-delay:0.20s;}
+.sidebar.open .nav-link:nth-child(7){animation-delay:0.23s;}
+@keyframes navItemIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
 .sb-top{padding:20px 20px 16px;border-bottom:1px solid var(--border);}
 .logo{display:flex;align-items:center;gap:11px;}
 .logo-mark svg{width:36px;height:36px;}
@@ -73,7 +94,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .sb-foot{padding:14px 20px;border-top:1px solid var(--border);font-size:9px;color:var(--text2);font-family:var(--mono);letter-spacing:1px;}
 
 /* ── MAIN ── */
-.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:1;}
+.main{width:100%;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:1;}
 .topbar{background:rgba(6,12,20,0.96);border-bottom:1px solid var(--border);padding:13px 26px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:15;backdrop-filter:blur(16px);box-shadow:0 2px 20px rgba(0,0,0,0.4);}
 .tb-title{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text);letter-spacing:2px;}
 .tb-title span{color:var(--accent);}
@@ -81,8 +102,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 .tb-right{display:flex;align-items:center;gap:10px;}
 .clock{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 11px;letter-spacing:1px;}
 .menu-btn{display:none;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:16px;cursor:pointer;}
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:18;}
-.overlay.show{display:block;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(2px);z-index:40;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
+.overlay.show{opacity:1;visibility:visible;}
 
 /* ── CONTENT ── */
 .content{padding:24px 26px;display:flex;flex-direction:column;gap:20px;flex:1;}
@@ -282,7 +303,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
 /* ── RESPONSIVE ── */
 @media(max-width:900px){.scan-types-row{grid-template-columns:repeat(2,1fr);}.phases{grid-template-columns:repeat(2,1fr);}.live-stats{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:720px){
-  .sidebar{display:none;}.sidebar.open{display:flex;position:fixed;left:0;top:0;bottom:0;z-index:20;width:230px;}
   .menu-btn{display:flex;align-items:center;}
   .content,.topbar{padding:14px 16px;}
   .scan-types-row{grid-template-columns:1fr 1fr;}
@@ -291,7 +311,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
   .btn-launch{width:100%;justify-content:center;}
   .corner{display:none;}
 }
-@media(min-width:721px){.menu-btn{display:none !important;}}
+.menu-btn{display:flex !important;align-items:center;}
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
@@ -352,12 +372,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     </div>
   </div>
   <div class="sb-status"><div class="pulse-dot"></div>SYSTEM ONLINE</div>
-  <div class="sb-search">
-    <div class="s-wrap" onclick="openSearch()" style="cursor:pointer;">
-      <span style="color:var(--text2);font-size:12px;">🔍</span>
-      <input type="text" placeholder="Search... (Ctrl+K)" readonly style="cursor:pointer;">
-    </div>
-  </div>
   <nav class="sb-nav">
     <div class="nav-sec">// Assessment</div>
     <a href="/" class="nav-link"><span class="nav-icon">⬡</span>Dashboard</a>
@@ -385,6 +399,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex
     </div>
     <div class="tb-right">
       <div class="clock" id="clock"></div>
+      <button class="icon-btn" onclick="openSearch()" title="Search (Ctrl+K)">🔍</button>
     </div>
   </div>
 

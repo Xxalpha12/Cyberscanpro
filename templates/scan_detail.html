@@ -18,7 +18,7 @@
   }
   *{box-sizing:border-box;margin:0;padding:0;}
   html,body{height:100%;}
-  body{font-family:var(--sans);background:var(--bg);color:var(--text);display:flex;min-height:100vh;font-size:13px;overflow-x:hidden;}
+  body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;overflow-x:hidden;}
 
   /* ── BACKGROUND ── */
   .bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;}
@@ -33,7 +33,28 @@
   .c-br{bottom:0;right:0;width:60px;height:60px;border-bottom:1px solid var(--accent);border-right:1px solid var(--accent);}
 
   /* ── SIDEBAR ── */
-  .sidebar{width:230px;flex-shrink:0;background:rgba(6,12,20,0.97);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;overflow-y:auto;z-index:20;box-shadow:4px 0 30px rgba(0,0,0,0.4);}
+  .sidebar{
+  width:260px;flex-shrink:0;
+  background:rgba(6,12,20,0.98);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;height:100vh;
+  overflow-y:auto;z-index:50;
+  box-shadow:8px 0 40px rgba(0,0,0,0.5);
+  transform:translateX(-100%);
+  transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  backdrop-filter:blur(20px);
+}
+.sidebar.open{transform:translateX(0);}
+.sidebar.open .nav-link{animation:navItemIn 0.4s ease both;}
+.sidebar.open .nav-link:nth-child(1){animation-delay:0.05s;}
+.sidebar.open .nav-link:nth-child(2){animation-delay:0.08s;}
+.sidebar.open .nav-link:nth-child(3){animation-delay:0.11s;}
+.sidebar.open .nav-link:nth-child(4){animation-delay:0.14s;}
+.sidebar.open .nav-link:nth-child(5){animation-delay:0.17s;}
+.sidebar.open .nav-link:nth-child(6){animation-delay:0.20s;}
+.sidebar.open .nav-link:nth-child(7){animation-delay:0.23s;}
+@keyframes navItemIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
   .sb-top{padding:20px 20px 16px;border-bottom:1px solid var(--border);}
 
   /* LOGO */
@@ -67,7 +88,7 @@
   .sb-foot{padding:14px 20px;border-top:1px solid var(--border);font-size:9px;color:var(--text2);font-family:var(--mono);letter-spacing:1px;}
 
   /* ── MAIN ── */
-  .main{flex:1;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:1;}
+  .main{width:100%;overflow-y:auto;display:flex;flex-direction:column;position:relative;z-index:1;}
 
   /* Topbar */
   .topbar{background:rgba(6,12,20,0.96);border-bottom:1px solid var(--border);padding:13px 26px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;position:sticky;top:0;z-index:15;backdrop-filter:blur(16px);box-shadow:0 2px 20px rgba(0,0,0,0.4);}
@@ -121,8 +142,8 @@
   .empty{padding:32px;text-align:center;color:var(--text2);font-size:12px;line-height:1.9;font-family:var(--mono);}
 
   /* Mobile */
-  .overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:18;}
-  .overlay.show{display:block;}
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(2px);z-index:40;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
+.overlay.show{opacity:1;visibility:visible;}
   .menu-btn{display:none;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:16px;cursor:pointer;align-items:center;}
   @media(max-width:720px){
     .sidebar{display:none;}
@@ -133,7 +154,7 @@
     .content{gap:14px;}
     .corner{display:none;}
   }
-  @media(min-width:721px){.menu-btn{display:none !important;}}
+  .menu-btn{display:flex !important;align-items:center;}
   
 /* Page animations */
 body{animation:pagein 0.3s ease both;}
@@ -472,12 +493,6 @@ body{animation:pagein 0.3s ease both;}
   <div class="sb-status">
     <div class="pulse-dot"></div>SYSTEM ONLINE
   </div>
-  <div class="sb-search">
-    <div class="s-wrap" onclick="openSearch()" style="cursor:pointer;">
-      <span style="color:var(--text2);font-size:12px;">🔍</span>
-      <input type="text" placeholder="Search... (Ctrl+K)" readonly style="cursor:pointer;">
-    </div>
-  </div>
   <nav class="sb-nav">
     <div class="nav-sec">// Assessment</div>
     <a href="/" class="nav-link {% if page=='home' %}active{% endif %}"><span class="nav-icon">⬡</span>Dashboard</a>
@@ -504,6 +519,7 @@ body{animation:pagein 0.3s ease both;}
     </div>
     <div class="tb-right">
       <div class="clock" id="clock"></div>
+      <button class="icon-btn" onclick="openSearch()" title="Search (Ctrl+K)">🔍</button>
       {% for f in report_files %}
         {% if f.endswith('.pdf') %}
         <a href="/report/{{ f }}" target="_blank" class="btn-report-pdf">📄 PDF</a>

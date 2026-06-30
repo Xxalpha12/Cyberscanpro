@@ -575,6 +575,107 @@ class Database:
         ), (now,))
         return [dict(r) for r in c.fetchall()]
 
+
+
+    # ── PERSISTENT REPORT STORAGE (survives Render redeploys) ──────────────────
+
+    def _init_reports_table(self):
+        c = self.conn.cursor()
+        if self._pg:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS report_files (
+                    id BIGSERIAL PRIMARY KEY,
+                    session_id TEXT NOT NULL,
+                    target TEXT NOT NULL,
+                    filename TEXT NOT NULL,
+                    file_type TEXT NOT NULL,
+                    file_data BYTEA NOT NULL,
+                    file_size INTEGER,
+                    created_at TEXT NOT NULL
+                )
+            """)
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS report_files (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    session_id TEXT NOT NULL,
+                    target TEXT NOT NULL,
+                    filename TEXT NOT NULL,
+                    file_type TEXT NOT NULL,
+                    file_data BLOB NOT NULL,
+                    file_size INTEGER,
+                    created_at TEXT NOT NULL
+                )
+            """)
+        self.conn.commit()
+
+    def save_report_file(self, session_id, target, filename, file_type, file_bytes):
+        self._init_reports_table()
+        c = self.conn.cursor()
+        now = datetime.now().isoformat()
+        if self._pg:
+            c.execute(
+                "INSERT INTO report_files (session_id, target, filename, file_type, file_data, file_size, created_at) "
+                "VALUES (%s,%s,%s,%s,%s,%s,%s)",
+                (session_id, target, filename, file_type, psycopg2.Binary(file_bytes), len(file_bytes), now)
+            )
+        else:
+            c.execute(
+                "INSERT INTO report_files (session_id, target, filename, file_type, file_data, file_size, created_at) "
+                "VALUES (?,?,?,?,?,?,?)",
+                (session_id, target, filename, file_type, file_bytes, len(file_bytes), now)
+            )
+        self.conn.commit()
+
+    def get_report_file(self, filename):
+        self._init_reports_table()
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT * FROM report_files WHERE filename=?"), (filename,))
+        row = c.fetchone()
+        if not row:
+            return None
+        row = dict(row)
+        if self._pg:
+            row["file_data"] = bytes(row["file_data"])
+        return row
+
+    def get_all_report_files(self):
+        self._init_reports_table()
+        c = self.conn.cursor()
+        c.execute("SELECT id, session_id, target, filename, file_type, file_size, created_at FROM report_files ORDER BY created_at DESC")
+        return [dict(r) for r in c.fetchall()]
+
+    def get_reports_for_session(self, session_id):
+        self._init_reports_table()
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT id, session_id, target, filename, file_type, file_size, created_at FROM report_files WHERE session_id=? ORDER BY created_at DESC"), (session_id,))
+        return [dict(r) for r in c.fetchall()]
+
+    def delete_report_file(self, filename):
+        """Permanently delete a report file from the database."""
+        self._init_reports_table()
+        c = self.conn.cursor()
+        c.execute(self._q("DELETE FROM report_files WHERE filename=?"), (filename,))
+        self.conn.commit()
+        return c.rowcount > 0
+
+    def delete_session_permanently(self, session_id):
+        """Permanently delete a scan session and ALL associated data — no recovery."""
+        c = self.conn.cursor()
+        tables = ["hosts", "ports", "web_findings", "cve_findings",
+                  "scan_logs", "scan_status", "scan_notes", "report_files"]
+        # ports references host_id, need to delete via host lookup first
+        c.execute(self._q("SELECT id FROM hosts WHERE session_id=?"), (session_id,))
+        host_ids = [r["id"] for r in c.fetchall()]
+        for hid in host_ids:
+            c.execute(self._q("DELETE FROM ports WHERE host_id=?"), (hid,))
+        for t in ["hosts", "web_findings", "cve_findings", "scan_logs",
+                  "scan_status", "scan_notes", "report_files"]:
+            c.execute(self._q(f"DELETE FROM {t} WHERE session_id=?"), (session_id,))
+        c.execute(self._q("DELETE FROM sessions WHERE id=?"), (session_id,))
+        self.conn.commit()
+        return True
+
     # ── CLOSE ─────────────────────────────────────────────────────────────────
 
     def close(self):

@@ -407,6 +407,18 @@ def run_scan():
             active_scans[session_id]["report_paths"] = paths
             db.complete_session(session_id)
 
+            # ── Persist report files into the database (survives Render redeploys) ──
+            for p in paths:
+                try:
+                    with open(p, "rb") as fbytes:
+                        file_bytes = fbytes.read()
+                    fname = os.path.basename(p)
+                    ftype = "pdf" if fname.endswith(".pdf") else "html"
+                    db.save_report_file(session_id, target, fname, ftype, file_bytes)
+                    _log(f"Report persisted to database: {fname}")
+                except Exception as e:
+                    _log(f"WARNING: Could not persist report {p}: {e}")
+
             if data.get("email"):
                 _send_report_email(data["email"], target, session_id, paths)
                 _log(f"Report emailed to {data['email']}")
@@ -494,24 +506,14 @@ def view_scan(session_id):
     cve_findings    = db.get_cve_findings(session_id)
     severity_counts = db.get_severity_counts(session_id)
     total_findings  = db.get_total_findings(session_id)
-    db.close()
 
     # Risk scoring
     risk_scores = score_all_hosts(hosts, web_findings, cve_findings)
 
-    # Get report files for this session
-    import glob
-    output_dir = os.path.join(os.path.dirname(__file__), "output")
-    report_files = []
-    if os.path.exists(output_dir):
-        for ext in ["html", "pdf"]:
-            pattern = os.path.join(output_dir, f"cyberscanpro_report_{session_id}_*.{ext}")
-            report_files += [os.path.basename(f) for f in glob.glob(pattern)]
-        # Also check old naming convention
-        for ext in ["html", "pdf"]:
-            pattern = os.path.join(output_dir, f"*_{session_id}_*.{ext}")
-            report_files += [os.path.basename(f) for f in glob.glob(pattern)
-                           if os.path.basename(f) not in report_files]
+    # Get report files for this session — from the DATABASE (persistent across redeploys)
+    db_reports = db.get_reports_for_session(session_id)
+    report_files = [r["filename"] for r in db_reports]
+    db.close()
 
     return render_template(
         "scan_detail.html",
@@ -527,10 +529,13 @@ def view_scan(session_id):
 @app.route("/scan/<session_id>/delete", methods=["POST"])
 @login_required
 def delete_scan(session_id):
+    """Permanently delete a scan session and all its data — irreversible."""
     db = Database()
     if not db.get_session(session_id):
+        db.close()
         return jsonify({"error": "Not found"}), 404
-    db.delete_session(session_id)
+    db.delete_session_permanently(session_id)
+    db.close()
     db.close()
     return jsonify({"success": True})
 
@@ -538,391 +543,59 @@ def delete_scan(session_id):
 @app.route("/report/<filetype>/<session_id>")
 @login_required
 def download_report_by_session(filetype, session_id):
-    """Find and serve the most recent report file for a session by type (pdf/html)."""
+    """Serve the most recent report for a session, by type (pdf/html), from the database."""
     import re
     if not re.match(r'^[\w\-]+$', session_id):
         abort(400)
-    output_dir = os.path.join(os.path.dirname(__file__), "output")
-    if not os.path.exists(output_dir):
-        abort(404)
-    ext = ".pdf" if filetype == "pdf" else ".html"
-    matches = sorted(
-        [f for f in os.listdir(output_dir) if session_id in f and f.endswith(ext)],
-        reverse=True
-    )
+    db = Database()
+    reports = db.get_reports_for_session(session_id)
+    db.close()
+    ext = "pdf" if filetype == "pdf" else "html"
+    matches = [r for r in reports if r["file_type"] == ext]
     if not matches:
         abort(404)
-    filepath = os.path.join(output_dir, matches[0])
-    mimetype = "application/pdf" if ext == ".pdf" else "text/html"
-    return send_file(filepath, as_attachment=False, mimetype=mimetype)
+    filename = matches[0]["filename"]
+    return download_report(filename)
 
 
 @app.route("/report/<filename>")
 @login_required
 def download_report(filename):
-    # Security: only allow safe filenames
     import re
     if not re.match(r'^[\w\-\.]+$', filename):
         abort(400)
-    output_dir = os.path.join(os.path.dirname(__file__), "output")
-    filepath = os.path.join(output_dir, filename)
-    if not os.path.exists(filepath):
+
+    db = Database()
+    record = db.get_report_file(filename)
+    db.close()
+
+    if not record:
+        # Fallback: try disk (covers reports generated before DB persistence was added)
+        output_dir = os.path.join(os.path.dirname(__file__), "output")
+        filepath = os.path.join(output_dir, filename)
+        if os.path.exists(filepath):
+            mimetype = "application/pdf" if filename.endswith(".pdf") else "text/html"
+            return send_file(filepath, as_attachment=False, mimetype=mimetype)
         abort(404)
-    # Open PDF in browser, download HTML
-    if filename.endswith(".pdf"):
-        return send_file(filepath, as_attachment=False,
-                        mimetype="application/pdf")
-    elif filename.endswith(".html"):
-        return send_file(filepath, as_attachment=False,
-                        mimetype="text/html")
-    return send_file(filepath, as_attachment=True)
 
+    from io import BytesIO
+    mimetype = "application/pdf" if record["file_type"] == "pdf" else "text/html"
+    return send_file(
+        BytesIO(record["file_data"]),
+        as_attachment=False,
+        mimetype=mimetype,
+        download_name=filename
+    )
 
-# ── EXPORT CSV ───────────────────────────────────────────
 
-@app.route("/export/csv")
-@login_required
-def export_csv():
-    """Export all scan sessions as a CSV file."""
-    db = Database()
-    sessions = db.get_all_sessions()
-    db.close()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow(["Session ID", "Target", "Started At", "Completed At", "Status"])
-    for s in sessions:
-        writer.writerow([s["id"], s["target"], s["started_at"],
-                         s.get("completed_at", ""), s["status"]])
 
-    response = make_response(output.getvalue())
-    response.headers["Content-Disposition"] = "attachment; filename=cyberscanpro_sessions.csv"
-    response.headers["Content-Type"] = "text/csv"
-    return response
 
+def _ts():
+    return datetime.now().strftime("%H:%M:%S")
 
-@app.route("/export/<session_id>/csv")
-@login_required
-def export_session_csv(session_id):
-    """Export all findings for a specific session as CSV."""
-    db = Database()
-    sess = db.get_session(session_id)
-    if not sess:
-        abort(404)
-    web = db.get_web_findings(session_id)
-    cve = db.get_cve_findings(session_id)
-    db.close()
 
-    output = io.StringIO()
-    writer = csv.writer(output)
-
-    writer.writerow(["=== WEB FINDINGS ==="])
-    writer.writerow(["Host IP", "URL", "Vulnerability", "Severity", "Description", "Recommendation"])
-    for f in web:
-        writer.writerow([f["host_ip"], f["url"], f["vuln_type"],
-                         f["severity"], f["description"], f["recommendation"]])
-
-    writer.writerow([])
-    writer.writerow(["=== CVE FINDINGS ==="])
-    writer.writerow(["Host IP", "Port", "Service", "CVE ID", "CVSS Score", "Severity", "Reference"])
-    for f in cve:
-        writer.writerow([f["host_ip"], f["port"], f["service"],
-                         f["cve_id"], f["cvss_score"], f["severity"], f["reference"]])
-
-    response = make_response(output.getvalue())
-    response.headers["Content-Disposition"] = f"attachment; filename=cyberscanpro_{session_id}_findings.csv"
-    response.headers["Content-Type"] = "text/csv"
-    return response
-
-
-# ── SCAN COMPARISON ───────────────────────────────────────
-
-@app.route("/compare")
-@login_required
-def compare():
-    db = Database()
-    sessions = db.get_all_sessions()
-    db.close()
-    return render_template("compare.html", sessions=sessions,
-                           page="compare", title="Compare Scans")
-
-
-@app.route("/api/compare")
-@login_required
-def api_compare():
-    """Return comparison data for two sessions."""
-    sid1 = request.args.get("s1")
-    sid2 = request.args.get("s2")
-    if not sid1 or not sid2:
-        return jsonify({"error": "Two session IDs required"}), 400
-
-    db = Database()
-    def get_data(sid):
-        s = db.get_session(sid)
-        if not s:
-            return None
-        return {
-            "session":        s,
-            "severity_counts": db.get_severity_counts(sid),
-            "total_findings": db.get_total_findings(sid),
-            "host_count":     len(db.get_hosts(sid)),
-            "web_count":      len(db.get_web_findings(sid)),
-            "cve_count":      len(db.get_cve_findings(sid)),
-        }
-
-    data1 = get_data(sid1)
-    data2 = get_data(sid2)
-    db.close()
-
-    if not data1 or not data2:
-        return jsonify({"error": "Session not found"}), 404
-
-    return jsonify({"session1": data1, "session2": data2})
-
-
-# ── CVE TREND ─────────────────────────────────────────────
-
-@app.route("/api/cve-trend")
-@login_required
-def api_cve_trend():
-    """Return CVE finding counts per session for trend chart."""
-    db = Database()
-    sessions = db.get_all_sessions()
-    trend = []
-    for s in sessions[-10:]:  # Last 10 sessions
-        counts = db.get_severity_counts(s["id"])
-        trend.append({
-            "session_id": s["id"],
-            "target":     s["target"],
-            "date":       s["started_at"][:10],
-            "critical":   counts["Critical"],
-            "high":       counts["High"],
-            "medium":     counts["Medium"],
-            "low":        counts["Low"],
-            "total":      sum(counts.values())
-        })
-    db.close()
-    return jsonify(trend)
-
-
-# ── REMEDIATION CHECKLIST ─────────────────────────────────
-
-@app.route("/scan/<session_id>/checklist")
-@login_required
-def remediation_checklist(session_id):
-    """Generate a downloadable remediation checklist."""
-    db = Database()
-    sess = db.get_session(session_id)
-    if not sess:
-        abort(404)
-    web_findings = db.get_web_findings(session_id)
-    cve_findings = db.get_cve_findings(session_id)
-    db.close()
-    return render_template("checklist.html",
-                           session=sess,
-                           web_findings=web_findings,
-                           cve_findings=cve_findings)
-
-
-# ── EMAIL DELIVERY ────────────────────────────────────────
-
-def _send_report_email(recipient: str, target: str, session_id: str, report_paths: list):
-    """
-    Send scan report via email using SMTP.
-    Set these in Render Environment Variables:
-      SMTP_HOST = smtp.gmail.com
-      SMTP_PORT = 587
-      SMTP_USER = your Gmail address
-      SMTP_PASS = your Gmail App Password
-    Gmail App Password: Google Account → Security → 2-Step Verification → App Passwords
-    """
-    smtp_host = os.environ.get("SMTP_HOST", "smtp.gmail.com")
-    smtp_port = int(os.environ.get("SMTP_PORT", "587"))
-    smtp_user = os.environ.get("SMTP_USER", "")
-    smtp_pass = os.environ.get("SMTP_PASS", "")
-
-    if not smtp_user or not smtp_pass:
-        logger.warning("Email not sent: Set SMTP_USER and SMTP_PASS in Render Environment Variables.")
-        return
-
-    logger.info(f"Sending report email to {recipient} via {smtp_host}:{smtp_port}")
-
-    try:
-        msg = MIMEMultipart()
-        msg["From"]    = smtp_user
-        msg["To"]      = recipient
-        msg["Subject"] = f"CyberScan Pro Report — {target} [{session_id}]"
-
-        body = f"""CyberScan Pro — Automated Vulnerability Assessment Report
-
-Target:     {target}
-Session ID: {session_id}
-Generated:  {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-
-Please find the attached penetration test report.
-
----
-CyberScan Pro | FUPRE Final Year Project | Obeh Emmanuel Onoriode
-⚠ This report is confidential. Authorized use only.
-"""
-        msg.attach(MIMEText(body, "plain"))
-
-        # Attach PDF report if available
-        for path in report_paths:
-            if path.endswith(".pdf") and os.path.exists(path):
-                with open(path, "rb") as f:
-                    part = MIMEBase("application", "octet-stream")
-                    part.set_payload(f.read())
-                    encoders.encode_base64(part)
-                    part.add_header("Content-Disposition",
-                                    f"attachment; filename={os.path.basename(path)}")
-                    msg.attach(part)
-
-        with smtplib.SMTP(smtp_host, smtp_port) as server:
-            server.starttls()
-            server.login(smtp_user, smtp_pass)
-            server.sendmail(smtp_user, recipient, msg.as_string())
-
-        logger.info(f"Report emailed to {recipient}")
-    except Exception as e:
-        logger.error(f"Email failed: {e}")
-
-
-# ── API ───────────────────────────────────────────────────
-
-
-
-
-
-
-
-@app.route("/api/screenshot/<session_id>", methods=["POST"])
-@login_required
-def capture_screenshot(session_id):
-    """Trigger screenshot capture for a session."""
-    from modules.screenshot import ScreenshotCapture
-    db = Database()
-    sess = db.get_session(session_id)
-    hosts = db.get_hosts(session_id)
-    db.close()
-
-    if not sess:
-        return jsonify({"error": "Session not found"}), 404
-
-    target = sess["target"]
-    if not target.startswith("http"):
-        target = f"http://{target}"
-
-    sc = ScreenshotCapture()
-    path = sc.capture(target, session_id)
-
-    if path:
-        return jsonify({"success": True, "url": f"/screenshots/{session_id}"})
-    return jsonify({"success": False, "error": "Screenshot capture failed"}), 500
-
-
-# ── SCHEDULE ROUTES ──────────────────────────────────────────────────────────
-
-@app.route("/schedules")
-@login_required
-def schedules():
-    db = Database()
-    scheds = db.get_all_schedules()
-    db.close()
-    return render_template("schedules.html", schedules=scheds,
-                           page="schedules", title="Scan Schedules")
-
-
-@app.route("/api/schedules", methods=["GET"])
-@login_required
-def api_get_schedules():
-    db = Database()
-    scheds = db.get_all_schedules()
-    db.close()
-    return jsonify(scheds)
-
-
-@app.route("/api/schedules", methods=["POST"])
-@login_required
-def api_create_schedule():
-    data      = request.get_json()
-    target    = data.get("target","").strip()
-    scan_type = data.get("scan_type","quick")
-    port_range = data.get("port_range","1-1024")
-    frequency = data.get("frequency","daily")
-
-    if not target:
-        return jsonify({"error": "Target required"}), 400
-
-    freq_hours = {"hourly": 1, "daily": 24, "weekly": 168}
-    hours      = freq_hours.get(frequency, 24)
-    next_run   = (datetime.now() + timedelta(hours=hours)).isoformat()
-
-    db = Database()
-    sid = db.create_schedule(target, scan_type, port_range, frequency, next_run)
-    db.close()
-    return jsonify({"success": True, "id": sid, "next_run": next_run})
-
-
-@app.route("/api/schedules/<int:schedule_id>", methods=["DELETE"])
-@login_required
-def api_delete_schedule(schedule_id):
-    db = Database()
-    db.delete_schedule(schedule_id)
-    db.close()
-    return jsonify({"success": True})
-
-
-# ── SCAN HISTORY ──────────────────────────────────────────────────────────────
-
-@app.route("/history")
-@login_required
-def history():
-    db = Database()
-    sessions = db.get_all_sessions()
-    enriched = []
-    total_findings = 0
-    for s in sessions:
-        counts   = db.get_severity_counts(s["id"])
-        findings = db.get_total_findings(s["id"])
-        total_findings += findings
-        risk = "CRITICAL" if counts["Critical"] > 0 else                "HIGH"     if counts["High"] > 0     else                "MEDIUM"   if counts["Medium"] > 0   else                "LOW"      if counts["Low"] > 0       else "NONE"
-        enriched.append({**dict(s),
-            "severity_counts": counts,
-            "risk_rating": risk})
-    db.close()
-    return render_template("history.html",
-        sessions=enriched,
-        total=len(sessions),
-        completed=len([s for s in sessions if s["status"]=="completed"]),
-        errors=len([s for s in sessions if s["status"]=="error"]),
-        total_findings=total_findings,
-        page="history", title="Scan History")
-
-
-# ── NOTES ─────────────────────────────────────────────────────────────────────
-
-@app.route("/api/notes/<session_id>", methods=["GET"])
-@login_required
-def get_notes(session_id):
-    db = Database()
-    notes = db.get_notes(session_id)
-    db.close()
-    return jsonify({"notes": notes})
-
-
-@app.route("/api/notes/<session_id>", methods=["POST"])
-@login_required
-def save_notes(session_id):
-    data  = request.get_json()
-    notes = data.get("notes", "")
-    db    = Database()
-    db.save_notes(session_id, notes)
-    db.close()
-    return jsonify({"success": True})
-
-
-# ── NOTIFICATIONS ─────────────────────────────────────────────────────────────
+# ── NOTIFICATIONS API ─────────────────────────────────────────────────────────
 
 
 
@@ -943,110 +616,7 @@ def delete_report(filename):
 
 # ── TARGETS PAGE ──────────────────────────────────────────────────────────────
 
-@app.route("/targets")
-@login_required
-def targets_page():
-    db = Database()
-    sessions = db.get_all_sessions()
 
-    # Group sessions by target
-    target_map = {}
-    for s in sessions:
-        tgt = s["target"]
-        if tgt not in target_map:
-            target_map[tgt] = []
-        target_map[tgt].append(s)
-
-    targets = []
-    for tgt, scans in target_map.items():
-        # Get findings for each scan
-        total_c = total_h = total_m = total_l = 0
-        latest_risk = "NONE"
-        latest_ip   = ""
-
-        for s in scans:
-            counts = db.get_severity_counts(s["id"])
-            total_c += counts["Critical"]
-            total_h += counts["High"]
-            total_m += counts["Medium"]
-            total_l += counts["Low"]
-
-        # Latest scan risk
-        if scans:
-            latest = scans[0]
-            counts = db.get_severity_counts(latest["id"])
-            latest_risk = "CRITICAL" if counts["Critical"] > 0 else                           "HIGH"     if counts["High"] > 0     else                           "MEDIUM"   if counts["Medium"] > 0   else                           "LOW"      if counts["Low"] > 0       else "NONE"
-            # Get IP from hosts
-            hosts = db.get_hosts(latest["id"])
-            if hosts:
-                latest_ip = hosts[0].get("ip","")
-
-        # Risk trend (compare last 2 scans)
-        trend = "stable"
-        if len(scans) >= 2:
-            c1 = db.get_severity_counts(scans[0]["id"])
-            c2 = db.get_severity_counts(scans[1]["id"])
-            score1 = c1["Critical"]*25 + c1["High"]*10 + c1["Medium"]*5 + c1["Low"]*1
-            score2 = c2["Critical"]*25 + c2["High"]*10 + c2["Medium"]*5 + c2["Low"]*1
-            if score1 > score2:
-                trend = "worse"
-            elif score1 < score2:
-                trend = "better"
-
-        # Add total_findings to each scan
-        enriched_scans = []
-        for s in scans:
-            total = db.get_total_findings(s["id"])
-            enriched_scans.append({**dict(s), "total_findings": total})
-
-        targets.append({
-            "name":           tgt,
-            "ip":             latest_ip,
-            "scan_count":     len(scans),
-            "latest_risk":    latest_risk,
-            "total_critical": total_c,
-            "total_high":     total_h,
-            "total_medium":   total_m,
-            "total_low":      total_l,
-            "trend":          trend,
-            "recent_scans":   enriched_scans[:5],
-        })
-
-    # Sort by latest risk severity
-    risk_order = {"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3,"NONE":4}
-    targets.sort(key=lambda x: risk_order.get(x["latest_risk"], 4))
-
-    db.close()
-    return render_template("targets.html",
-        targets=targets,
-        page="targets", title="Targets"
-    )
-
-
-# ── SETTINGS PAGE ─────────────────────────────────────────────────────────────
-
-@app.route("/settings")
-@login_required
-def settings_page():
-    import shutil
-    return render_template("settings.html",
-        nmap_available    = bool(shutil.which("nmap")),
-        use_postgres      = bool(os.environ.get("DATABASE_URL","")),
-        nvd_key           = bool(os.environ.get("NVD_API_KEY","")),
-        smtp_configured   = bool(os.environ.get("SMTP_USER","") and os.environ.get("SMTP_PASS","")),
-        smtp_host         = os.environ.get("SMTP_HOST","smtp.gmail.com"),
-        smtp_port         = os.environ.get("SMTP_PORT","587"),
-        smtp_user         = os.environ.get("SMTP_USER",""),
-        smtp_pass         = os.environ.get("SMTP_PASS",""),
-        screenshot_key    = bool(os.environ.get("SCREENSHOT_API_KEY","")),
-        sync_key          = bool(os.environ.get("SYNC_API_KEY","")),
-        scan_threads      = os.environ.get("SCAN_THREADS","100"),
-        max_cidr          = os.environ.get("MAX_CIDR_HOSTS","50"),
-        scan_timeout      = os.environ.get("SCAN_TIMEOUT","1"),
-        login_user        = os.environ.get("NETSCAN_USER","admin"),
-        login_pass        = os.environ.get("NETSCAN_PASS","admin123"),
-        page="settings", title="Settings"
-    )
 
 
 @app.route("/api/test-email", methods=["POST"])
@@ -1147,15 +717,9 @@ def api_sessions():
 @app.route("/reports")
 @login_required
 def reports_page():
-    import glob
-    output_dir = os.path.join(os.path.dirname(__file__), "output")
-    os.makedirs(output_dir, exist_ok=True)
-
     db = Database()
     sessions = db.get_all_sessions()
-
-    session_targets = {s["id"]: s["target"] for s in sessions}
-    session_risks    = {}
+    session_risks = {}
     for s in sessions:
         counts = db.get_severity_counts(s["id"])
         risk = "CRITICAL" if counts.get("Critical",0) > 0 else \
@@ -1163,40 +727,23 @@ def reports_page():
                "MEDIUM"   if counts.get("Medium",0) > 0   else \
                "LOW"      if counts.get("Low",0) > 0       else "NONE"
         session_risks[s["id"]] = risk
+
+    db_reports = db.get_all_report_files()
     db.close()
 
     reports = []
-    if os.path.exists(output_dir):
-        for f in sorted(os.listdir(output_dir), reverse=True):
-            if not (f.endswith(".pdf") or f.endswith(".html")):
-                continue
-            filepath = os.path.join(output_dir, f)
-            size_kb  = os.path.getsize(filepath) // 1024
-
-            # Extract session_id — handles cyberscanpro_report_<id>_<timestamp>.ext
-            parts = f.replace("cyberscanpro_report_", "").replace("netscampro_report_", "")
-            session_id = parts.split("_")[0] if parts else ""
-
-            rtype = "pdf" if f.endswith(".pdf") else "html"
-
-            try:
-                import datetime as dt
-                mtime = os.path.getmtime(filepath)
-                date  = dt.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
-            except Exception:
-                date = "Unknown"
-
-            target_name = session_targets.get(session_id, session_id[:12] if session_id else "Unknown target")
-
-            reports.append({
-                "filename":   f,
-                "type":       rtype,
-                "target":     target_name,
-                "session_id": session_id,
-                "risk":       session_risks.get(session_id, "NONE"),
-                "date":       date,
-                "size":       f"{size_kb} KB",
-            })
+    for r in db_reports:
+        size_kb = (r.get("file_size") or 0) // 1024
+        date = (r.get("created_at","") or "")[:16].replace("T"," ")
+        reports.append({
+            "filename":   r["filename"],
+            "type":       r["file_type"],
+            "target":     r["target"],
+            "session_id": r["session_id"],
+            "risk":       session_risks.get(r["session_id"], "NONE"),
+            "date":       date,
+            "size":       f"{size_kb} KB",
+        })
 
     pdf_count  = sum(1 for r in reports if r["type"] == "pdf")
     html_count = sum(1 for r in reports if r["type"] == "html")
@@ -1315,6 +862,106 @@ def api_search():
 
     db.close()
     return jsonify({"results": results[:20]})
+
+
+
+
+# ── TARGETS PAGE ──────────────────────────────────────────────────────────────
+
+@app.route("/targets")
+@login_required
+def targets_page():
+    db = Database()
+    sessions = db.get_all_sessions()
+
+    # Group sessions by target hostname
+    target_map = {}
+    for s in sessions:
+        name = s["target"]
+        if name not in target_map:
+            target_map[name] = {
+                "name":           name,
+                "ip":             None,
+                "scan_count":     0,
+                "recent_scans":   [],
+                "total_critical": 0,
+                "total_high":     0,
+                "total_medium":   0,
+                "total_low":      0,
+                "latest_risk":    "NONE",
+                "risk_history":   [],
+                "trend":          "stable",
+                "reports":        [],
+            }
+
+        t = target_map[name]
+        t["scan_count"] += 1
+
+        # Severity counts for this scan
+        counts = db.get_severity_counts(s["id"])
+        crit   = counts.get("Critical", 0)
+        high   = counts.get("High", 0)
+        med    = counts.get("Medium", 0)
+        low    = counts.get("Low", 0)
+        total  = crit + high + med + low
+
+        t["total_critical"] += crit
+        t["total_high"]     += high
+        t["total_medium"]   += med
+        t["total_low"]      += low
+
+        risk = "CRITICAL" if crit > 0 else \
+               "HIGH"     if high > 0  else \
+               "MEDIUM"   if med  > 0  else \
+               "LOW"      if low  > 0  else "NONE"
+        t["risk_history"].append(risk)
+
+        # Enrich scan entry
+        scan_entry = dict(s)
+        scan_entry["total_findings"] = total
+        t["recent_scans"].append(scan_entry)
+
+        # Get host IP from first host found
+        if not t["ip"]:
+            hosts = db.get_hosts(s["id"])
+            if hosts:
+                t["ip"] = hosts[0].get("ip", "")
+
+        # Reports for this session
+        reps = db.get_reports_for_session(s["id"])
+        for r in reps:
+            if r not in t["reports"]:
+                t["reports"].append(r)
+
+    # Sort recent_scans newest first, compute latest risk and trend
+    for t in target_map.values():
+        t["recent_scans"].sort(key=lambda x: x.get("started_at",""), reverse=True)
+        if t["risk_history"]:
+            t["latest_risk"] = t["risk_history"][-1]
+            # Trend: compare last scan vs second-to-last
+            if len(t["risk_history"]) >= 2:
+                risk_order = {"NONE":0,"LOW":1,"MEDIUM":2,"HIGH":3,"CRITICAL":4}
+                last  = risk_order.get(t["risk_history"][-1], 0)
+                prev  = risk_order.get(t["risk_history"][-2], 0)
+                if last > prev:
+                    t["trend"] = "worse"
+                elif last < prev:
+                    t["trend"] = "better"
+                else:
+                    t["trend"] = "stable"
+
+    targets = sorted(
+        target_map.values(),
+        key=lambda x: ({"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3,"NONE":4}.get(x["latest_risk"],4), x["name"])
+    )
+
+    db.close()
+
+    return render_template("targets.html",
+        targets=list(targets),
+        page="targets",
+        title="Targets"
+    )
 
 
 @app.route("/logout")

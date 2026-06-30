@@ -80,21 +80,38 @@ body{
    SIDEBAR
 ═══════════════════════════════════════════════════ */
 .sidebar{
-  width:230px;flex-shrink:0;
-  background:rgba(6,12,20,0.97);
+  width:260px;flex-shrink:0;
+  background:rgba(6,12,20,0.98);
   border-right:1px solid var(--border);
   display:flex;flex-direction:column;
-  position:sticky;top:0;height:100vh;
-  overflow-y:auto;z-index:20;
-  box-shadow:4px 0 30px rgba(0,0,0,0.4);
+  position:fixed;top:0;left:0;bottom:0;height:100vh;
+  overflow-y:auto;z-index:50;
+  box-shadow:8px 0 40px rgba(0,0,0,0.5);
+  transform:translateX(-100%);
+  transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
+  backdrop-filter:blur(20px);
 }
+.sidebar.open{
+  transform:translateX(0);
+}
+.sidebar.open .nav-link{
+  animation:navItemIn 0.4s ease both;
+}
+.sidebar.open .nav-link:nth-child(1){animation-delay:0.05s;}
+.sidebar.open .nav-link:nth-child(2){animation-delay:0.08s;}
+.sidebar.open .nav-link:nth-child(3){animation-delay:0.11s;}
+.sidebar.open .nav-link:nth-child(4){animation-delay:0.14s;}
+.sidebar.open .nav-link:nth-child(5){animation-delay:0.17s;}
+.sidebar.open .nav-link:nth-child(6){animation-delay:0.20s;}
+.sidebar.open .nav-link:nth-child(7){animation-delay:0.23s;}
+@keyframes navItemIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
 
 .sb-top{
   padding:22px 20px 18px;
   border-bottom:1px solid var(--border);
 }
 .brand{display:flex;align-items:center;gap:12px;}
-.brand-icon{
+.brand-icon{display:flex;align-items:center;justify-content:center;
   width:36px;height:36px;border-radius:9px;flex-shrink:0;
   background:linear-gradient(135deg,rgba(0,200,255,0.2),rgba(0,200,255,0.04));
   border:1px solid rgba(0,200,255,0.25);
@@ -555,8 +572,8 @@ nav{flex:1;overflow-y:auto;padding:8px 0;}
 }
 
 /* Mobile */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:18;}
-.overlay.show{display:block;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(2px);z-index:40;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
+.overlay.show{opacity:1;visibility:visible;}
 .menu-btn{
   display:none;background:var(--bg3);
   border:1px solid var(--border);border-radius:7px;
@@ -565,15 +582,13 @@ nav{flex:1;overflow-y:auto;padding:8px 0;}
 @media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr);}}
 @media(max-width:900px){.g3{grid-template-columns:1fr 1fr;}}
 @media(max-width:720px){
-  .sidebar{display:none;}
-  .sidebar.open{display:flex;position:fixed;left:0;top:0;bottom:0;z-index:20;width:230px;}
   .menu-btn{display:flex;align-items:center;}
   .g2,.g3,.g4,.gcol{grid-template-columns:1fr;}
   .content,.topbar{padding:14px 16px;}
   .content{gap:14px;}
   .corner{display:none;}
 }
-@media(min-width:721px){.menu-btn{display:none !important;}}
+.menu-btn{display:flex !important;align-items:center;}
 
 
 
@@ -907,7 +922,52 @@ body{animation:pagein 0.3s ease both;}
 <aside class="sidebar" id="sidebar">
   <div class="sb-top">
     <div class="brand">
-      <div class="brand-icon">🛡</div>
+      <div class="brand-icon"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+          <defs>
+            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#00e5ff"/>
+              <stop offset="100%" stop-color="#0066ff"/>
+            </linearGradient>
+          </defs>
+          <g stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-linecap="round">
+            <path d="M32 14 L20 6 M20 6 L20 2"/>
+            <path d="M32 14 L32 6"/>
+            <path d="M32 14 L44 6 M44 6 L44 2"/>
+            <path d="M18 22 L6 22 M6 22 L2 22"/>
+            <path d="M46 22 L58 22 M58 22 L62 22"/>
+            <path d="M18 42 L6 42 M6 42 L2 42"/>
+            <path d="M46 42 L58 42 M58 42 L62 42"/>
+            <path d="M24 50 L16 58 M16 58 L13 61"/>
+            <path d="M32 52 L32 60"/>
+            <path d="M40 50 L48 58 M48 58 L51 61"/>
+          </g>
+          <g fill="url(#logoGrad)">
+            <circle cx="20" cy="2" r="2.2"/>
+            <circle cx="32" cy="6" r="2.2"/>
+            <circle cx="44" cy="2" r="2.2"/>
+            <circle cx="2" cy="22" r="2.2"/>
+            <circle cx="62" cy="22" r="2.2"/>
+            <circle cx="2" cy="42" r="2.2"/>
+            <circle cx="62" cy="42" r="2.2"/>
+            <circle cx="13" cy="61" r="2.2"/>
+            <circle cx="32" cy="60" r="2.2"/>
+            <circle cx="51" cy="61" r="2.2"/>
+          </g>
+          <g fill="url(#logoGrad)" opacity="0.7">
+            <rect x="24" y="16" width="2" height="2"/>
+            <rect x="38" y="16" width="2" height="2"/>
+            <rect x="13" y="30" width="2" height="2"/>
+            <rect x="49" y="30" width="2" height="2"/>
+            <rect x="24" y="46" width="2" height="2"/>
+            <rect x="38" y="46" width="2" height="2"/>
+          </g>
+          <rect x="16" y="14" width="32" height="32" rx="9" fill="rgba(0,180,255,0.06)" stroke="url(#logoGrad)" stroke-width="2.2"/>
+          <path d="M26 27 V23.5 C26 19.5 29 17 32 17 C35 17 38 19.5 38 23.5 V27"
+                stroke="url(#logoGrad)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          <rect x="23" y="27" width="18" height="14" rx="3" fill="rgba(0,180,255,0.1)" stroke="url(#logoGrad)" stroke-width="2.2"/>
+          <circle cx="32" cy="32.5" r="2.3" fill="url(#logoGrad)"/>
+          <path d="M32 34.5 L32 37.5" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
+        </svg></div>
       <div>
         <div class="brand-name">CyberScan<span>Pro</span></div>
       </div>
@@ -918,13 +978,6 @@ body{animation:pagein 0.3s ease both;}
   <div class="sb-status">
     <div class="status-ok-dot"></div>
     SYSTEM ONLINE
-  </div>
-
-  <div class="sb-search">
-    <div class="search-wrap">
-      <span style="color:var(--text2);font-size:12px;">🔍</span>
-      <input type="text" placeholder="Search targets, reports...">
-    </div>
   </div>
 
   <nav>
@@ -963,6 +1016,9 @@ body{animation:pagein 0.3s ease both;}
     </div>
     <div class="tb-right">
       <div class="clock" id="clock">--:--:--</div>
+      <button class="icon-btn" onclick="openSearch()" title="Search (Ctrl+K)">
+        🔍
+      </button>
       <button class="icon-btn" onclick="loadNotifs()" title="Notifications">
         🔔
         {% if severity_counts.Critical > 0 %}<div class="notif-dot"></div>{% endif %}
@@ -1229,103 +1285,6 @@ body{animation:pagein 0.3s ease both;}
         {% endfor %}
       </div>
       <a href="/history" class="view-all">VIEW ALL ACTIVITY →</a>
-    </div>
-
-    <!-- ROW 3: Recent Scans -->
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-title">📋 Recent Scans</span>
-        <a href="/history" class="mlink">View all →</a>
-      </div>
-      <div style="overflow-x:auto;">
-        <table class="scan-table">
-          <thead>
-            <tr>
-              <th>Target</th>
-              <th>Status</th>
-              <th>Risk Level</th>
-              <th>Findings</th>
-              <th>Date</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for s in sessions[:7] %}
-            {% set sc = s.severity_counts if s.severity_counts else {} %}
-            {% set total = sc.get('Critical',0) + sc.get('High',0) + sc.get('Medium',0) + sc.get('Low',0) %}
-            <tr>
-              <td class="scan-target">{{ s.target }}</td>
-              <td><span class="pill p-{{ s.status }}">{{ s.status|title }}</span></td>
-              <td>
-                {% if sc.get('Critical',0) > 0 %}<span class="risk rC">CRITICAL</span>
-                {% elif sc.get('High',0) > 0 %}<span class="risk rH">HIGH</span>
-                {% elif sc.get('Medium',0) > 0 %}<span class="risk rM">MEDIUM</span>
-                {% elif sc.get('Low',0) > 0 %}<span class="risk rL">LOW</span>
-                {% else %}<span class="risk rN">NONE</span>{% endif %}
-              </td>
-              <td style="font-weight:700;color:var(--text);font-family:var(--mono);">{{ total }}</td>
-              <td style="font-family:var(--mono);font-size:11px;">{{ s.started_at[:10] if s.started_at else '—' }}</td>
-              <td><a href="/scan/{{ s.id }}" class="mlink">VIEW →</a></td>
-            </tr>
-            {% else %}
-            <tr><td colspan="6" class="empty">No scans yet. <a href="/scan/new" class="mlink">Launch first scan →</a></td></tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-      <a href="/history" class="view-all">VIEW ALL SCANS →</a>
-    </div>
-
-    <!-- ROW 4: Reports + Targets -->
-    <div class="g2">
-
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title" style="display:none">📄 Recent Reports</span>
-          <a href="/reports" class="mlink">View all →</a>
-        </div>
-        <div class="ilist" style="display:none">
-          {% for r in recent_reports %}
-          <div class="iitem">
-            <div class="iicon">{{ '📄' if r.type == 'pdf' else '🌐' }}</div>
-            <div class="imain">
-              <div class="iname">{{ r.target }}</div>
-              <div class="imeta">{{ r.type|upper }} · {{ r.date }}</div>
-            </div>
-            <a href="/report/{{ r.filename }}" target="_blank" class="iact">OPEN</a>
-          </div>
-          {% else %}
-          <div class="empty">No reports yet.<br>Complete a scan to generate reports.</div>
-          {% endfor %}
-        </div>
-        <a href="/reports" class="view-all">VIEW ALL REPORTS →</a>
-      </div>
-
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title">🎯 Scanned Targets</span>
-          <a href="/targets" class="mlink">View all →</a>
-        </div>
-        <div class="ilist">
-          {% for t in top_targets %}
-          <div class="iitem">
-            <div class="iicon">🌐</div>
-            <div class="imain">
-              <div class="iname">{{ t.name }}</div>
-              <div class="imeta">
-                {{ t.scan_count }} scan(s) ·
-                <span style="color:{% if t.latest_risk=='CRITICAL' %}var(--red){% elif t.latest_risk=='HIGH' %}var(--orange){% elif t.latest_risk=='MEDIUM' %}var(--yellow){% else %}var(--text2){% endif %}">{{ t.latest_risk }}</span>
-              </div>
-            </div>
-            <a href="/scan/new?target={{ t.name }}" class="iact">SCAN</a>
-          </div>
-          {% else %}
-          <div class="empty">No targets yet.<br><a href="/scan/new" class="mlink">Add first target →</a></div>
-          {% endfor %}
-        </div>
-        <a href="/targets" class="view-all">MANAGE TARGETS →</a>
-      </div>
-
     </div>
 
   </div>
