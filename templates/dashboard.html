@@ -668,6 +668,27 @@ body{animation:pagein 0.3s ease both;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
 </style>
+
+<style>
+.sr-live-card{padding:18px 22px;font-size:12px;}
+.slc-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
+.slc-icon{font-size:22px;flex-shrink:0;}
+.slc-title{font-size:14px;font-weight:700;color:#e2eaf4;font-family:'Share Tech Mono',monospace;margin-bottom:3px;}
+.slc-sub{font-size:11px;color:#4d6a85;}
+.slc-btn{margin-left:auto;padding:6px 14px;background:rgba(0,200,255,0.1);color:#00c8ff;border:1px solid rgba(0,200,255,0.25);border-radius:6px;font-size:10px;font-weight:700;font-family:'Share Tech Mono',monospace;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:all 0.2s;}
+.slc-btn:hover{background:rgba(0,200,255,0.2);}
+.slc-desc{font-size:12px;color:#64748b;line-height:1.7;background:rgba(255,255,255,0.02);border-radius:7px;padding:10px 14px;margin-bottom:10px;}
+.slc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
+.slcs{background:rgba(255,255,255,0.03);border:1px solid rgba(0,200,255,0.08);border-radius:7px;padding:10px;text-align:center;}
+.slcs-n{font-size:18px;font-weight:800;font-family:'Share Tech Mono',monospace;color:#e2eaf4;}
+.slcs-l{font-size:9px;color:#4d6a85;margin-top:3px;letter-spacing:1px;text-transform:uppercase;}
+.slc-found{margin-top:10px;border-top:1px solid rgba(0,200,255,0.08);padding-top:10px;}
+.slc-found-label{font-size:9px;color:#304560;letter-spacing:2px;font-family:'Share Tech Mono',monospace;margin-bottom:8px;}
+.slc-found-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:11px;color:#64748b;border-bottom:1px solid rgba(0,200,255,0.04);}
+.slc-cves{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
+.slc-cve-tag{padding:3px 8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);border-radius:4px;font-size:10px;font-family:'Share Tech Mono',monospace;text-decoration:none;}
+.slc-cve-tag:hover{background:rgba(239,68,68,0.2);}
+</style>
 </head>
 <body>
 
@@ -1585,10 +1606,13 @@ document.querySelectorAll('.rt-range-btn').forEach(btn=>{
     </div>
     <div class="search-results" id="search-results">
       <div class="search-hint">
-        <div class="sh-row"><span class="sh-kbd">target:</span> search by domain or IP — e.g. <i>target:soap.fupre.edu.ng</i></div>
-        <div class="sh-row"><span class="sh-kbd">cve:</span> find a specific CVE — e.g. <i>cve:CVE-2024-1234</i></div>
-        <div class="sh-row"><span class="sh-kbd">risk:</span> filter by severity — e.g. <i>risk:critical</i></div>
-        <div class="sh-row"><span class="sh-kbd">report:</span> find reports by target name</div>
+        <div class="sh-row"><span class="sh-kbd">cve:CVE-2024-1234</span> → Live NVD lookup — CVSS score, description, severity</div>
+        <div class="sh-row"><span class="sh-kbd">ip:192.168.1.1</span> → AbuseIPDB reputation — abuse score, reports, ISP</div>
+        <div class="sh-row"><span class="sh-kbd">port:22</span> → Port intelligence — risk level, known CVEs, found on your targets</div>
+        <div class="sh-row"><span class="sh-kbd">vt:example.com</span> → VirusTotal — malicious/clean verdict from 70+ engines</div>
+        <div class="sh-row"><span class="sh-kbd">exploit:apache</span> → Exploit-DB search link for that service or technology</div>
+        <div class="sh-row"><span class="sh-kbd">target:soap.fupre.edu.ng</span> → Search your scanned targets</div>
+        <div class="sh-row"><span class="sh-kbd">risk:critical</span> · <span class="sh-kbd">vuln:sqli</span> · <span class="sh-kbd">report:bluewave</span> → Filter your project data</div>
       </div>
     </div>
   </div>
@@ -1777,10 +1801,13 @@ document.getElementById('global-search-input')?.addEventListener('input', (e)=>{
   if(!q){
     document.getElementById('search-results').innerHTML = `
       <div class="search-hint">
-        <div class="sh-row"><span class="sh-kbd">target:</span> search by domain or IP — e.g. <i>target:soap.fupre.edu.ng</i></div>
-        <div class="sh-row"><span class="sh-kbd">cve:</span> find a specific CVE — e.g. <i>cve:CVE-2024-1234</i></div>
-        <div class="sh-row"><span class="sh-kbd">risk:</span> filter by severity — e.g. <i>risk:critical</i></div>
-        <div class="sh-row"><span class="sh-kbd">report:</span> find reports by target name</div>
+        <div class="sh-row"><span class="sh-kbd">cve:CVE-2024-1234</span> → Live NVD lookup — CVSS score, description, severity</div>
+        <div class="sh-row"><span class="sh-kbd">ip:192.168.1.1</span> → AbuseIPDB reputation — abuse score, reports, ISP</div>
+        <div class="sh-row"><span class="sh-kbd">port:22</span> → Port intelligence — risk level, known CVEs, found on your targets</div>
+        <div class="sh-row"><span class="sh-kbd">vt:example.com</span> → VirusTotal — malicious/clean verdict from 70+ engines</div>
+        <div class="sh-row"><span class="sh-kbd">exploit:apache</span> → Exploit-DB search link for that service or technology</div>
+        <div class="sh-row"><span class="sh-kbd">target:soap.fupre.edu.ng</span> → Search your scanned targets</div>
+        <div class="sh-row"><span class="sh-kbd">risk:critical</span> · <span class="sh-kbd">vuln:sqli</span> · <span class="sh-kbd">report:bluewave</span> → Filter your project data</div>
       </div>`;
     return;
   }
@@ -1788,13 +1815,148 @@ document.getElementById('global-search-input')?.addEventListener('input', (e)=>{
 });
 
 async function runSearch(q){
-  const resultsEl = document.getElementById('search-results');
-  resultsEl.innerHTML = '<div class="sr-no-results">Searching...</div>';
+  const resultsEl = document.getElementById("search-results");
+  resultsEl.innerHTML = "<div class='sr-no-results'>Searching...</div>";
+
+  const qlo = q.toLowerCase().trim();
+  const parts = q.split(":");
+  const prefix = parts.length > 1 ? parts[0].toLowerCase() : null;
+  const term   = parts.length > 1 ? parts.slice(1).join(":").trim() : q.trim();
+
+  // ── Live CVE lookup ──────────────────────────────────────────────────────
+  if(prefix === "cve" && /^CVE-\d{4}-\d+$/i.test(term)){
+    const r = await fetch(`/api/live/cve/${term.toUpperCase()}`);
+    const d = await r.json();
+    if(d.error){
+      resultsEl.innerHTML = `<div class="sr-no-results">❌ ${d.error}</div>`;
+    } else {
+      const sevColor = {CRITICAL:"#ef4444",HIGH:"#f97316",MEDIUM:"#eab308",LOW:"#3b82f6"}[d.severity?.toUpperCase()] || "#64748b";
+      resultsEl.innerHTML = `
+        <div class="sr-live-card">
+          <div class="slc-header">
+            <span class="slc-icon">🔴</span>
+            <div>
+              <div class="slc-title">${d.cve_id}</div>
+              <div class="slc-sub">Published ${d.published} · CVSS <b style="color:${sevColor}">${d.cvss_score}</b> · <span style="color:${sevColor}">${d.severity}</span></div>
+            </div>
+            <a href="${d.url}" target="_blank" class="slc-btn">NVD →</a>
+          </div>
+          <div class="slc-desc">${d.description}</div>
+        </div>`;
+    }
+    return;
+  }
+
+  // ── Live IP reputation ────────────────────────────────────────────────────
+  if(prefix === "ip" && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(term)){
+    const r = await fetch(`/api/live/ip/${term}`);
+    const d = await r.json();
+    if(d.error){
+      resultsEl.innerHTML = `<div class="sr-no-results">❌ ${d.error}${d.setup ? "<br><small>" + d.setup + "</small>" : ""}</div>`;
+    } else {
+      const score = d.abuse_score;
+      const col = score > 50 ? "#ef4444" : score > 10 ? "#f97316" : "#00ff9d";
+      resultsEl.innerHTML = `
+        <div class="sr-live-card">
+          <div class="slc-header">
+            <span class="slc-icon">🌐</span>
+            <div>
+              <div class="slc-title">${d.ip}</div>
+              <div class="slc-sub">${d.isp} · ${d.country} · ${d.usage_type}</div>
+            </div>
+            <a href="https://www.abuseipdb.com/check/${d.ip}" target="_blank" class="slc-btn">AbuseIPDB →</a>
+          </div>
+          <div class="slc-stats">
+            <div class="slcs"><div class="slcs-n" style="color:${col}">${score}%</div><div class="slcs-l">Abuse Score</div></div>
+            <div class="slcs"><div class="slcs-n">${d.total_reports}</div><div class="slcs-l">Reports</div></div>
+            <div class="slcs"><div class="slcs-n">${d.domain || "—"}</div><div class="slcs-l">Domain</div></div>
+            <div class="slcs"><div class="slcs-n">${d.last_reported}</div><div class="slcs-l">Last Report</div></div>
+          </div>
+        </div>`;
+    }
+    return;
+  }
+
+  // ── Live port intelligence ────────────────────────────────────────────────
+  if(prefix === "port" && /^\d+$/.test(term)){
+    const r = await fetch(`/api/live/port/${term}`);
+    const d = await r.json();
+    const riskCol = {CRITICAL:"#ef4444",HIGH:"#f97316",MEDIUM:"#eab308",LOW:"#3b82f6",UNKNOWN:"#64748b"}[d.risk] || "#64748b";
+    const found = d.found_on_your_targets || [];
+    resultsEl.innerHTML = `
+      <div class="sr-live-card">
+        <div class="slc-header">
+          <span class="slc-icon">🔌</span>
+          <div>
+            <div class="slc-title">Port ${d.port} — ${d.service}</div>
+            <div class="slc-sub">Risk: <span style="color:${riskCol};font-weight:700">${d.risk}</span></div>
+          </div>
+        </div>
+        <div class="slc-desc">${d.notes}</div>
+        ${found.length ? `<div class="slc-found"><div class="slc-found-label">FOUND ON YOUR TARGETS</div>${found.map(f=>`<div class="slc-found-item"><span>🎯 ${f.target}</span><a href="/scan/${f.session_id}" class="slc-btn" style="font-size:9px;">VIEW</a></div>`).join("")}</div>` : "<div class='slc-found'><div class='slc-found-label'>NOT FOUND IN YOUR SCANS</div></div>"}
+        ${d.cves?.length ? `<div class="slc-cves">Known CVEs: ${d.cves.map(c=>`<a href="https://nvd.nist.gov/vuln/detail/${c}" target="_blank" class="slc-cve-tag">${c}</a>`).join("")}</div>` : ""}
+      </div>`;
+    return;
+  }
+
+  // ── Live VirusTotal lookup ────────────────────────────────────────────────
+  if(prefix === "vt" || prefix === "virustotal"){
+    const r = await fetch(`/api/live/vt/${encodeURIComponent(term)}`);
+    const d = await r.json();
+    if(d.error){
+      resultsEl.innerHTML = `<div class="sr-no-results">❌ ${d.error}${d.setup ? "<br><small>" + d.setup + "</small>" : ""}</div>`;
+    } else {
+      const mal = d.malicious;
+      const col = mal > 5 ? "#ef4444" : mal > 0 ? "#f97316" : "#00ff9d";
+      resultsEl.innerHTML = `
+        <div class="sr-live-card">
+          <div class="slc-header">
+            <span class="slc-icon">🛡</span>
+            <div>
+              <div class="slc-title">${d.target}</div>
+              <div class="slc-sub">${d.as_owner || ""} · ${d.country || ""}</div>
+            </div>
+            <a href="${d.vt_url}" target="_blank" class="slc-btn">VirusTotal →</a>
+          </div>
+          <div class="slc-stats">
+            <div class="slcs"><div class="slcs-n" style="color:${col}">${d.malicious}</div><div class="slcs-l">Malicious</div></div>
+            <div class="slcs"><div class="slcs-n" style="color:#eab308">${d.suspicious}</div><div class="slcs-l">Suspicious</div></div>
+            <div class="slcs"><div class="slcs-n" style="color:#00ff9d">${d.harmless}</div><div class="slcs-l">Clean</div></div>
+            <div class="slcs"><div class="slcs-n">${d.reputation}</div><div class="slcs-l">Reputation</div></div>
+          </div>
+        </div>`;
+    }
+    return;
+  }
+
+  // ── Exploit search ────────────────────────────────────────────────────────
+  if(prefix === "exploit"){
+    const r = await fetch(`/api/live/exploit/${encodeURIComponent(term)}`);
+    const d = await r.json();
+    if(d.redirect){
+      resultsEl.innerHTML = `
+        <div class="sr-live-card">
+          <div class="slc-header">
+            <span class="slc-icon">💀</span>
+            <div><div class="slc-title">Exploit-DB Search: ${term}</div><div class="slc-sub">Click to search on Exploit-DB</div></div>
+            <a href="${d.redirect}" target="_blank" class="slc-btn">Search →</a>
+          </div>
+          <div class="slc-desc">Exploit-DB requires browser access. Click the button to search for "${term}" exploits in their database of 45,000+ verified exploits.</div>
+        </div>`;
+    }
+    return;
+  }
+
+  // ── Default: search your own project data ────────────────────────────────
   try{
-    const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+    const res = await fetch("/api/search?q=" + encodeURIComponent(q));
     const data = await res.json();
     if(!data.results || data.results.length === 0){
-      resultsEl.innerHTML = '<div class="sr-no-results">No results for "' + q + '"</div>';
+      resultsEl.innerHTML = `
+        <div class="sr-no-results">
+          No results for "${q}"<br><br>
+          <small style="color:var(--text2)">Try: cve:CVE-2024-1234 · ip:192.168.1.1 · port:22 · vt:example.com · exploit:apache</small>
+        </div>`;
       return;
     }
     resultsEl.innerHTML = data.results.map(r => `
@@ -1804,11 +1966,10 @@ async function runSearch(q){
           <div class="sr-title">${r.title}</div>
           <div class="sr-sub">${r.subtitle}</div>
         </div>
-        ${r.badge ? `<span class="sr-badge" style="background:${r.badge_bg};color:${r.badge_color};">${r.badge}</span>` : ''}
-      </a>
-    `).join('');
+        ${r.badge ? `<span class="sr-badge" style="background:${r.badge_bg};color:${r.badge_color};">${r.badge}</span>` : ""}
+      </a>`).join("");
   }catch(e){
-    resultsEl.innerHTML = '<div class="sr-no-results">Search error — try again</div>';
+    resultsEl.innerHTML = "<div class='sr-no-results'>Search error — try again</div>";
   }
 }
 </script>

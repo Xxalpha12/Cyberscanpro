@@ -727,6 +727,192 @@ def save_notes(session_id):
 
 
 
+# ── LIVE CVE LOOKUP (NVD) ─────────────────────────────────────────────────────
+
+@app.route("/api/live/cve/<cve_id>")
+@login_required
+def live_cve_lookup(cve_id):
+    import urllib.request, json, re
+    if not re.match(r"^CVE-\d{4}-\d+$", cve_id.upper()):
+        return jsonify({"error": "Invalid CVE ID format"})
+    api_key = os.environ.get("NVD_API_KEY", "")
+    headers = {"apiKey": api_key} if api_key else {}
+    url = f"https://services.nvd.nist.gov/rest/json/cves/2.0?cveId={cve_id.upper()}"
+    try:
+        req = urllib.request.Request(url, headers=headers)
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = json.loads(r.read())
+        vulns = data.get("vulnerabilities", [])
+        if not vulns:
+            return jsonify({"error": "CVE not found in NVD"})
+        cve = vulns[0]["cve"]
+        desc = next((d["value"] for d in cve.get("descriptions",[]) if d["lang"]=="en"), "No description")
+        metrics = cve.get("metrics", {})
+        cvss = None
+        for key in ("cvssMetricV31","cvssMetricV30","cvssMetricV2"):
+            if key in metrics and metrics[key]:
+                cvss = metrics[key][0].get("cvssData",{})
+                break
+        return jsonify({
+            "cve_id":      cve_id.upper(),
+            "description": desc,
+            "cvss_score":  cvss.get("baseScore") if cvss else "N/A",
+            "severity":    cvss.get("baseSeverity") if cvss else "N/A",
+            "published":   cve.get("published","")[:10],
+            "url":         f"https://nvd.nist.gov/vuln/detail/{cve_id.upper()}"
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+# ── LIVE EXPLOIT-DB SEARCH ────────────────────────────────────────────────────
+
+@app.route("/api/live/exploit/<query>")
+@login_required
+def live_exploit_search(query):
+    import urllib.request, json, urllib.parse
+    q = urllib.parse.quote(query[:50])
+    url = f"https://exploit-db.com/search?q={q}&type=local&platform=&format=json"
+    # ExploitDB doesn't have a free JSON API - use their search page scraping
+    # Instead use a curated known-exploits list approach
+    try:
+        req = urllib.request.Request(
+            f"https://cvedb.shodan.io/cve/{q}",
+            headers={"User-Agent": "CyberScanPro/1.0"}
+        )
+        with urllib.request.urlopen(req, timeout=6) as r:
+            data = json.loads(r.read())
+        return jsonify({"results": [data] if data else [], "source": "Shodan CVE DB"})
+    except Exception:
+        # Fallback: return a helpful redirect
+        return jsonify({
+            "redirect": f"https://www.exploit-db.com/search?q={query}",
+            "message": f"Search '{query}' on Exploit-DB",
+            "results": []
+        })
+
+
+# ── LIVE IP REPUTATION (AbuseIPDB) ───────────────────────────────────────────
+
+@app.route("/api/live/ip/<ip>")
+@login_required
+def live_ip_reputation(ip):
+    import urllib.request, json, re
+    if not re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", ip):
+        return jsonify({"error": "Invalid IP address"})
+    api_key = os.environ.get("ABUSEIPDB_API_KEY", "")
+    if not api_key:
+        return jsonify({"error": "AbuseIPDB API key not configured", "setup": "Add ABUSEIPDB_API_KEY to Render environment variables. Free key at abuseipdb.com"})
+    try:
+        url = f"https://api.abuseipdb.com/api/v2/check?ipAddress={ip}&maxAgeInDays=90&verbose"
+        req = urllib.request.Request(url, headers={"Key": api_key, "Accept": "application/json"})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = json.loads(r.read())
+        d = data.get("data", {})
+        return jsonify({
+            "ip":              ip,
+            "abuse_score":     d.get("abuseConfidenceScore", 0),
+            "country":         d.get("countryCode","Unknown"),
+            "isp":             d.get("isp","Unknown"),
+            "total_reports":   d.get("totalReports", 0),
+            "last_reported":   d.get("lastReportedAt","Never")[:10] if d.get("lastReportedAt") else "Never",
+            "is_whitelisted":  d.get("isWhitelisted", False),
+            "usage_type":      d.get("usageType","Unknown"),
+            "domain":          d.get("domain",""),
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+# ── LIVE PORT INTELLIGENCE ────────────────────────────────────────────────────
+
+@app.route("/api/live/port/<int:port>")
+@login_required
+def live_port_intel(port):
+    PORT_DB = {
+        21:   {"service":"FTP","risk":"HIGH","notes":"Unencrypted file transfer. Credentials sent in plaintext. Use SFTP instead.","cves":["CVE-2010-4221","CVE-2011-2523"]},
+        22:   {"service":"SSH","risk":"MEDIUM","notes":"Secure remote access. Risk if using default credentials or weak ciphers. Disable root login.","cves":[]},
+        23:   {"service":"Telnet","risk":"CRITICAL","notes":"Completely unencrypted. Never use on production. Replace with SSH immediately.","cves":["CVE-2020-10188"]},
+        25:   {"service":"SMTP","risk":"MEDIUM","notes":"Email server. Risk of open relay abuse. Should require authentication.","cves":[]},
+        53:   {"service":"DNS","risk":"MEDIUM","notes":"DNS server. Risk of DNS amplification attacks if open resolver.","cves":["CVE-2020-1350"]},
+        80:   {"service":"HTTP","risk":"MEDIUM","notes":"Unencrypted web traffic. Should redirect to HTTPS (443). Exposes data in transit.","cves":[]},
+        443:  {"service":"HTTPS","risk":"LOW","notes":"Encrypted web traffic. Check TLS version — TLS 1.0/1.1 are deprecated.","cves":[]},
+        445:  {"service":"SMB","risk":"CRITICAL","notes":"Windows file sharing. Historically exploited (WannaCry, EternalBlue). Block externally.","cves":["CVE-2017-0144","CVE-2020-0796"]},
+        1433: {"service":"MSSQL","risk":"HIGH","notes":"Microsoft SQL Server. Should never be exposed to the internet.","cves":[]},
+        3306: {"service":"MySQL","risk":"HIGH","notes":"MySQL database. Must never be publicly accessible. Bind to localhost only.","cves":["CVE-2012-2122"]},
+        3389: {"service":"RDP","risk":"HIGH","notes":"Windows Remote Desktop. Frequent brute-force target. Use VPN and NLA.","cves":["CVE-2019-0708"]},
+        5432: {"service":"PostgreSQL","risk":"HIGH","notes":"PostgreSQL database. Must never be publicly accessible.","cves":[]},
+        6379: {"service":"Redis","risk":"CRITICAL","notes":"Redis cache. Default has NO authentication. Trivially exploitable if exposed.","cves":["CVE-2022-0543"]},
+        8080: {"service":"HTTP-Alt","risk":"MEDIUM","notes":"Alternative HTTP port. Often used by dev servers or proxies accidentally left open.","cves":[]},
+        8443: {"service":"HTTPS-Alt","risk":"LOW","notes":"Alternative HTTPS port. Verify this is intentional and certificate is valid.","cves":[]},
+        27017:{"service":"MongoDB","risk":"CRITICAL","notes":"MongoDB. Early versions had NO auth by default. Massive data breach risk.","cves":["CVE-2019-2389"]},
+    }
+    info = PORT_DB.get(port, {
+        "service": f"Port {port}",
+        "risk": "UNKNOWN",
+        "notes": f"Port {port} is not in our intelligence database. Investigate manually to determine if this service should be exposed.",
+        "cves": []
+    })
+    # Also check which of your scans found this port open
+    db = Database()
+    sessions = db.get_all_sessions()
+    found_on = []
+    for s in sessions:
+        hosts = db.get_hosts(s["id"])
+        for h in hosts:
+            for p in h.get("ports",[]):
+                if p.get("port") == port and p.get("state") == "open":
+                    found_on.append({
+                        "target": s["target"],
+                        "session_id": s["id"],
+                        "service": p.get("service",""),
+                        "version": p.get("version",""),
+                    })
+    db.close()
+    return jsonify({**info, "port": port, "found_on_your_targets": found_on[:5]})
+
+
+# ── LIVE VIRUSTOTAL LOOKUP ────────────────────────────────────────────────────
+
+@app.route("/api/live/vt/<path:target>")
+@login_required
+def live_virustotal(target):
+    import urllib.request, json, hashlib
+    api_key = os.environ.get("VIRUSTOTAL_API_KEY","")
+    if not api_key:
+        return jsonify({"error": "VirusTotal API key not configured", "setup": "Add VIRUSTOTAL_API_KEY to Render environment variables. Free at virustotal.com"})
+    import re
+    is_ip     = bool(re.match(r"^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$", target))
+    is_domain = bool(re.match(r"^[a-zA-Z0-9][a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}$", target))
+    if is_ip:
+        url = f"https://www.virustotal.com/api/v3/ip_addresses/{target}"
+    elif is_domain:
+        url = f"https://www.virustotal.com/api/v3/domains/{target}"
+    else:
+        return jsonify({"error": "Provide a domain or IP address"})
+    try:
+        req = urllib.request.Request(url, headers={"x-apikey": api_key})
+        with urllib.request.urlopen(req, timeout=8) as r:
+            data = json.loads(r.read())
+        attrs = data.get("data",{}).get("attributes",{})
+        stats = attrs.get("last_analysis_stats",{})
+        return jsonify({
+            "target":      target,
+            "malicious":   stats.get("malicious", 0),
+            "suspicious":  stats.get("suspicious", 0),
+            "harmless":    stats.get("harmless", 0),
+            "undetected":  stats.get("undetected", 0),
+            "reputation":  attrs.get("reputation", 0),
+            "country":     attrs.get("country",""),
+            "as_owner":    attrs.get("as_owner",""),
+            "categories":  attrs.get("categories",{}),
+            "vt_url":      f"https://www.virustotal.com/gui/{'ip-address' if is_ip else 'domain'}/{target}",
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+
 @app.route("/logout")
 def logout():
     session.clear()
