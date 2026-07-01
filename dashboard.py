@@ -619,375 +619,111 @@ def delete_report(filename):
 
 
 
+
+
+
 @app.route("/api/test-email", methods=["POST"])
 @login_required
 def test_email():
-    data      = request.get_json()
-    recipient = data.get("email","")
-    if not recipient:
-        return jsonify({"error": "No email provided"}), 400
+    import smtplib
+    from email.mime.text import MIMEText
+    data  = request.get_json() or {}
+    email = data.get("email","")
+    if not email:
+        return jsonify({"success": False, "error": "No email provided"})
+    smtp_host = os.environ.get("SMTP_HOST","smtp.gmail.com")
+    smtp_port = int(os.environ.get("SMTP_PORT", 587))
+    smtp_user = os.environ.get("SMTP_USER","")
+    smtp_pass = os.environ.get("SMTP_PASS","")
+    if not smtp_user or not smtp_pass:
+        return jsonify({"success": False, "error": "SMTP not configured"})
     try:
-        _send_report_email(recipient, "Test Target", "test-session-id", [])
+        msg = MIMEText("CyberScan Pro email test — SMTP is working correctly.")
+        msg["Subject"] = "CyberScan Pro — Test Email"
+        msg["From"]    = smtp_user
+        msg["To"]      = email
+        with smtplib.SMTP(smtp_host, smtp_port) as s:
+            s.starttls()
+            s.login(smtp_user, smtp_pass)
+            s.send_message(msg)
         return jsonify({"success": True})
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"success": False, "error": str(e)})
 
 
-def _ts():
-    return datetime.now().strftime("%H:%M:%S")
+# ── COMPARE PAGE ──────────────────────────────────────────────────────────────
 
-
-# ── NOTIFICATIONS API ─────────────────────────────────────────────────────────
-
-@app.route("/api/notifications")
+@app.route("/compare")
 @login_required
-def api_notifications():
-    db     = Database()
-    counts = db.get_severity_counts()
-    db.close()
-    notifs = []
-    if counts["Critical"] > 0:
-        notifs.append({"message": f"{counts['Critical']} Critical vulnerability(ies) found — immediate action required", "type": "critical"})
-    if counts["High"] > 0:
-        notifs.append({"message": f"{counts['High']} High severity finding(s) — address within 7 days", "type": "high"})
-    return jsonify(notifs)
-
-
-# ── ACTIVITY FEED API ─────────────────────────────────────────────────────────
-
-@app.route("/api/activity-feed")
-@login_required
-def api_activity_feed():
-    db       = Database()
-    sessions = db.get_all_sessions()
-    feed     = []
-    for s in sessions[:10]:
-        sc     = db.get_severity_counts(s["id"])
-        t      = (s.get("started_at","")[:16] or "").replace("T"," ")
-        status = s["status"]
-        if status == "completed":
-            if sc.get("Critical",0) > 0:
-                feed.append({"type":"crit","message":f"Critical finding on {s['target']}","time":t,"badge":"CRITICAL","badge_type":"crit"})
-            else:
-                feed.append({"type":"ok","message":f"Scan completed: {s['target']}","time":t,"badge":"Done","badge_type":"ok"})
-        elif status == "error":
-            feed.append({"type":"warn","message":f"Scan failed: {s['target']}","time":t,"badge":"Failed","badge_type":"warn"})
-        elif status == "running":
-            feed.append({"type":"scan","message":f"Scanning in progress: {s['target']}","time":t,"badge":None,"badge_type":""})
-    db.close()
-    return jsonify(feed)
-
-
-# ── SEVERITY COUNTS API ───────────────────────────────────────────────────────
-
-@app.route("/api/severity-counts")
-@login_required
-def api_severity_counts():
-    db     = Database()
-    counts = db.get_severity_counts()
-    db.close()
-    return jsonify(counts)
-
-
-# ── SESSIONS API ──────────────────────────────────────────────────────────────
-
-@app.route("/api/sessions")
-@login_required
-def api_sessions():
-    db       = Database()
-    sessions = db.get_all_sessions()
-    result   = []
-    for s in sessions[:10]:
-        sc = db.get_severity_counts(s["id"])
-        result.append({
-            "id":       s["id"],
-            "target":   s["target"],
-            "status":   s["status"],
-            "started_at": s.get("started_at",""),
-            "severity_counts": sc
-        })
-    db.close()
-    return jsonify(result)
-
-
-
-
-# ── REPORTS PAGE ─────────────────────────────────────────────────────────────
-
-@app.route("/reports")
-@login_required
-def reports_page():
+def compare_page():
     db = Database()
     sessions = db.get_all_sessions()
-    session_risks = {}
-    for s in sessions:
-        counts = db.get_severity_counts(s["id"])
-        risk = "CRITICAL" if counts.get("Critical",0) > 0 else \
-               "HIGH"     if counts.get("High",0) > 0     else \
-               "MEDIUM"   if counts.get("Medium",0) > 0   else \
-               "LOW"      if counts.get("Low",0) > 0       else "NONE"
-        session_risks[s["id"]] = risk
-
-    db_reports = db.get_all_report_files()
     db.close()
-
-    reports = []
-    for r in db_reports:
-        size_kb = (r.get("file_size") or 0) // 1024
-        date = (r.get("created_at","") or "")[:16].replace("T"," ")
-        reports.append({
-            "filename":   r["filename"],
-            "type":       r["file_type"],
-            "target":     r["target"],
-            "session_id": r["session_id"],
-            "risk":       session_risks.get(r["session_id"], "NONE"),
-            "date":       date,
-            "size":       f"{size_kb} KB",
-        })
-
-    pdf_count  = sum(1 for r in reports if r["type"] == "pdf")
-    html_count = sum(1 for r in reports if r["type"] == "html")
-    sess_ids   = set(r["session_id"] for r in reports)
-
-    return render_template("reports.html",
-        reports=reports,
-        total_reports=len(reports),
-        pdf_count=pdf_count,
-        html_count=html_count,
-        sessions_with_reports=len(sess_ids),
-        page="reports", title="Reports"
+    return render_template("history.html",
+        sessions=sessions,
+        page="compare", title="Compare Scans"
     )
 
 
+# ── SCREENSHOTS API ───────────────────────────────────────────────────────────
 
-
-# ── GLOBAL SEARCH API ─────────────────────────────────────────────────────────
-
-@app.route("/api/search")
+@app.route("/api/screenshot/<session_id>", methods=["POST"])
 @login_required
-def api_search():
-    q = request.args.get("q", "").strip()
-    if not q:
-        return jsonify({"results": []})
-
-    results = []
+def capture_screenshot(session_id):
     db = Database()
-    sessions = db.get_all_sessions()
-
-    # Parse search operators
-    filter_type = None
-    query = q
-    if ":" in q:
-        prefix, rest = q.split(":", 1)
-        if prefix.lower() in ("target", "cve", "risk", "report"):
-            filter_type = prefix.lower()
-            query = rest.strip()
-
-    query_lower = query.lower()
-
-    # Search targets/sessions
-    if filter_type in (None, "target"):
-        seen_targets = set()
-        for s in sessions:
-            if query_lower in s["target"].lower() and s["target"] not in seen_targets:
-                seen_targets.add(s["target"])
-                counts = db.get_severity_counts(s["id"])
-                risk = "CRITICAL" if counts.get("Critical",0) > 0 else \
-                       "HIGH" if counts.get("High",0) > 0 else \
-                       "MEDIUM" if counts.get("Medium",0) > 0 else \
-                       "LOW" if counts.get("Low",0) > 0 else "NONE"
-                badge_colors = {
-                    "CRITICAL": ("rgba(239,68,68,0.15)", "#ef4444"),
-                    "HIGH": ("rgba(249,115,22,0.15)", "#f97316"),
-                    "MEDIUM": ("rgba(234,179,8,0.15)", "#eab308"),
-                    "LOW": ("rgba(59,130,246,0.15)", "#3b82f6"),
-                    "NONE": ("rgba(100,116,139,0.15)", "#64748b"),
-                }
-                bg, color = badge_colors.get(risk, badge_colors["NONE"])
-                results.append({
-                    "icon": "🌐", "title": s["target"],
-                    "subtitle": f"Target · Last scanned {s.get('started_at','')[:10]}",
-                    "url": f"/scan/{s['id']}",
-                    "badge": risk, "badge_bg": bg, "badge_color": color,
-                })
-
-    # Search by risk level
-    if filter_type == "risk":
-        for s in sessions:
-            counts = db.get_severity_counts(s["id"])
-            risk = "critical" if counts.get("Critical",0)>0 else \
-                   "high" if counts.get("High",0)>0 else \
-                   "medium" if counts.get("Medium",0)>0 else \
-                   "low" if counts.get("Low",0)>0 else "none"
-            if query_lower in risk:
-                results.append({
-                    "icon": "⚠️", "title": s["target"],
-                    "subtitle": f"Risk level: {risk.upper()}",
-                    "url": f"/scan/{s['id']}",
-                    "badge": risk.upper(), "badge_bg": "rgba(239,68,68,0.15)", "badge_color": "#ef4444",
-                })
-
-    # Search CVEs
-    if filter_type in (None, "cve"):
-        for s in sessions:
-            cves = db.get_cve_findings(s["id"])
-            for c in cves:
-                if query_lower in c.get("cve_id","").lower():
-                    results.append({
-                        "icon": "🔴", "title": c.get("cve_id",""),
-                        "subtitle": f"Found on {s['target']} · CVSS {c.get('cvss_score','N/A')}",
-                        "url": f"/scan/{s['id']}",
-                        "badge": c.get("severity","").upper(), "badge_bg": "rgba(239,68,68,0.15)", "badge_color": "#ef4444",
-                    })
-
-    # Search reports
-    if filter_type in (None, "report"):
-        output_dir = os.path.join(os.path.dirname(__file__), "output")
-        if os.path.exists(output_dir):
-            session_targets = {s["id"]: s["target"] for s in sessions}
-            for f in os.listdir(output_dir):
-                if not (f.endswith(".pdf") or f.endswith(".html")):
-                    continue
-                parts = f.replace("cyberscanpro_report_","").split("_")
-                sid = parts[0] if parts else ""
-                target = session_targets.get(sid, "")
-                if query_lower in target.lower():
-                    results.append({
-                        "icon": "📄" if f.endswith(".pdf") else "🌐",
-                        "title": target,
-                        "subtitle": f"{'PDF' if f.endswith('.pdf') else 'HTML'} Report",
-                        "url": f"/report/{f}",
-                        "badge": None,
-                    })
-
+    sess = db.get_session(session_id)
     db.close()
-    return jsonify({"results": results[:20]})
+    if not sess:
+        return jsonify({"success": False, "error": "Session not found"})
+    target = sess["target"]
+    api_key = os.environ.get("SCREENSHOT_API_KEY","")
+    if not api_key:
+        return jsonify({"success": False, "error": "Screenshot API key not configured"})
+    try:
+        import urllib.request
+        url = f"https://api.screenshotone.com/take?access_key={api_key}&url=https://{target}&format=jpg&viewport_width=1280&viewport_height=800"
+        screenshot_dir = os.path.join(os.path.dirname(__file__), "static", "screenshots")
+        os.makedirs(screenshot_dir, exist_ok=True)
+        save_path = os.path.join(screenshot_dir, f"{session_id}.jpg")
+        urllib.request.urlretrieve(url, save_path)
+        return jsonify({"success": True, "url": f"/screenshots/{session_id}"})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
 
-
-
-# ── TARGETS PAGE ──────────────────────────────────────────────────────────────
-
-@app.route("/targets")
+@app.route("/screenshots/<session_id>")
 @login_required
-def targets_page():
+def serve_screenshot(session_id):
+    import re
+    if not re.match(r'^[\w\-]+$', session_id):
+        abort(400)
+    screenshot_dir = os.path.join(os.path.dirname(__file__), "static", "screenshots")
+    path = os.path.join(screenshot_dir, f"{session_id}.jpg")
+    if not os.path.exists(path):
+        abort(404)
+    return send_file(path, mimetype="image/jpeg")
+
+
+# ── NOTES API ─────────────────────────────────────────────────────────────────
+
+@app.route("/api/notes/<session_id>", methods=["GET"])
+@login_required
+def get_notes(session_id):
     db = Database()
-    sessions = db.get_all_sessions()
-
-    # Group sessions by target hostname
-    target_map = {}
-    for s in sessions:
-        name = s["target"]
-        if name not in target_map:
-            target_map[name] = {
-                "name":           name,
-                "ip":             None,
-                "scan_count":     0,
-                "recent_scans":   [],
-                "total_critical": 0,
-                "total_high":     0,
-                "total_medium":   0,
-                "total_low":      0,
-                "latest_risk":    "NONE",
-                "risk_history":   [],
-                "trend":          "stable",
-                "reports":        [],
-            }
-
-        t = target_map[name]
-        t["scan_count"] += 1
-
-        # Severity counts for this scan
-        counts = db.get_severity_counts(s["id"])
-        crit   = counts.get("Critical", 0)
-        high   = counts.get("High", 0)
-        med    = counts.get("Medium", 0)
-        low    = counts.get("Low", 0)
-        total  = crit + high + med + low
-
-        t["total_critical"] += crit
-        t["total_high"]     += high
-        t["total_medium"]   += med
-        t["total_low"]      += low
-
-        risk = "CRITICAL" if crit > 0 else \
-               "HIGH"     if high > 0  else \
-               "MEDIUM"   if med  > 0  else \
-               "LOW"      if low  > 0  else "NONE"
-        t["risk_history"].append(risk)
-
-        # Enrich scan entry
-        scan_entry = dict(s)
-        scan_entry["total_findings"] = total
-        t["recent_scans"].append(scan_entry)
-
-        # Get host IP from first host found
-        if not t["ip"]:
-            hosts = db.get_hosts(s["id"])
-            if hosts:
-                t["ip"] = hosts[0].get("ip", "")
-
-        # Reports for this session
-        reps = db.get_reports_for_session(s["id"])
-        for r in reps:
-            if r not in t["reports"]:
-                t["reports"].append(r)
-
-    # Sort recent_scans newest first, compute latest risk and trend
-    for t in target_map.values():
-        t["recent_scans"].sort(key=lambda x: x.get("started_at",""), reverse=True)
-        if t["risk_history"]:
-            t["latest_risk"] = t["risk_history"][-1]
-            # Trend: compare last scan vs second-to-last
-            if len(t["risk_history"]) >= 2:
-                risk_order = {"NONE":0,"LOW":1,"MEDIUM":2,"HIGH":3,"CRITICAL":4}
-                last  = risk_order.get(t["risk_history"][-1], 0)
-                prev  = risk_order.get(t["risk_history"][-2], 0)
-                if last > prev:
-                    t["trend"] = "worse"
-                elif last < prev:
-                    t["trend"] = "better"
-                else:
-                    t["trend"] = "stable"
-
-    targets = sorted(
-        target_map.values(),
-        key=lambda x: ({"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3,"NONE":4}.get(x["latest_risk"],4), x["name"])
-    )
-
+    notes = db.get_notes(session_id)
     db.close()
-
-    return render_template("targets.html",
-        targets=list(targets),
-        page="targets",
-        title="Targets"
-    )
+    return jsonify({"notes": notes})
 
 
-# ── SUPABASE KEEP-ALIVE (prevents free-tier auto-pause) ──────────────────────
-import threading
-
-def _supabase_keepalive():
-    """Ping the database every 3 days to prevent Supabase free-tier pausing."""
-    import time
-    while True:
-        # Wait 3 days (259200 seconds)
-        time.sleep(259200)
-        try:
-            db = Database()
-            c = db.conn.cursor()
-            c.execute("SELECT 1")
-            db.close()
-            import logging
-            logging.getLogger(__name__).info("Supabase keep-alive ping sent")
-        except Exception as e:
-            import logging
-            logging.getLogger(__name__).warning(f"Keep-alive ping failed: {e}")
-
-# Only start keep-alive thread when running on Render (PostgreSQL mode)
-if os.environ.get("DATABASE_URL"):
-    _ka_thread = threading.Thread(target=_supabase_keepalive, daemon=True)
-    _ka_thread.start()
+@app.route("/api/notes/<session_id>", methods=["POST"])
+@login_required
+def save_notes(session_id):
+    data  = request.get_json() or {}
+    notes = data.get("notes","")
+    db = Database()
+    db.save_notes(session_id, notes)
+    db.close()
+    return jsonify({"success": True})
 
 
 

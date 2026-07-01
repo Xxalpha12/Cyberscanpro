@@ -580,10 +580,56 @@ body{animation:pagein 0.3s ease both;}
           <div class="env-badge">🔧 SCREENSHOT_API_KEY</div>
           <div class="status-line">
             {% if screenshot_key %}<div class="dot-ok"></div><span class="status-ok">Configured</span>
-            {% else %}<div class="dot-err"></div><span class="status-err">Not set</span>{% endif %}
+            {% else %}<div class="dot-err"></div><span class="status-err">Not set — screenshotone.com</span>{% endif %}
           </div>
         </div>
       </div>
+
+      <!-- Shodan -->
+      <div class="s-row">
+        <div>
+          <div class="s-label">Shodan API Key</div>
+          <div class="s-desc">Get free key at <b>account.shodan.io</b><br>Adds historical internet exposure data to every scan. Shows open ports Shodan has seen globally.</div>
+        </div>
+        <div class="s-control">
+          <div class="env-badge">🔧 SHODAN_API_KEY</div>
+          <div class="status-line" style="margin-top:4px;">
+            {% if shodan_key %}<div class="dot-ok"></div><span class="status-ok">Configured</span>
+            {% else %}<div class="dot-warn"></div><span class="status-warn">Not set — account.shodan.io → free tier</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- VirusTotal -->
+      <div class="s-row">
+        <div>
+          <div class="s-label">VirusTotal API Key</div>
+          <div class="s-desc">Get free key at <b>virustotal.com → My API Key</b><br>Checks targets against 70+ antivirus engines and blacklist databases. 500 free requests/day.</div>
+        </div>
+        <div class="s-control">
+          <div class="env-badge">🔧 VIRUSTOTAL_API_KEY</div>
+          <div class="status-line" style="margin-top:4px;">
+            {% if virustotal_key %}<div class="dot-ok"></div><span class="status-ok">Configured</span>
+            {% else %}<div class="dot-warn"></div><span class="status-warn">Not set — virustotal.com → sign up → API key</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- URLScan -->
+      <div class="s-row">
+        <div>
+          <div class="s-label">URLScan.io API Key</div>
+          <div class="s-desc">Get free key at <b>urlscan.io/user/signup</b><br>Visual browser scan — detects redirects, scripts loaded, certificates. Great second screenshot source.</div>
+        </div>
+        <div class="s-control">
+          <div class="env-badge">🔧 URLSCAN_API_KEY</div>
+          <div class="status-line" style="margin-top:4px;">
+            {% if urlscan_key %}<div class="dot-ok"></div><span class="status-ok">Configured</span>
+            {% else %}<div class="dot-warn"></div><span class="status-warn">Not set — urlscan.io → sign up free</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <!-- Email -->
