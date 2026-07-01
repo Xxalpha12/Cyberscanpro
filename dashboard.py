@@ -964,6 +964,33 @@ def targets_page():
     )
 
 
+# ── SUPABASE KEEP-ALIVE (prevents free-tier auto-pause) ──────────────────────
+import threading
+
+def _supabase_keepalive():
+    """Ping the database every 3 days to prevent Supabase free-tier pausing."""
+    import time
+    while True:
+        # Wait 3 days (259200 seconds)
+        time.sleep(259200)
+        try:
+            db = Database()
+            c = db.conn.cursor()
+            c.execute("SELECT 1")
+            db.close()
+            import logging
+            logging.getLogger(__name__).info("Supabase keep-alive ping sent")
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).warning(f"Keep-alive ping failed: {e}")
+
+# Only start keep-alive thread when running on Render (PostgreSQL mode)
+if os.environ.get("DATABASE_URL"):
+    _ka_thread = threading.Thread(target=_supabase_keepalive, daemon=True)
+    _ka_thread.start()
+
+
+
 @app.route("/logout")
 def logout():
     session.clear()
