@@ -5,3 +5,9 @@ modules/__pycache__/
 db/netscampro.db
 output/
 *.log
+__pycache__/
+*.pyc
+*.pyo
+.env
+output/
+*.db
