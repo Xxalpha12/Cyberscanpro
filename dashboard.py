@@ -730,4 +730,124 @@ def save_notes(session_id):
 @app.route("/logout")
 def logout():
     session.clear()
-    return redirect(url_for("login"))
+    return redirect(url_for("login"))@app.route("/api/search")
+@login_required
+def api_search():
+    q = request.args.get("q","").strip()
+    if not q:
+        return jsonify({"results":[]})
+
+    results = []
+    db = Database()
+    sessions = db.get_all_sessions()
+
+    filter_type = None
+    query = q
+    if ":" in q:
+        parts = q.split(":",1)
+        if parts[0].lower() in ("target","cve","risk","report","vuln","host","ip"):
+            filter_type = parts[0].lower()
+            query = parts[1].strip()
+    qlo = query.lower()
+
+    RISK_COLORS = {
+        "CRITICAL": ("rgba(239,68,68,0.15)","#ef4444"),
+        "HIGH":     ("rgba(249,115,22,0.15)","#f97316"),
+        "MEDIUM":   ("rgba(234,179,8,0.15)","#eab308"),
+        "LOW":      ("rgba(59,130,246,0.15)","#3b82f6"),
+        "NONE":     ("rgba(100,116,139,0.15)","#64748b"),
+    }
+
+    def risk_badge(risk):
+        risk = risk.upper()
+        bg, col = RISK_COLORS.get(risk, RISK_COLORS["NONE"])
+        return risk, bg, col
+
+    def calc_risk(counts):
+        if counts.get("Critical",0) > 0: return "CRITICAL"
+        if counts.get("High",0) > 0:     return "HIGH"
+        if counts.get("Medium",0) > 0:   return "MEDIUM"
+        if counts.get("Low",0) > 0:      return "LOW"
+        return "NONE"
+
+    # Targets
+    if filter_type in (None,"target","ip","host"):
+        seen = set()
+        for s in sessions:
+            tgt = s["target"]
+            if qlo in tgt.lower() and tgt not in seen:
+                seen.add(tgt)
+                counts = db.get_severity_counts(s["id"])
+                rk = calc_risk(counts)
+                rk, bg, col = risk_badge(rk)
+                scan_count = sum(1 for x in sessions if x["target"] == tgt)
+                results.append({
+                    "icon":"🌐","title":tgt,
+                    "subtitle":"Target " + str(scan_count) + " scan(s) Last scanned " + s.get("started_at","")[:10],
+                    "url":"/scan/" + s["id"],
+                    "badge":rk,"badge_bg":bg,"badge_color":col,
+                })
+
+    # Risk filter
+    if filter_type == "risk":
+        for s in sessions:
+            counts = db.get_severity_counts(s["id"])
+            rk = calc_risk(counts).lower()
+            if qlo in rk:
+                rk2, bg, col = risk_badge(rk)
+                results.append({
+                    "icon":"⚠️","title":s["target"],
+                    "subtitle":"Risk " + rk2 + " " + s.get("started_at","")[:10],
+                    "url":"/scan/" + s["id"],
+                    "badge":rk2,"badge_bg":bg,"badge_color":col,
+                })
+
+    # CVEs
+    if filter_type in (None,"cve"):
+        seen_c = set()
+        for s in sessions:
+            for c in db.get_cve_findings(s["id"]):
+                cid = c.get("cve_id","")
+                if qlo in cid.lower() and cid not in seen_c:
+                    seen_c.add(cid)
+                    sev = c.get("severity","LOW").upper()
+                    sev, bg, col = risk_badge(sev)
+                    results.append({
+                        "icon":"🔴","title":cid,
+                        "subtitle":"Found on " + s["target"] + " CVSS " + str(c.get("cvss_score","N/A")),
+                        "url":"/scan/" + s["id"],
+                        "badge":sev,"badge_bg":bg,"badge_color":col,
+                    })
+
+    # Web vulns
+    if filter_type in (None,"vuln"):
+        seen_v = set()
+        for s in sessions:
+            for f in db.get_web_findings(s["id"]):
+                vtype = f.get("vuln_type","")
+                key = s["id"] + ":" + vtype
+                if (qlo in vtype.lower() or qlo in f.get("description","").lower()) and key not in seen_v:
+                    seen_v.add(key)
+                    sev = f.get("severity","LOW").upper()
+                    sev, bg, col = risk_badge(sev)
+                    results.append({
+                        "icon":"🐛","title":vtype or "Web Finding",
+                        "subtitle":"Found on " + s["target"] + " " + f.get("url","")[:40],
+                        "url":"/scan/" + s["id"],
+                        "badge":sev,"badge_bg":bg,"badge_color":col,
+                    })
+
+    # Reports
+    if filter_type in (None,"report"):
+        for r in db.get_all_report_files():
+            if qlo in r.get("target","").lower():
+                results.append({
+                    "icon":"📄" if r["file_type"]=="pdf" else "🌐",
+                    "title":r.get("target","Unknown"),
+                    "subtitle":r["file_type"].upper() + " Report " + r.get("created_at","")[:10],
+                    "url":"/report/" + r["filename"],
+                    "badge":None,
+                })
+
+    db.close()
+    return jsonify({"results":results[:25]})
