@@ -913,6 +913,169 @@ def live_virustotal(target):
 
 
 
+# ── HISTORY PAGE ──────────────────────────────────────────────────────────────
+
+@app.route("/history")
+@login_required
+def history_page():
+    db = Database()
+    sessions = db.get_all_sessions()
+    enriched = []
+    for s in sessions:
+        sc = db.get_severity_counts(s["id"])
+        enriched.append({**dict(s), "severity_counts": sc})
+    db.close()
+    return render_template("history.html",
+        sessions=enriched,
+        page="history", title="Scan History"
+    )
+
+
+# ── SETTINGS PAGE ─────────────────────────────────────────────────────────────
+
+@app.route("/settings")
+@login_required
+def settings_page():
+    import shutil
+    return render_template("settings.html",
+        nmap_available  = bool(shutil.which("nmap")),
+        use_postgres    = bool(os.environ.get("DATABASE_URL")),
+        nvd_key         = bool(os.environ.get("NVD_API_KEY")),
+        screenshot_key  = bool(os.environ.get("SCREENSHOT_API_KEY")),
+        shodan_key      = bool(os.environ.get("SHODAN_API_KEY")),
+        virustotal_key  = bool(os.environ.get("VIRUSTOTAL_API_KEY")),
+        urlscan_key     = bool(os.environ.get("URLSCAN_API_KEY")),
+        smtp_configured = bool(os.environ.get("SMTP_USER")),
+        smtp_host       = os.environ.get("SMTP_HOST","smtp.gmail.com"),
+        smtp_user       = os.environ.get("SMTP_USER",""),
+        login_user      = os.environ.get("NETSCAN_USER","admin"),
+        login_pass      = os.environ.get("NETSCAN_PASS","admin123"),
+        page="settings", title="Settings"
+    )
+
+
+# ── REPORTS PAGE ──────────────────────────────────────────────────────────────
+
+@app.route("/reports")
+@login_required
+def reports_page():
+    db = Database()
+    sessions = db.get_all_sessions()
+    session_risks = {}
+    for s in sessions:
+        counts = db.get_severity_counts(s["id"])
+        risk = "CRITICAL" if counts.get("Critical",0) > 0 else                "HIGH"     if counts.get("High",0) > 0     else                "MEDIUM"   if counts.get("Medium",0) > 0   else                "LOW"      if counts.get("Low",0) > 0       else "NONE"
+        session_risks[s["id"]] = risk
+
+    db_reports = db.get_all_report_files()
+    db.close()
+
+    reports = []
+    for r in db_reports:
+        size_kb = (r.get("file_size") or 0) // 1024
+        date = (r.get("created_at","") or "")[:16].replace("T"," ")
+        reports.append({
+            "filename":   r["filename"],
+            "type":       r["file_type"],
+            "target":     r["target"],
+            "session_id": r["session_id"],
+            "risk":       session_risks.get(r["session_id"], "NONE"),
+            "date":       date,
+            "size":       f"{size_kb} KB",
+        })
+
+    pdf_count  = sum(1 for r in reports if r["type"] == "pdf")
+    html_count = sum(1 for r in reports if r["type"] == "html")
+    sess_ids   = set(r["session_id"] for r in reports)
+
+    return render_template("reports.html",
+        reports=reports,
+        total_reports=len(reports),
+        pdf_count=pdf_count,
+        html_count=html_count,
+        sessions_with_reports=len(sess_ids),
+        page="reports", title="Reports"
+    )
+
+
+# ── API NOTIFICATIONS ─────────────────────────────────────────────────────────
+
+@app.route("/api/notifications")
+@login_required
+def api_notifications():
+    db     = Database()
+    counts = db.get_severity_counts()
+    db.close()
+    notifs = []
+    if counts.get("Critical",0) > 0:
+        notifs.append({"message": f"{counts['Critical']} Critical vulnerability(ies) found — immediate action required", "type": "critical"})
+    if counts.get("High",0) > 0:
+        notifs.append({"message": f"{counts['High']} High severity finding(s) — address within 7 days", "type": "high"})
+    return jsonify(notifs)
+
+
+# ── API ACTIVITY FEED ─────────────────────────────────────────────────────────
+
+@app.route("/api/activity-feed")
+@login_required
+def api_activity_feed():
+    db       = Database()
+    sessions = db.get_all_sessions()
+    feed     = []
+    for s in sessions[:10]:
+        sc     = db.get_severity_counts(s["id"])
+        t      = (s.get("started_at","")[:16] or "").replace("T"," ")
+        status = s["status"]
+        if status == "completed":
+            if sc.get("Critical",0) > 0:
+                feed.append({"type":"crit","message":f"Critical finding on {s['target']}","time":t,"badge":"CRITICAL","badge_type":"crit"})
+            else:
+                feed.append({"type":"ok","message":f"Scan completed: {s['target']}","time":t,"badge":"Done","badge_type":"ok"})
+        elif status == "error":
+            feed.append({"type":"warn","message":f"Scan failed: {s['target']}","time":t,"badge":"Failed","badge_type":"warn"})
+        else:
+            feed.append({"type":"scan","message":f"Scanning: {s['target']}","time":t,"badge":None,"badge_type":""})
+    db.close()
+    return jsonify(feed)
+
+
+# ── API SEVERITY COUNTS ───────────────────────────────────────────────────────
+
+@app.route("/api/severity-counts")
+@login_required
+def api_severity_counts():
+    db     = Database()
+    counts = db.get_severity_counts()
+    db.close()
+    return jsonify(counts)
+
+
+# ── API SESSIONS ──────────────────────────────────────────────────────────────
+
+@app.route("/api/sessions")
+@login_required
+def api_sessions():
+    db       = Database()
+    sessions = db.get_all_sessions()
+    result   = []
+    for s in sessions[:10]:
+        sc = db.get_severity_counts(s["id"])
+        result.append({
+            "id":             s["id"],
+            "target":         s["target"],
+            "status":         s["status"],
+            "started_at":     s.get("started_at",""),
+            "severity_counts": sc
+        })
+    db.close()
+    return jsonify(result)
+
+
+# ── API SEARCH ────────────────────────────────────────────────────────────────
+
+
+
+
 @app.route("/logout")
 def logout():
     session.clear()
