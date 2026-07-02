@@ -1076,6 +1076,62 @@ def api_sessions():
 
 
 
+@app.route("/targets")
+@login_required
+def targets_page():
+    db = Database()
+    sessions = db.get_all_sessions()
+    target_map = {}
+    for s in sessions:
+        name = s["target"]
+        if name not in target_map:
+            target_map[name] = {
+                "name": name, "ip": None,
+                "scan_count": 0, "recent_scans": [],
+                "total_critical": 0, "total_high": 0,
+                "total_medium": 0, "total_low": 0,
+                "latest_risk": "NONE", "risk_history": [],
+                "trend": "stable",
+            }
+        t = target_map[name]
+        t["scan_count"] += 1
+        counts = db.get_severity_counts(s["id"])
+        t["total_critical"] += counts.get("Critical", 0)
+        t["total_high"]     += counts.get("High", 0)
+        t["total_medium"]   += counts.get("Medium", 0)
+        t["total_low"]      += counts.get("Low", 0)
+        total = sum(counts.values())
+        risk = "CRITICAL" if counts.get("Critical",0)>0 else                "HIGH"     if counts.get("High",0)>0     else                "MEDIUM"   if counts.get("Medium",0)>0   else                "LOW"      if counts.get("Low",0)>0       else "NONE"
+        t["risk_history"].append(risk)
+        se = dict(s)
+        se["total_findings"] = total
+        t["recent_scans"].append(se)
+        if not t["ip"]:
+            hosts = db.get_hosts(s["id"])
+            if hosts:
+                t["ip"] = hosts[0].get("ip", "")
+
+    for t in target_map.values():
+        t["recent_scans"].sort(key=lambda x: x.get("started_at",""), reverse=True)
+        if t["risk_history"]:
+            t["latest_risk"] = t["risk_history"][-1]
+            if len(t["risk_history"]) >= 2:
+                ro = {"NONE":0,"LOW":1,"MEDIUM":2,"HIGH":3,"CRITICAL":4}
+                last = ro.get(t["risk_history"][-1], 0)
+                prev = ro.get(t["risk_history"][-2], 0)
+                t["trend"] = "worse" if last > prev else "better" if last < prev else "stable"
+
+    targets = sorted(target_map.values(),
+        key=lambda x: ({"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3,"NONE":4}.get(x["latest_risk"],4), x["name"])
+    )
+    db.close()
+    return render_template("targets.html",
+        targets=list(targets),
+        page="targets", title="Targets"
+    )
+
+
+
 @app.route("/logout")
 def logout():
     session.clear()
