@@ -619,13 +619,28 @@ body{animation:pagein 0.3s ease both;}
       <div class="s-row">
         <div>
           <div class="s-label">URLScan.io API Key</div>
-          <div class="s-desc">Get free key at <b>urlscan.io/user/signup</b><br>Visual browser scan — detects redirects, scripts loaded, certificates. Great second screenshot source.</div>
+          <div class="s-desc">Get free key at <b>urlscan.io/user/signup</b><br>Visual browser scan — detects redirects, scripts loaded, certificates.</div>
         </div>
         <div class="s-control">
           <div class="env-badge">🔧 URLSCAN_API_KEY</div>
           <div class="status-line" style="margin-top:4px;">
             {% if urlscan_key %}<div class="dot-ok"></div><span class="status-ok">Configured</span>
             {% else %}<div class="dot-warn"></div><span class="status-warn">Not set — urlscan.io → sign up free</span>{% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- AbuseIPDB -->
+      <div class="s-row">
+        <div>
+          <div class="s-label">AbuseIPDB API Key</div>
+          <div class="s-desc">Get free key at <b>abuseipdb.com</b><br>IP reputation lookup — crowdsourced abuse reports. Powers the <code>ip:</code> search command. 1000 checks/day free.</div>
+        </div>
+        <div class="s-control">
+          <div class="env-badge">🔧 ABUSEIPDB_API_KEY</div>
+          <div class="status-line" style="margin-top:4px;">
+            {% if abuseipdb_key %}<div class="dot-ok"></div><span class="status-ok">Configured</span>
+            {% else %}<div class="dot-warn"></div><span class="status-warn">Not set — abuseipdb.com → sign up → API</span>{% endif %}
           </div>
         </div>
       </div>

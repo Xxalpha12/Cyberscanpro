@@ -122,7 +122,7 @@ def get_explanation(vuln_type):
 class ReportGenerator:
 
     def __init__(self, session_id, target, hosts, web_findings,
-                 cve_findings, output_format="both"):
+                 cve_findings, output_format="both", enrichment=None):
         self.session_id    = session_id
         self.target        = target
         self.hosts         = hosts
@@ -130,6 +130,7 @@ class ReportGenerator:
         self.cve_findings  = cve_findings
         self.output_format = output_format
         self.generated_at  = datetime.now()
+        self.enrichment    = enrichment or {}
         os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     def _enrich(self, findings):
@@ -180,17 +181,10 @@ class ReportGenerator:
 
     def _context(self):
         counts = self._severity_counts()
-        # Find screenshot path
-        import glob
-        ss_dir  = os.path.join(os.path.dirname(os.path.dirname(__file__)), "output", "screenshots")
-        ss_path = os.path.join(ss_dir, f"screenshot_{self.session_id}.png")
-        ss_exists = os.path.exists(ss_path)
-
         return {
             "report_title":    "Vulnerability Assessment Report",
             "target":          self.target,
             "session_id":      self.session_id,
-            "screenshot_path": ss_path if ss_exists else None,
             "generated_at":    self.generated_at.strftime("%Y-%m-%d %H:%M:%S UTC"),
             "total_hosts":     len(self.hosts),
             "total_findings":  len(self.web_findings) + len(self.cve_findings),
@@ -201,6 +195,12 @@ class ReportGenerator:
             "cve_findings":    sorted(self.cve_findings,  key=lambda x: SEVERITY_ORDER.get(x.get("severity","Low"), 4)),
             "all_findings":    self._all_findings(),
             "methodology":     METHODOLOGY,
+            "enrichment":      self.enrichment,
+            "shodan":          self.enrichment.get("shodan", {}),
+            "virustotal":      self.enrichment.get("virustotal", {}),
+            "abuseipdb":       self.enrichment.get("abuseipdb", {}),
+            "urlscan":         self.enrichment.get("urlscan", {}),
+            "has_enrichment":  bool(self.enrichment),
         }
 
     def generate(self):
@@ -239,7 +239,7 @@ class ReportGenerator:
             from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer,
                                             Table, TableStyle, HRFlowable,
                                             PageBreak, KeepTogether)
-            from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+            from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFIED
         except ImportError:
             logger.error("reportlab not installed — PDF skipped")
             return
@@ -265,15 +265,15 @@ class ReportGenerator:
             title="CyberScan Pro Report", author="Obeh Emmanuel Onoriode")
 
         FONT = "Helvetica"
-        _base_styles = getSampleStyleSheet()
         def S(name, **kw):
-            return ParagraphStyle(name, parent=_base_styles["Normal"], **kw)
+            from reportlab.lib.styles import ParagraphStyle
+            return ParagraphStyle(name, fontName=FONT, **kw)
 
         TITLE = S("T",  fontSize=20, textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER)
         SUB   = S("SB", fontSize=10, textColor=colors.HexColor("#A8C4D8"), alignment=TA_CENTER)
         H1    = S("H1", fontSize=14, textColor=NAVY, fontName="Helvetica-Bold", spaceBefore=16, spaceAfter=6)
         H2    = S("H2", fontSize=11, textColor=BLUE, fontName="Helvetica-Bold", spaceBefore=10, spaceAfter=4)
-        BD    = S("BD", fontSize=9,  leading=14, spaceAfter=6, alignment=TA_JUSTIFY)
+        BD    = S("BD", fontSize=9,  leading=14, spaceAfter=6, alignment=TA_JUSTIFIED)
         SM    = S("SM", fontSize=7.5, textColor=colors.grey, leading=11)
         LB    = S("LB", fontSize=8,  textColor=colors.grey, fontName="Helvetica-Bold")
         PE    = S("PE", fontSize=8.5, leading=13, spaceAfter=3)
@@ -374,38 +374,6 @@ class ReportGenerator:
         ]))
         story += [guide, PageBreak()]
 
-        # ── SCREENSHOT ────────────────────────────────────────────────────
-        ss_path = ctx.get("screenshot_path")
-        if ss_path and os.path.exists(ss_path):
-            try:
-                from reportlab.platypus import Image as RLImage
-                story += [Paragraph("Target Screenshot", H1), hr(), sp(0.2),
-                          Paragraph(f"Visual capture of <b>{ctx['target']}</b> at time of scan.", BD)]
-
-                # Browser chrome bar
-                chrome = Table([[
-                    Paragraph(f"  {ctx['target']}", S("URL", fontSize=9,
-                        textColor=colors.HexColor("#888"), fontName="Helvetica"))
-                ]], colWidths=[17*cm])
-                chrome.setStyle(TableStyle([
-                    ("BACKGROUND",    (0,0),(-1,-1), colors.HexColor("#1a1a1a")),
-                    ("TOPPADDING",    (0,0),(-1,-1), 6),
-                    ("BOTTOMPADDING", (0,0),(-1,-1), 6),
-                ]))
-                story.append(chrome)
-
-                # Screenshot image
-                img = RLImage(ss_path, width=17*cm, height=9*cm, kind="proportional")
-                story += [img, sp(0.4), PageBreak()]
-            except Exception as e:
-                logger.warning(f"Could not embed screenshot in PDF: {e}")
-                story += [Paragraph(f"Screenshot available at: /screenshots/{ctx['session_id']}", BD),
-                          PageBreak()]
-        else:
-            story += [Paragraph("Screenshot", H1), hr(), sp(0.2),
-                      Paragraph("No screenshot was captured for this scan. Open the scan results page and click CAPTURE to generate one.", BD),
-                      PageBreak()]
-
         # ── EXECUTIVE SUMMARY ──────────────────────────────────────────────
         story += [Paragraph("Executive Summary", H1), hr(), sp(0.2)]
         summ = (f"An automated vulnerability assessment was conducted against <b>{ctx['target']}</b> on {ctx['generated_at']}. "
@@ -444,80 +412,21 @@ class ReportGenerator:
             for host in ctx["hosts"]:
                 story.append(Paragraph(f"<b>{host['ip']}</b> — {host.get('hostname','N/A')} — OS: {host.get('os','Unknown')}", H2))
                 if host.get("ports"):
-                    PORT_INFO = {
-                        21:  ("FTP — File Transfer Protocol",
-                              "Transfers files between client and server with NO encryption. Passwords and file contents are transmitted in plain text.",
-                              "Attacker captures FTP traffic with a packet sniffer, extracts login credentials in plain text, then logs in to steal files or upload malware.",
-                              "Disable FTP. Use SFTP (port 22) instead. If FTP required, enable FTPS with TLS encryption."),
-                        22:  ("SSH — Secure Shell",
-                              "Encrypted remote server access. The secure standard for server administration.",
-                              "Automated bots run brute force attacks 24/7 trying thousands of passwords. Weak passwords lead to complete server compromise.",
-                              "Disable password login. Use SSH keys only. Disable root login. Install fail2ban."),
-                        23:  ("Telnet — CRITICAL RISK",
-                              "Legacy remote access with ZERO encryption. Passwords and all commands sent as plain text.",
-                              "Attacker uses free tool (Wireshark) to capture session in real time and read your password as you type it.",
-                              "IMMEDIATELY: systemctl stop telnetd && systemctl disable telnetd. Use SSH instead."),
-                        25:  ("SMTP — Mail Server (Outgoing)",
-                              "Sends emails between mail servers. Port 25 handles server-to-server email delivery.",
-                              "If misconfigured as open relay, attackers route millions of spam emails through your server, destroying your domain reputation.",
-                              "Require SMTP authentication. Configure SPF, DKIM, DMARC DNS records."),
-                        53:  ("DNS — Domain Name System",
-                              "Translates domain names to IP addresses. Critical internet infrastructure service.",
-                              "DNS amplification attacks flood victims with traffic. Cache poisoning redirects users to fake websites. Zone transfer reveals internal network map.",
-                              "Restrict zone transfers. Disable recursion for external clients. Keep DNS software updated."),
-                        80:  ("HTTP — Web Server (Unencrypted)",
-                              "Serves web pages with NO encryption. All data including passwords travel in plain text.",
-                              "Attacker intercepts HTTP traffic to steal session cookies (account takeover), capture login credentials, or modify page content in transit.",
-                              "Install SSL certificate (free from Let's Encrypt). Redirect all HTTP to HTTPS. Add Strict-Transport-Security header."),
-                        110: ("POP3 — Email Retrieval (Unencrypted)",
-                              "Downloads emails from server. Without SSL, everything transmitted in plain text.",
-                              "Attacker intercepts POP3 traffic, extracts email password, reads all emails, resets passwords for bank/social accounts using that email.",
-                              "Disable port 110. Use POP3S on port 995 with SSL/TLS. Update all mail clients."),
-                        143: ("IMAP — Email Access (Unencrypted)",
-                              "Email access protocol. Without encryption, credentials and email content exposed.",
-                              "Attacker steals email credentials, reads all private emails, impersonates account holder, resets passwords for all linked accounts.",
-                              "Disable port 143. Use IMAPS on port 993. Set ssl=required in Dovecot config."),
-                        443: ("HTTPS — Secure Web Server",
-                              "Encrypted web traffic using TLS/SSL. Protects data in transit.",
-                              "If old TLS versions enabled, vulnerabilities like POODLE/BEAST allow decryption. Expired certs enable man-in-the-middle attacks.",
-                              "Disable TLS 1.0/1.1, SSLv2/SSLv3. Enable TLS 1.2/1.3 only. Test at ssllabs.com."),
-                        465: ("SMTPS — Secure Mail Submission",
-                              "Encrypted email submission using implicit SSL/TLS.",
-                              "Weak authentication allows attackers to relay spam through your server, blacklisting your domain.",
-                              "Require strong authentication. Enforce TLS. Implement rate limiting. Configure SPF/DKIM/DMARC."),
-                        587: ("SMTP Submission",
-                              "Email client submission port using STARTTLS encryption.",
-                              "Without authentication requirement, attackers use your server as spam relay, destroying email reputation.",
-                              "Require authentication. Enforce STARTTLS. Monitor for unusual sending volume."),
-                        3306:("MySQL Database — CRITICAL RISK",
-                              "Direct access to your database server. Should NEVER be publicly accessible.",
-                              "Automated tools find exposed MySQL and brute force root password. If successful, entire database is stolen or deleted as ransomware.",
-                              "IMMEDIATELY: iptables -A INPUT -p tcp --dport 3306 -j DROP. Set bind-address=127.0.0.1 in my.cnf."),
-                        3389:("RDP — Remote Desktop — CRITICAL RISK",
-                              "Graphical remote control of Windows server. Actively targeted by ransomware groups 24/7.",
-                              "Ransomware groups scan internet for RDP, brute force access, then encrypt all files demanding payment. BlueKeep allows unauthenticated RCE.",
-                              "Restrict to specific IPs by firewall. Enable NLA. Use VPN before RDP. Change default port."),
-                        6379:("Redis — CRITICAL RISK",
-                              "In-memory cache with NO default password. Never expose publicly.",
-                              "Attacker connects without password, reads all cached data including session tokens, writes malicious cache entries, or executes OS commands.",
-                              "Add password in redis.conf. Bind to 127.0.0.1. Block port 6379 at firewall."),
-                    }
-
-                    pd = [["Port", "Service", "Version", "Risk Level"]]
+                    pd = [["Port", "Service", "Version", "Security Note"]]
                     for p in host["ports"]:
                         port = p.get("port", 0)
-                        if port in [23, 3306, 3389, 6379, 27017]:
-                            risk = "🔴 CRITICAL"
-                        elif port in [21, 25, 53, 110, 143]:
-                            risk = "🟠 HIGH"
-                        elif port in [80, 22, 587]:
-                            risk = "🟡 MEDIUM"
-                        else:
-                            risk = "🔵 LOW/REVIEW"
+                        note = {22:"Ensure key-based auth, disable root login",
+                                21:"⚠️ FTP unencrypted — use SFTP instead",
+                                23:"🚨 Telnet unencrypted — disable immediately",
+                                80:"Redirect all traffic to HTTPS (port 443)",
+                                443:"Ensure TLS 1.2+ only, disable old SSL",
+                                3306:"⚠️ MySQL publicly exposed — restrict by firewall",
+                                3389:"🚨 RDP exposed — restrict to specific IPs only",
+                                6379:"🚨 Redis exposed — verify authentication enabled",
+                               }.get(port, "Verify this port needs public access")
                         pd.append([f"{port}/{p.get('protocol','tcp')}",
-                                   p.get("service",""), str(p.get("version",""))[:25], risk])
-
-                    pt = Table(pd, colWidths=[2*cm,2.5*cm,7*cm,5.5*cm])
+                                   p.get("service",""), str(p.get("version",""))[:30], note])
+                    pt = Table(pd, colWidths=[2*cm,2.5*cm,4.5*cm,8*cm])
                     pt.setStyle(TableStyle([
                         ("BACKGROUND",    (0,0),(-1,0), NAVY),
                         ("TEXTCOLOR",     (0,0),(-1,0), colors.white),
@@ -530,64 +439,6 @@ class ReportGenerator:
                         ("VALIGN",        (0,0),(-1,-1), "TOP"),
                     ]))
                     story.append(pt)
-                    story.append(sp(0.3))
-
-                    # Detailed port analysis
-                    story.append(Paragraph("Port Security Analysis", H2))
-                    for p in host["ports"]:
-                        port = p.get("port", 0)
-                        info = PORT_INFO.get(port, (
-                            f"Port {port} Service",
-                            "This network service is publicly accessible from the internet.",
-                            "Attackers probe this service for known vulnerabilities, attempt default credential login, or exploit unpatched software.",
-                            "Verify if public access is needed. Close the port if not required. Keep software updated."
-                        ))
-                        svc_name, what, attack, fix = info
-
-                        if port in [23, 3306, 3389, 6379, 27017]:
-                            left_col = colors.HexColor("#C00000")
-                            bg_col   = colors.HexColor("#fff5f5")
-                        elif port in [21, 25, 53, 110, 143]:
-                            left_col = colors.HexColor("#E67E22")
-                            bg_col   = colors.HexColor("#fffbf5")
-                        else:
-                            left_col = colors.HexColor("#2980B9")
-                            bg_col   = colors.HexColor("#f5faff")
-
-                        port_header = Table([[
-                            Paragraph(f"<b>Port {port} — {svc_name}</b>  "
-                                      f"<font size='8' color='grey'>{p.get('version','')}</font>",
-                                      S("PH", fontSize=10, fontName="Helvetica-Bold"))
-                        ]], colWidths=[17*cm])
-                        port_header.setStyle(TableStyle([
-                            ("BACKGROUND",    (0,0),(-1,-1), bg_col),
-                            ("LINEBELOW",     (0,0),(-1,0), 2, left_col),
-                            ("TOPPADDING",    (0,0),(-1,-1), 8),
-                            ("BOTTOMPADDING", (0,0),(-1,-1), 8),
-                            ("LEFTPADDING",   (0,0),(-1,-1), 10),
-                        ]))
-                        story.append(port_header)
-
-                        details = Table([
-                            [Paragraph("<b>🔍 What is this service?</b>", LB),
-                             Paragraph("<b>💥 What could an attacker do?</b>", LB),
-                             Paragraph("<b>🔧 How to secure this</b>", LB)],
-                            [Paragraph(what, PE),
-                             Paragraph(attack, PE),
-                             Paragraph(fix, PE)],
-                        ], colWidths=[5.67*cm, 5.67*cm, 5.66*cm])
-                        details.setStyle(TableStyle([
-                            ("BACKGROUND",    (0,0),(-1,-1), colors.white),
-                            ("BACKGROUND",    (0,0),(-1,0), colors.HexColor("#f8f9fa")),
-                            ("GRID",          (0,0),(-1,-1), 0.5, colors.HexColor("#e0e0e0")),
-                            ("TOPPADDING",    (0,0),(-1,-1), 6),
-                            ("BOTTOMPADDING", (0,0),(-1,-1), 6),
-                            ("LEFTPADDING",   (0,0),(-1,-1), 8),
-                            ("VALIGN",        (0,0),(-1,-1), "TOP"),
-                            ("LINEAFTER",     (0,0),(1,-1), 0.5, colors.HexColor("#e0e0e0")),
-                        ]))
-                        story.append(details)
-                        story.append(sp(0.2))
                 story.append(sp(0.4))
             story.append(PageBreak())
 

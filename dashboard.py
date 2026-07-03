@@ -244,7 +244,7 @@ def run_scan():
     from modules.web_scanner import WebScanner
     from modules.web_tester import WebTester
     from modules.cve_scanner import CVEScanner
-    from modules.report_generator import ReportGenerator
+    from modules.report_generator import ReportGenerator  # v4 with API enrichment
 
     db = Database()
     session_id = db.create_session(target)
@@ -307,6 +307,63 @@ def run_scan():
             )
             hosts = scanner.run()
             db.save_hosts(session_id, hosts)
+
+            # ── API Enrichment (Shodan, VirusTotal, AbuseIPDB, URLScan) ──────
+            try:
+                from modules.api_enrichment import enrich_target, get_shodan_cves
+                target_ip = hosts[0]["ip"] if hosts else resolved_ip
+                hostname  = target
+
+                _log(f"Running API enrichment for {target_ip}...")
+                enrichment = enrich_target(
+                    ip=target_ip,
+                    hostname=hostname,
+                    progress_cb=_log
+                )
+
+                # Store enrichment data in scan_notes (JSON) for use in reports
+                import json
+                existing_notes = db.get_notes(session_id) or ""
+                enrich_json = json.dumps({"enrichment": enrichment}, indent=2)
+                db.save_notes(session_id, enrich_json)
+
+                # Add Shodan CVEs to cve_findings
+                shodan_cves = get_shodan_cves(target_ip)
+                if shodan_cves:
+                    _log(f"Shodan found {len(shodan_cves)} additional CVEs")
+                    db.save_cve_findings(session_id, shodan_cves)
+
+                # Flag high abuse score as a web finding
+                abuse = enrichment.get("abuseipdb", {})
+                if abuse.get("abuse_score", 0) > 25:
+                    db.save_web_findings(session_id, [{
+                        "host_ip":        target_ip,
+                        "url":            f"https://{hostname}",
+                        "vuln_type":      "Malicious IP Reputation",
+                        "severity":       "High" if abuse["abuse_score"] < 75 else "Critical",
+                        "description":    f"IP {target_ip} has an AbuseIPDB score of {abuse['abuse_score']}% with {abuse.get('total_reports',0)} reports of malicious activity.",
+                        "evidence":       f"ISP: {abuse.get('isp','')} | Country: {abuse.get('country','')} | Last reported: {abuse.get('last_reported','')}",
+                        "recommendation": "Investigate this IP's history. High abuse scores indicate the host may be compromised or used for malicious purposes.",
+                    }])
+
+                # Flag VirusTotal malicious detections as findings
+                vt = enrichment.get("virustotal", {})
+                if vt.get("malicious", 0) > 0:
+                    severity = "Critical" if vt["malicious"] > 5 else "High"
+                    db.save_web_findings(session_id, [{
+                        "host_ip":        target_ip,
+                        "url":            f"https://{hostname}",
+                        "vuln_type":      "VirusTotal Malicious Detection",
+                        "severity":       severity,
+                        "description":    f"{hostname} is flagged as malicious by {vt['malicious']} out of {vt['malicious']+vt.get('harmless',0)+vt.get('undetected',0)} VirusTotal engines.",
+                        "evidence":       f"Malicious: {vt['malicious']} | Suspicious: {vt.get('suspicious',0)} | Categories: {', '.join(list(vt.get('categories',{}).values())[:3])}",
+                        "recommendation": "This target has been flagged by multiple antivirus/blacklist engines. Treat with extreme caution.",
+                    }])
+
+            except Exception as enrich_err:
+                _log(f"API enrichment warning: {enrich_err}")
+                logger.warning(f"Enrichment error: {enrich_err}")
+            # ── End API Enrichment ────────────────────────────────────────────
             active_scans[session_id]["hosts_found"] = len(hosts)
             _set_progress(30, f"Network scan complete — {len(hosts)} host(s), "
                               f"{sum(len(h.get('ports',[])) for h in hosts)} open port(s) total.")
@@ -397,11 +454,23 @@ def run_scan():
 
             # ── Report ────────────────────────────────────────────────────────
             _set_progress(80, "Generating report...")
+            # Load enrichment data from notes (stored as JSON during scan)
+            enrichment_data = {}
+            try:
+                import json as _json
+                notes_raw = db.get_notes(session_id) or ""
+                if notes_raw.startswith("{"):
+                    notes_parsed = _json.loads(notes_raw)
+                    enrichment_data = notes_parsed.get("enrichment", {})
+            except Exception:
+                pass
+
             gen = ReportGenerator(
                 session_id=session_id, target=target,
                 hosts=hosts, web_findings=web_findings,
                 cve_findings=cve_findings,
-                output_format=data.get("output_format", "both")
+                output_format=data.get("output_format", "both"),
+                enrichment=enrichment_data
             )
             paths = gen.generate()
             active_scans[session_id]["report_paths"] = paths
@@ -945,6 +1014,7 @@ def settings_page():
         shodan_key      = bool(os.environ.get("SHODAN_API_KEY")),
         virustotal_key  = bool(os.environ.get("VIRUSTOTAL_API_KEY")),
         urlscan_key     = bool(os.environ.get("URLSCAN_API_KEY")),
+        abuseipdb_key   = bool(os.environ.get("ABUSEIPDB_API_KEY")),
         smtp_configured = bool(os.environ.get("SMTP_USER")),
         smtp_host       = os.environ.get("SMTP_HOST","smtp.gmail.com"),
         smtp_user       = os.environ.get("SMTP_USER",""),

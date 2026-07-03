@@ -387,7 +387,86 @@
   <!-- WEB FINDINGS WITH PLAIN ENGLISH -->
   {% if web_findings %}
   <section>
-    <h2>🌐 Web Application Security Findings</h2>
+    <h2>🌐 
+    <!-- ═══ THREAT INTELLIGENCE SECTION ═══ -->
+    {% if has_enrichment %}
+    <h2>🔍 Threat Intelligence</h2>
+    <p>The following intelligence data was gathered from external threat databases during the assessment.</p>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin:16px 0 24px;">
+
+      {% if shodan %}
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;">
+        <div style="font-weight:700;color:#1e293b;margin-bottom:10px;font-size:13px;">🔎 Shodan Intelligence</div>
+        <table style="width:100%;font-size:12px;">
+          {% if shodan.org %}<tr><td style="color:#64748b;width:110px;">Organisation</td><td>{{ shodan.org }}</td></tr>{% endif %}
+          {% if shodan.isp %}<tr><td style="color:#64748b;">ISP</td><td>{{ shodan.isp }}</td></tr>{% endif %}
+          {% if shodan.country %}<tr><td style="color:#64748b;">Country</td><td>{{ shodan.country }}{% if shodan.city %}, {{ shodan.city }}{% endif %}</td></tr>{% endif %}
+          {% if shodan.os %}<tr><td style="color:#64748b;">OS</td><td>{{ shodan.os }}</td></tr>{% endif %}
+          {% if shodan.open_ports %}<tr><td style="color:#64748b;">Open Ports</td><td>{{ shodan.open_ports | join(", ") }}</td></tr>{% endif %}
+          {% if shodan.vulns %}<tr><td style="color:#64748b;">Known CVEs</td><td style="color:#ef4444;font-weight:600;">{{ shodan.vulns | join(", ") }}</td></tr>{% endif %}
+          {% if shodan.tags %}<tr><td style="color:#64748b;">Tags</td><td>{{ shodan.tags | join(", ") }}</td></tr>{% endif %}
+        </table>
+      </div>
+      {% endif %}
+
+      {% if virustotal %}
+      {% set mal = virustotal.malicious %}
+      <div style="background:#f8fafc;border:1px solid {% if mal > 5 %}#fecaca{% elif mal > 0 %}#fed7aa{% else %}#bbf7d0{% endif %};border-radius:8px;padding:16px;">
+        <div style="font-weight:700;color:#1e293b;margin-bottom:10px;font-size:13px;">🛡 VirusTotal Analysis</div>
+        <div style="display:flex;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+          <div style="text-align:center;flex:1;min-width:60px;">
+            <div style="font-size:24px;font-weight:800;color:{% if mal > 0 %}#ef4444{% else %}#22c55e{% endif %};">{{ mal }}</div>
+            <div style="font-size:10px;color:#64748b;">Malicious</div>
+          </div>
+          <div style="text-align:center;flex:1;min-width:60px;">
+            <div style="font-size:24px;font-weight:800;color:#f97316;">{{ virustotal.suspicious }}</div>
+            <div style="font-size:10px;color:#64748b;">Suspicious</div>
+          </div>
+          <div style="text-align:center;flex:1;min-width:60px;">
+            <div style="font-size:24px;font-weight:800;color:#22c55e;">{{ virustotal.harmless }}</div>
+            <div style="font-size:10px;color:#64748b;">Clean</div>
+          </div>
+        </div>
+        {% if virustotal.as_owner %}<p style="font-size:11px;color:#64748b;">Network: {{ virustotal.as_owner }}</p>{% endif %}
+        <a href="{{ virustotal.vt_url }}" style="font-size:11px;color:#3b82f6;">View full VirusTotal report →</a>
+      </div>
+      {% endif %}
+
+      {% if abuseipdb %}
+      {% set score = abuseipdb.abuse_score %}
+      <div style="background:#f8fafc;border:1px solid {% if score > 50 %}#fecaca{% elif score > 10 %}#fed7aa{% else %}#e2e8f0{% endif %};border-radius:8px;padding:16px;">
+        <div style="font-weight:700;color:#1e293b;margin-bottom:10px;font-size:13px;">⚠️ AbuseIPDB Reputation</div>
+        <div style="text-align:center;margin-bottom:12px;">
+          <div style="font-size:36px;font-weight:800;color:{% if score > 50 %}#ef4444{% elif score > 10 %}#f97316{% else %}#22c55e{% endif %};">{{ score }}%</div>
+          <div style="font-size:11px;color:#64748b;">Abuse Confidence Score</div>
+        </div>
+        <table style="width:100%;font-size:11px;">
+          <tr><td style="color:#64748b;">Total Reports</td><td>{{ abuseipdb.total_reports }}</td></tr>
+          <tr><td style="color:#64748b;">ISP</td><td>{{ abuseipdb.isp }}</td></tr>
+          <tr><td style="color:#64748b;">Country</td><td>{{ abuseipdb.country }}</td></tr>
+          <tr><td style="color:#64748b;">Usage Type</td><td>{{ abuseipdb.usage_type }}</td></tr>
+          <tr><td style="color:#64748b;">Last Reported</td><td>{{ abuseipdb.last_reported or "Never" }}</td></tr>
+        </table>
+      </div>
+      {% endif %}
+
+      {% if urlscan %}
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:16px;">
+        <div style="font-weight:700;color:#1e293b;margin-bottom:10px;font-size:13px;">🌐 URLScan.io Analysis</div>
+        <p style="font-size:12px;color:#64748b;margin-bottom:10px;">Visual browser scan submitted during assessment.</p>
+        <a href="{{ urlscan.result_url }}" target="_blank" style="display:block;padding:8px 14px;background:#3b82f6;color:#fff;border-radius:6px;text-align:center;text-decoration:none;font-size:12px;font-weight:600;margin-bottom:8px;">View URLScan Result →</a>
+        {% if urlscan.screenshot %}
+        <img src="{{ urlscan.screenshot }}" style="width:100%;border-radius:4px;border:1px solid #e2e8f0;" alt="URLScan screenshot" onerror="this.style.display='none'">
+        {% endif %}
+      </div>
+      {% endif %}
+
+    </div>
+    {% endif %}
+    <!-- ═══ END THREAT INTELLIGENCE ═══ -->
+
+Web Application Security Findings</h2>
     <p>The following security issues were found in the web application at <strong>{{ target }}</strong>. Each finding includes a plain English explanation so you understand exactly what the risk is and how to fix it.</p>
 
     {% for f in web_findings %}
