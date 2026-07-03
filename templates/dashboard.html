@@ -689,6 +689,20 @@ body{animation:pagein 0.3s ease both;}
 .slc-cve-tag{padding:3px 8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);border-radius:4px;font-size:10px;font-family:'Share Tech Mono',monospace;text-decoration:none;}
 .slc-cve-tag:hover{background:rgba(239,68,68,0.2);}
 </style>
+
+<style>
+.sh-title{font-size:9px;color:var(--accent);letter-spacing:3px;font-family:var(--mono);margin-bottom:12px;}
+.sh-tip{font-size:11px;color:rgba(0,200,255,0.3);margin-top:12px;font-style:italic;}
+.sr-section-label{font-size:9px;color:var(--text2);letter-spacing:2px;font-family:var(--mono);padding:10px 22px 4px;}
+.sr-recent{cursor:pointer;}
+.sr-recent-del{color:var(--text2);font-size:12px;padding:4px 8px;border-radius:4px;transition:all 0.2s;flex-shrink:0;}
+.sr-recent-del:hover{color:var(--red);background:rgba(239,68,68,0.1);}
+.sr-quickaction{background:rgba(0,255,157,0.03);border-left:2px solid rgba(0,255,157,0.3);}
+.sr-ac-actions{display:flex;gap:6px;flex-shrink:0;}
+.sr-ac-btn{padding:4px 10px;background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.15);border-radius:5px;font-size:10px;font-family:var(--mono);text-decoration:none;transition:all 0.2s;white-space:nowrap;}
+.sr-ac-btn:hover{background:rgba(0,200,255,0.18);}
+#search-overlay{opacity:0;transition:opacity 0.25s ease;display:none;}
+</style>
 </head>
 <body>
 
@@ -1775,203 +1789,303 @@ document.querySelectorAll('.rt-range-btn').forEach(btn=>{
   resize(); initStars(); draw();
 })();
 
-// ── SEARCH LOGIC ──────────────────────────────────────────────────────────────
-function openSearch(){
-  document.getElementById('search-overlay').classList.add('show');
-  setTimeout(()=>document.getElementById('global-search-input').focus(), 100);
-  document.body.style.overflow = 'hidden';
+// ── PROFESSIONAL SEARCH ENGINE ───────────────────────────────────────────────
+(function(){
+
+// State
+let recentSearches = [];
+let allTargets     = [];
+let activeIndex    = -1;
+let debounceTimer  = null;
+
+// Load recent searches from sessionStorage (cleared on tab close)
+function loadRecent(){
+  try { recentSearches = JSON.parse(sessionStorage.getItem("csp_searches") || "[]"); } catch(e){ recentSearches = []; }
 }
-function closeSearch(){
-  document.getElementById('search-overlay').classList.remove('show');
-  document.body.style.overflow = '';
-  document.getElementById('global-search-input').value = '';
+function saveSearch(q){
+  if(!q || recentSearches.includes(q)) return;
+  recentSearches.unshift(q);
+  recentSearches = recentSearches.slice(0,5);
+  try { sessionStorage.setItem("csp_searches", JSON.stringify(recentSearches)); } catch(e){}
 }
-document.addEventListener('keydown', (e)=>{
-  if(e.key === 'Escape') closeSearch();
-  if((e.ctrlKey || e.metaKey) && e.key === 'k'){ e.preventDefault(); openSearch(); }
-});
-document.getElementById('search-overlay')?.addEventListener('click', (e)=>{
-  if(e.target.id === 'search-overlay') closeSearch();
-});
 
-let searchTimeout;
-document.getElementById('global-search-input')?.addEventListener('input', (e)=>{
-  clearTimeout(searchTimeout);
-  const q = e.target.value.trim();
-  if(!q){
-    document.getElementById('search-results').innerHTML = `
-      <div class="search-hint">
-        <div class="sh-row"><span class="sh-kbd">cve:CVE-2024-1234</span> → Live NVD lookup — CVSS score, description, severity</div>
-        <div class="sh-row"><span class="sh-kbd">ip:192.168.1.1</span> → AbuseIPDB reputation — abuse score, reports, ISP</div>
-        <div class="sh-row"><span class="sh-kbd">port:22</span> → Port intelligence — risk level, known CVEs, found on your targets</div>
-        <div class="sh-row"><span class="sh-kbd">vt:example.com</span> → VirusTotal — malicious/clean verdict from 70+ engines</div>
-        <div class="sh-row"><span class="sh-kbd">exploit:apache</span> → Exploit-DB search link for that service or technology</div>
-        <div class="sh-row"><span class="sh-kbd">target:soap.fupre.edu.ng</span> → Search your scanned targets</div>
-        <div class="sh-row"><span class="sh-kbd">risk:critical</span> · <span class="sh-kbd">vuln:sqli</span> · <span class="sh-kbd">report:bluewave</span> → Filter your project data</div>
-      </div>`;
-    return;
-  }
-  searchTimeout = setTimeout(()=>runSearch(q), 250);
-});
-
-async function runSearch(q){
-  const resultsEl = document.getElementById("search-results");
-  resultsEl.innerHTML = "<div class='sr-no-results'>Searching...</div>";
-
-  const qlo = q.toLowerCase().trim();
-  const parts = q.split(":");
-  const prefix = parts.length > 1 ? parts[0].toLowerCase() : null;
-  const term   = parts.length > 1 ? parts.slice(1).join(":").trim() : q.trim();
-
-  // ── Live CVE lookup ──────────────────────────────────────────────────────
-  if(prefix === "cve" && /^CVE-\d{4}-\d+$/i.test(term)){
-    const r = await fetch(`/api/live/cve/${term.toUpperCase()}`);
-    const d = await r.json();
-    if(d.error){
-      resultsEl.innerHTML = `<div class="sr-no-results">❌ ${d.error}</div>`;
-    } else {
-      const sevColor = {CRITICAL:"#ef4444",HIGH:"#f97316",MEDIUM:"#eab308",LOW:"#3b82f6"}[d.severity?.toUpperCase()] || "#64748b";
-      resultsEl.innerHTML = `
-        <div class="sr-live-card">
-          <div class="slc-header">
-            <span class="slc-icon">🔴</span>
-            <div>
-              <div class="slc-title">${d.cve_id}</div>
-              <div class="slc-sub">Published ${d.published} · CVSS <b style="color:${sevColor}">${d.cvss_score}</b> · <span style="color:${sevColor}">${d.severity}</span></div>
-            </div>
-            <a href="${d.url}" target="_blank" class="slc-btn">NVD →</a>
-          </div>
-          <div class="slc-desc">${d.description}</div>
-        </div>`;
-    }
-    return;
-  }
-
-  // ── Live IP reputation ────────────────────────────────────────────────────
-  if(prefix === "ip" && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(term)){
-    const r = await fetch(`/api/live/ip/${term}`);
-    const d = await r.json();
-    if(d.error){
-      resultsEl.innerHTML = `<div class="sr-no-results">❌ ${d.error}${d.setup ? "<br><small>" + d.setup + "</small>" : ""}</div>`;
-    } else {
-      const score = d.abuse_score;
-      const col = score > 50 ? "#ef4444" : score > 10 ? "#f97316" : "#00ff9d";
-      resultsEl.innerHTML = `
-        <div class="sr-live-card">
-          <div class="slc-header">
-            <span class="slc-icon">🌐</span>
-            <div>
-              <div class="slc-title">${d.ip}</div>
-              <div class="slc-sub">${d.isp} · ${d.country} · ${d.usage_type}</div>
-            </div>
-            <a href="https://www.abuseipdb.com/check/${d.ip}" target="_blank" class="slc-btn">AbuseIPDB →</a>
-          </div>
-          <div class="slc-stats">
-            <div class="slcs"><div class="slcs-n" style="color:${col}">${score}%</div><div class="slcs-l">Abuse Score</div></div>
-            <div class="slcs"><div class="slcs-n">${d.total_reports}</div><div class="slcs-l">Reports</div></div>
-            <div class="slcs"><div class="slcs-n">${d.domain || "—"}</div><div class="slcs-l">Domain</div></div>
-            <div class="slcs"><div class="slcs-n">${d.last_reported}</div><div class="slcs-l">Last Report</div></div>
-          </div>
-        </div>`;
-    }
-    return;
-  }
-
-  // ── Live port intelligence ────────────────────────────────────────────────
-  if(prefix === "port" && /^\d+$/.test(term)){
-    const r = await fetch(`/api/live/port/${term}`);
-    const d = await r.json();
-    const riskCol = {CRITICAL:"#ef4444",HIGH:"#f97316",MEDIUM:"#eab308",LOW:"#3b82f6",UNKNOWN:"#64748b"}[d.risk] || "#64748b";
-    const found = d.found_on_your_targets || [];
-    resultsEl.innerHTML = `
-      <div class="sr-live-card">
-        <div class="slc-header">
-          <span class="slc-icon">🔌</span>
-          <div>
-            <div class="slc-title">Port ${d.port} — ${d.service}</div>
-            <div class="slc-sub">Risk: <span style="color:${riskCol};font-weight:700">${d.risk}</span></div>
-          </div>
-        </div>
-        <div class="slc-desc">${d.notes}</div>
-        ${found.length ? `<div class="slc-found"><div class="slc-found-label">FOUND ON YOUR TARGETS</div>${found.map(f=>`<div class="slc-found-item"><span>🎯 ${f.target}</span><a href="/scan/${f.session_id}" class="slc-btn" style="font-size:9px;">VIEW</a></div>`).join("")}</div>` : "<div class='slc-found'><div class='slc-found-label'>NOT FOUND IN YOUR SCANS</div></div>"}
-        ${d.cves?.length ? `<div class="slc-cves">Known CVEs: ${d.cves.map(c=>`<a href="https://nvd.nist.gov/vuln/detail/${c}" target="_blank" class="slc-cve-tag">${c}</a>`).join("")}</div>` : ""}
-      </div>`;
-    return;
-  }
-
-  // ── Live VirusTotal lookup ────────────────────────────────────────────────
-  if(prefix === "vt" || prefix === "virustotal"){
-    const r = await fetch(`/api/live/vt/${encodeURIComponent(term)}`);
-    const d = await r.json();
-    if(d.error){
-      resultsEl.innerHTML = `<div class="sr-no-results">❌ ${d.error}${d.setup ? "<br><small>" + d.setup + "</small>" : ""}</div>`;
-    } else {
-      const mal = d.malicious;
-      const col = mal > 5 ? "#ef4444" : mal > 0 ? "#f97316" : "#00ff9d";
-      resultsEl.innerHTML = `
-        <div class="sr-live-card">
-          <div class="slc-header">
-            <span class="slc-icon">🛡</span>
-            <div>
-              <div class="slc-title">${d.target}</div>
-              <div class="slc-sub">${d.as_owner || ""} · ${d.country || ""}</div>
-            </div>
-            <a href="${d.vt_url}" target="_blank" class="slc-btn">VirusTotal →</a>
-          </div>
-          <div class="slc-stats">
-            <div class="slcs"><div class="slcs-n" style="color:${col}">${d.malicious}</div><div class="slcs-l">Malicious</div></div>
-            <div class="slcs"><div class="slcs-n" style="color:#eab308">${d.suspicious}</div><div class="slcs-l">Suspicious</div></div>
-            <div class="slcs"><div class="slcs-n" style="color:#00ff9d">${d.harmless}</div><div class="slcs-l">Clean</div></div>
-            <div class="slcs"><div class="slcs-n">${d.reputation}</div><div class="slcs-l">Reputation</div></div>
-          </div>
-        </div>`;
-    }
-    return;
-  }
-
-  // ── Exploit search ────────────────────────────────────────────────────────
-  if(prefix === "exploit"){
-    const r = await fetch(`/api/live/exploit/${encodeURIComponent(term)}`);
-    const d = await r.json();
-    if(d.redirect){
-      resultsEl.innerHTML = `
-        <div class="sr-live-card">
-          <div class="slc-header">
-            <span class="slc-icon">💀</span>
-            <div><div class="slc-title">Exploit-DB Search: ${term}</div><div class="slc-sub">Click to search on Exploit-DB</div></div>
-            <a href="${d.redirect}" target="_blank" class="slc-btn">Search →</a>
-          </div>
-          <div class="slc-desc">Exploit-DB requires browser access. Click the button to search for "${term}" exploits in their database of 45,000+ verified exploits.</div>
-        </div>`;
-    }
-    return;
-  }
-
-  // ── Default: search your own project data ────────────────────────────────
+// Fetch all target names for autocomplete
+async function loadTargets(){
   try{
-    const res = await fetch("/api/search?q=" + encodeURIComponent(q));
-    const data = await res.json();
-    if(!data.results || data.results.length === 0){
-      resultsEl.innerHTML = `
-        <div class="sr-no-results">
-          No results for "${q}"<br><br>
-          <small style="color:var(--text2)">Try: cve:CVE-2024-1234 · ip:192.168.1.1 · port:22 · vt:example.com · exploit:apache</small>
-        </div>`;
-      return;
-    }
-    resultsEl.innerHTML = data.results.map(r => `
-      <a href="${r.url}" class="sr-item">
-        <div class="sr-icon">${r.icon}</div>
-        <div class="sr-main">
-          <div class="sr-title">${r.title}</div>
-          <div class="sr-sub">${r.subtitle}</div>
-        </div>
-        ${r.badge ? `<span class="sr-badge" style="background:${r.badge_bg};color:${r.badge_color};">${r.badge}</span>` : ""}
-      </a>`).join("");
-  }catch(e){
-    resultsEl.innerHTML = "<div class='sr-no-results'>Search error — try again</div>";
+    const r = await fetch("/api/sessions");
+    const d = await r.json();
+    const seen = new Set();
+    allTargets = [];
+    (d||[]).forEach(s=>{ if(s.target && !seen.has(s.target)){ seen.add(s.target); allTargets.push(s.target); } });
+  }catch(e){}
+}
+
+// Fuzzy match — returns score (higher = better match)
+function fuzzyScore(str, query){
+  str   = str.toLowerCase();
+  query = query.toLowerCase();
+  if(str === query) return 100;
+  if(str.startsWith(query)) return 90;
+  if(str.includes(query)) return 80;
+  // Character-by-character fuzzy
+  let si = 0, qi = 0, score = 0;
+  while(si < str.length && qi < query.length){
+    if(str[si] === query[qi]){ score++; qi++; }
+    si++;
+  }
+  return qi === query.length ? Math.round((score / str.length) * 70) : 0;
+}
+
+// Detect what the user is typing
+function detectIntent(q){
+  const lo = q.toLowerCase().trim();
+  if(lo.startsWith("cve:"))       return {type:"cve",    term:lo.slice(4).trim()};
+  if(lo.startsWith("ip:"))        return {type:"ip",     term:lo.slice(3).trim()};
+  if(lo.startsWith("port:"))      return {type:"port",   term:lo.slice(5).trim()};
+  if(lo.startsWith("vt:"))        return {type:"vt",     term:lo.slice(3).trim()};
+  if(lo.startsWith("exploit:"))   return {type:"exploit",term:lo.slice(8).trim()};
+  if(lo.startsWith("risk:"))      return {type:"risk",   term:lo.slice(5).trim()};
+  if(lo.startsWith("vuln:"))      return {type:"vuln",   term:lo.slice(5).trim()};
+  if(lo.startsWith("report:"))    return {type:"report", term:lo.slice(7).trim()};
+  if(lo.startsWith("target:"))    return {type:"target", term:lo.slice(7).trim()};
+  // Auto-detect domain/IP
+  if(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(lo)) return {type:"ip_auto", term:lo};
+  if(/^CVE-\d{4}-\d+$/i.test(lo)) return {type:"cve_auto", term:lo};
+  if(/^\d+$/.test(lo) && parseInt(lo) < 65536) return {type:"port_auto", term:lo};
+  return {type:"text", term:lo};
+}
+
+// Render results container
+function setResults(html, resetIndex=true){
+  document.getElementById("search-results").innerHTML = html;
+  if(resetIndex){ activeIndex = -1; }
+}
+
+// Show empty state with recent searches
+function showEmpty(){
+  loadRecent();
+  if(recentSearches.length === 0){
+    setResults(`<div class="search-hint">
+      <div class="sh-title">// SEARCH COMMANDS</div>
+      <div class="sh-row"><span class="sh-kbd">cve:</span>CVE-2024-1234 → Live NVD lookup</div>
+      <div class="sh-row"><span class="sh-kbd">ip:</span>192.168.1.1 → AbuseIPDB reputation</div>
+      <div class="sh-row"><span class="sh-kbd">port:</span>22 → Port risk + your targets</div>
+      <div class="sh-row"><span class="sh-kbd">vt:</span>example.com → VirusTotal scan</div>
+      <div class="sh-row"><span class="sh-kbd">exploit:</span>apache → Exploit-DB search</div>
+      <div class="sh-row"><span class="sh-kbd">risk:</span>critical · <span class="sh-kbd">vuln:</span>sqli · <span class="sh-kbd">report:</span>target</div>
+      <div class="sh-tip">Tip: Just type a domain or IP and we'll auto-detect what to search</div>
+    </div>`);
+  } else {
+    const items = recentSearches.map((s,i)=>`
+      <div class="sr-item sr-recent" data-index="${i}" onclick="setInput('${s.replace(/'/g,"\'")}')">
+        <div class="sr-icon">🕐</div>
+        <div class="sr-main"><div class="sr-title">${s}</div><div class="sr-sub">Recent search</div></div>
+        <span class="sr-recent-del" onclick="delRecent(event,${i})">✕</span>
+      </div>`).join("");
+    setResults(`<div class="sr-section-label">RECENT SEARCHES</div>${items}`);
   }
 }
+
+// Show autocomplete suggestions from existing targets
+function showSuggestions(q){
+  const scored = allTargets
+    .map(t => ({t, score: fuzzyScore(t, q)}))
+    .filter(x => x.score > 0)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 6);
+
+  const intent = detectIntent(q);
+  let html = "";
+
+  // Quick action: "Scan this target?" if looks like a domain/IP not yet in targets
+  const looksLikeDomain = /^[a-zA-Z0-9][a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}$/.test(q.trim());
+  const looksLikeIP     = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(q.trim());
+  if((looksLikeDomain || looksLikeIP) && !allTargets.includes(q.trim())){
+    html += `<a href="/scan/new?target=${encodeURIComponent(q.trim())}" class="sr-item sr-quickaction">
+      <div class="sr-icon">▶</div>
+      <div class="sr-main">
+        <div class="sr-title">Scan "${q.trim()}"</div>
+        <div class="sr-sub">Launch new vulnerability assessment on this target</div>
+      </div>
+      <span class="sr-badge" style="background:rgba(0,255,157,0.1);color:#00ff9d;border:1px solid rgba(0,255,157,0.2);">SCAN NOW</span>
+    </a>`;
+  }
+
+  // Auto-detect intent suggestions
+  if(intent.type === "ip_auto"){
+    html += `<div class="sr-item" onclick="setInput('ip:${q}')">
+      <div class="sr-icon">🌐</div>
+      <div class="sr-main"><div class="sr-title">Check IP reputation: ${q}</div><div class="sr-sub">Query AbuseIPDB for abuse reports and threat intelligence</div></div>
+      <span class="sr-badge" style="background:rgba(0,200,255,0.1);color:#00c8ff;">ip: →</span>
+    </div>`;
+  }
+  if(intent.type === "cve_auto"){
+    html += `<div class="sr-item" onclick="setInput('cve:${q}')">
+      <div class="sr-icon">🔴</div>
+      <div class="sr-main"><div class="sr-title">Lookup ${q.toUpperCase()} on NVD</div><div class="sr-sub">Get CVSS score, severity, description and affected versions</div></div>
+      <span class="sr-badge" style="background:rgba(239,68,68,0.1);color:#ef4444;">cve: →</span>
+    </div>`;
+  }
+  if(intent.type === "port_auto"){
+    html += `<div class="sr-item" onclick="setInput('port:${q}')">
+      <div class="sr-icon">🔌</div>
+      <div class="sr-main"><div class="sr-title">Port ${q} intelligence</div><div class="sr-sub">Risk level, common services, CVEs, found on your targets</div></div>
+      <span class="sr-badge" style="background:rgba(234,179,8,0.1);color:#eab308;">port: →</span>
+    </div>`;
+  }
+
+  // Fuzzy matched existing targets
+  if(scored.length > 0){
+    html += `<div class="sr-section-label">YOUR TARGETS</div>`;
+    html += scored.map((x,i)=>`
+      <a href="/targets" class="sr-item" data-ac-index="${i}">
+        <div class="sr-icon">🌐</div>
+        <div class="sr-main">
+          <div class="sr-title">${highlightMatch(x.t, q)}</div>
+          <div class="sr-sub">Scanned target · Match score ${x.score}%</div>
+        </div>
+        <div class="sr-ac-actions">
+          <a href="/scan/new?target=${encodeURIComponent(x.t)}" class="sr-ac-btn" onclick="event.stopPropagation()">▶ Scan</a>
+          <a href="/targets" class="sr-ac-btn">View</a>
+        </div>
+      </a>`).join("");
+  }
+
+  if(!html){
+    html = `<div class="sr-no-results">No suggestions for "${q}" — press Enter to search</div>`;
+  }
+
+  setResults(html);
+}
+
+// Highlight matching characters in autocomplete
+function highlightMatch(str, query){
+  query = query.toLowerCase();
+  let result = "";
+  let qi = 0;
+  for(let i=0;i<str.length;i++){
+    if(qi < query.length && str[i].toLowerCase() === query[qi]){
+      result += `<span style="color:var(--accent);font-weight:700">${str[i]}</span>`;
+      qi++;
+    } else {
+      result += str[i];
+    }
+  }
+  return result;
+}
+
+function setInput(val){
+  const inp = document.getElementById("global-search-input");
+  if(inp){ inp.value = val; inp.dispatchEvent(new Event("input")); inp.focus(); }
+}
+
+function delRecent(e, idx){
+  e.stopPropagation();
+  recentSearches.splice(idx,1);
+  try{ sessionStorage.setItem("csp_searches", JSON.stringify(recentSearches)); }catch(x){}
+  showEmpty();
+}
+
+// Keyboard navigation
+document.getElementById("global-search-input")?.addEventListener("keydown", (e)=>{
+  const items = document.querySelectorAll("#search-results .sr-item");
+  if(!items.length) return;
+
+  if(e.key === "ArrowDown"){
+    e.preventDefault();
+    activeIndex = Math.min(activeIndex+1, items.length-1);
+    updateActive(items);
+  } else if(e.key === "ArrowUp"){
+    e.preventDefault();
+    activeIndex = Math.max(activeIndex-1, -1);
+    updateActive(items);
+  } else if(e.key === "Enter"){
+    e.preventDefault();
+    if(activeIndex >= 0 && items[activeIndex]){
+      items[activeIndex].click();
+    } else {
+      const q = document.getElementById("global-search-input").value.trim();
+      if(q){ saveSearch(q); runSearch(q); }
+    }
+  }
+});
+
+function updateActive(items){
+  items.forEach((el,i)=>{
+    if(i === activeIndex){
+      el.style.background = "rgba(0,200,255,0.08)";
+      el.scrollIntoView({block:"nearest"});
+    } else {
+      el.style.background = "";
+    }
+  });
+}
+
+// Main input handler
+document.getElementById("global-search-input")?.addEventListener("input", (e)=>{
+  clearTimeout(debounceTimer);
+  const q = e.target.value.trim();
+  activeIndex = -1;
+
+  if(!q){ showEmpty(); return; }
+
+  // Show suggestions immediately (fast, local)
+  showSuggestions(q);
+
+  // Debounce live API search
+  debounceTimer = setTimeout(()=>{
+    const intent = detectIntent(q);
+    if(intent.type === "cve" || intent.type === "cve_auto"){
+      if(/CVE-\d{4}-\d+/i.test(intent.term)) runSearch(q);
+    } else if(intent.type === "ip" || intent.type === "ip_auto"){
+      if(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(intent.term)) runSearch(q);
+    } else if(intent.type === "port" || intent.type === "port_auto"){
+      if(/^\d+$/.test(intent.term)) runSearch(q);
+    } else if(intent.type === "vt"){
+      if(intent.term.length > 3) runSearch(q);
+    } else if(intent.type === "exploit"){
+      if(intent.term.length > 2) runSearch(q);
+    } else if(q.length >= 2){
+      runSearch(q);
+    }
+  }, 400);
+});
+
+// Open/close
+window.openSearch = function(){
+  const overlay = document.getElementById("search-overlay");
+  overlay.style.display = "flex";
+  requestAnimationFrame(()=>{ overlay.style.opacity="1"; });
+  document.body.style.overflow = "hidden";
+  loadRecent();
+  loadTargets();
+  setTimeout(()=>{ document.getElementById("global-search-input")?.focus(); }, 80);
+  showEmpty();
+};
+window.closeSearch = function(){
+  const overlay = document.getElementById("search-overlay");
+  overlay.style.opacity = "0";
+  setTimeout(()=>{ overlay.style.display="none"; }, 300);
+  document.body.style.overflow = "";
+  document.getElementById("global-search-input").value = "";
+  activeIndex = -1;
+};
+
+// Keyboard shortcut
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape") closeSearch();
+  if((e.ctrlKey||e.metaKey) && e.key==="k"){ e.preventDefault(); openSearch(); }
+});
+
+// Click outside to close
+document.getElementById("search-overlay")?.addEventListener("click",(e)=>{
+  if(e.target.id==="search-overlay") closeSearch();
+});
+
+loadRecent();
+loadTargets();
+
+})();
 </script>
 
 </body>
