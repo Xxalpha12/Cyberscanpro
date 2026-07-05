@@ -1867,26 +1867,55 @@ function setResults(html, resetIndex=true){
 // Show empty state with recent searches
 function showEmpty(){
   loadRecent();
-  if(recentSearches.length === 0){
-    setResults(`<div class="search-hint">
-      <div class="sh-title">// SEARCH COMMANDS</div>
-      <div class="sh-row"><span class="sh-kbd">cve:</span>CVE-2024-1234 → Live NVD lookup</div>
-      <div class="sh-row"><span class="sh-kbd">ip:</span>192.168.1.1 → AbuseIPDB reputation</div>
-      <div class="sh-row"><span class="sh-kbd">port:</span>22 → Port risk + your targets</div>
-      <div class="sh-row"><span class="sh-kbd">vt:</span>example.com → VirusTotal scan</div>
-      <div class="sh-row"><span class="sh-kbd">exploit:</span>apache → Exploit-DB search</div>
-      <div class="sh-row"><span class="sh-kbd">risk:</span>critical · <span class="sh-kbd">vuln:</span>sqli · <span class="sh-kbd">report:</span>target</div>
-      <div class="sh-tip">Tip: Just type a domain or IP and we'll auto-detect what to search</div>
-    </div>`);
-  } else {
-    const items = recentSearches.map((s,i)=>`
-      <div class="sr-item sr-recent" data-index="${i}" onclick="setInput('${s.replace(/'/g,"\'")}')">
+
+  const examples = [
+    {icon:"🔴",label:"cve:CVE-2021-44228",  desc:"Log4Shell — CVSS 10.0 Critical. Click to see full NVD details",        val:"cve:CVE-2021-44228"},
+    {icon:"🔴",label:"cve:CVE-2019-0708",   desc:"BlueKeep RDP — wormable exploit. Click to look up on NVD",              val:"cve:CVE-2019-0708"},
+    {icon:"🌐",label:"ip:8.8.8.8",           desc:"Check Google DNS IP on AbuseIPDB — see reputation score",              val:"ip:8.8.8.8"},
+    {icon:"🔌",label:"port:22",              desc:"SSH — is this open on any of your scanned targets? What's the risk?",  val:"port:22"},
+    {icon:"🔌",label:"port:3306",            desc:"MySQL — should NEVER be public. Check if any target has it open",      val:"port:3306"},
+    {icon:"🔌",label:"port:445",             desc:"SMB — WannaCry/EternalBlue. Critical risk if exposed",                val:"port:445"},
+    {icon:"🛡", label:"vt:malware.wicar.org", desc:"VirusTotal check — this test site should show malicious detections",  val:"vt:malware.wicar.org"},
+    {icon:"💀",label:"exploit:apache",       desc:"Find public Apache exploits on Exploit-DB",                            val:"exploit:apache"},
+    {icon:"⚠️",label:"risk:critical",        desc:"Show all your scans with Critical severity findings",                 val:"risk:critical"},
+    {icon:"🐛",label:"vuln:sql",             desc:"Find all SQL injection findings across your scans",                   val:"vuln:sql"},
+  ];
+
+  const recentHTML = recentSearches.length ? `
+    <div class="sr-section-label">// RECENT SEARCHES</div>
+    ${recentSearches.map((s,i)=>`
+      <div class="sr-item sr-recent" onclick="setInput('${s.replace(/'/g,"\\'")}')">
         <div class="sr-icon">🕐</div>
-        <div class="sr-main"><div class="sr-title">${s}</div><div class="sr-sub">Recent search</div></div>
+        <div class="sr-main"><div class="sr-title">${s}</div><div class="sr-sub">Click to run again</div></div>
         <span class="sr-recent-del" onclick="delRecent(event,${i})">✕</span>
-      </div>`).join("");
-    setResults(`<div class="sr-section-label">RECENT SEARCHES</div>${items}`);
-  }
+      </div>`).join("")}` : "";
+
+  const examplesHTML = `
+    <div class="sr-section-label">// CLICK ANY EXAMPLE TO TRY IT</div>
+    ${examples.map(e=>`
+      <div class="sr-item" style="cursor:pointer;" onclick="runExample('${e.val}')">
+        <div class="sr-icon">${e.icon}</div>
+        <div class="sr-main">
+          <div class="sr-title" style="color:var(--accent);font-family:var(--mono);font-size:13px;">${e.label}</div>
+          <div class="sr-sub">${e.desc}</div>
+        </div>
+        <span class="sr-badge" style="background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.15);white-space:nowrap;">TRY IT →</span>
+      </div>`).join("")}
+    <div style="padding:14px 22px;font-size:11px;color:var(--text2);border-top:1px solid var(--border);line-height:1.8;">
+      💡 <b style="color:var(--text3)">Just type anything:</b> a domain like <span style="color:var(--accent);font-family:var(--mono)">soap.fupre.edu.ng</span>, 
+      an IP like <span style="color:var(--accent);font-family:var(--mono)">192.168.1.1</span>, 
+      a CVE ID like <span style="color:var(--accent);font-family:var(--mono)">CVE-2024-1234</span>, 
+      or a port number like <span style="color:var(--accent);font-family:var(--mono)">8080</span> — 
+      the search auto-detects what to look up.
+    </div>`;
+
+  setResults(recentHTML + examplesHTML);
+}
+
+function runExample(val){
+  const inp = document.getElementById("global-search-input");
+  if(inp){ inp.value = val; inp.focus(); }
+  runSearch(val);
 }
 
 // Show autocomplete suggestions from existing targets
