@@ -701,7 +701,7 @@ body{animation:pagein 0.3s ease both;}
 .sr-ac-actions{display:flex;gap:6px;flex-shrink:0;}
 .sr-ac-btn{padding:4px 10px;background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.15);border-radius:5px;font-size:10px;font-family:var(--mono);text-decoration:none;transition:all 0.2s;white-space:nowrap;}
 .sr-ac-btn:hover{background:rgba(0,200,255,0.18);}
-#search-overlay{opacity:0;transition:opacity 0.25s ease;display:none;}
+
 </style>
 </head>
 <body>
@@ -1638,9 +1638,12 @@ document.querySelectorAll('.rt-range-btn').forEach(btn=>{
   background:radial-gradient(ellipse at center, #050a14 0%, #000003 100%);
   display:none;align-items:flex-start;justify-content:center;
   padding-top:8vh;
-  opacity:0;transition:opacity 0.3s ease;
 }
-#search-overlay.show{display:flex;opacity:1;}
+#search-overlay.visible{
+  display:flex;
+  animation:searchFadeIn 0.25s ease both;
+}
+@keyframes searchFadeIn{from{opacity:0}to{opacity:1}}
 #space-canvas{position:absolute;inset:0;z-index:0;}
 .search-box-wrap{
   position:relative;z-index:2;
@@ -2054,8 +2057,7 @@ document.getElementById("global-search-input")?.addEventListener("input", (e)=>{
 // Open/close
 window.openSearch = function(){
   const overlay = document.getElementById("search-overlay");
-  overlay.style.display = "flex";
-  requestAnimationFrame(()=>{ overlay.style.opacity="1"; });
+  overlay.classList.add("visible");
   document.body.style.overflow = "hidden";
   loadRecent();
   loadTargets();
@@ -2064,10 +2066,11 @@ window.openSearch = function(){
 };
 window.closeSearch = function(){
   const overlay = document.getElementById("search-overlay");
-  overlay.style.opacity = "0";
-  setTimeout(()=>{ overlay.style.display="none"; }, 300);
+  overlay.classList.remove("visible");
   document.body.style.overflow = "";
-  document.getElementById("global-search-input").value = "";
+  const inp = document.getElementById("global-search-input");
+  if(inp) inp.value = "";
+  setResults(""); 
   activeIndex = -1;
 };
 
@@ -2081,6 +2084,157 @@ document.addEventListener("keydown",(e)=>{
 document.getElementById("search-overlay")?.addEventListener("click",(e)=>{
   if(e.target.id==="search-overlay") closeSearch();
 });
+
+// Make non-anchor sr-items navigate properly
+document.getElementById("search-results")?.addEventListener("click",(e)=>{
+  const item = e.target.closest(".sr-item[data-url]");
+  if(item && item.dataset.url){
+    saveSearch(document.getElementById("global-search-input").value.trim());
+    window.location.href = item.dataset.url;
+  }
+});
+
+
+// ── runSearch: handles all live API lookups + project data search ─────────────
+async function runSearch(q){
+  const resultsEl = document.getElementById("search-results");
+  if(!resultsEl) return;
+  const intent = detectIntent(q);
+  const prefix  = intent.type;
+  const term    = intent.term;
+
+  resultsEl.innerHTML = "<div class='sr-no-results' style='padding:20px 22px;'>Searching...</div>";
+
+  // ── CVE Live Lookup ────────────────────────────────────────────────────────
+  if((prefix==="cve"||prefix==="cve_auto") && /CVE-\d{4}-\d+/i.test(term)){
+    saveSearch(q);
+    const r = await fetch("/api/live/cve/"+term.toUpperCase());
+    const d = await r.json();
+    if(d.error){ resultsEl.innerHTML=`<div class="sr-no-results">❌ ${d.error}</div>`; return; }
+    const sc = {CRITICAL:"#ef4444",HIGH:"#f97316",MEDIUM:"#eab308",LOW:"#3b82f6"}[d.severity?.toUpperCase()]||"#64748b";
+    resultsEl.innerHTML = `<div class="sr-live-card">
+      <div class="slc-header">
+        <span class="slc-icon">🔴</span>
+        <div><div class="slc-title">${d.cve_id}</div>
+        <div class="slc-sub">Published ${d.published} · CVSS <b style="color:${sc}">${d.cvss_score}</b> · <span style="color:${sc}">${d.severity}</span></div></div>
+        <a href="${d.url}" target="_blank" class="slc-btn">View on NVD →</a>
+      </div>
+      <div class="slc-desc">${d.description}</div>
+    </div>`;
+    return;
+  }
+
+  // ── IP Reputation ──────────────────────────────────────────────────────────
+  if((prefix==="ip"||prefix==="ip_auto") && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(term)){
+    saveSearch(q);
+    const r = await fetch("/api/live/ip/"+term);
+    const d = await r.json();
+    if(d.error){ resultsEl.innerHTML=`<div class="sr-no-results">❌ ${d.error}${d.setup?"<br><small style='color:#64748b'>"+d.setup+"</small>":""}</div>`; return; }
+    const col = d.abuse_score>50?"#ef4444":d.abuse_score>10?"#f97316":"#00ff9d";
+    resultsEl.innerHTML = `<div class="sr-live-card">
+      <div class="slc-header">
+        <span class="slc-icon">🌐</span>
+        <div><div class="slc-title">${d.ip}</div><div class="slc-sub">${d.isp} · ${d.country} · ${d.usage_type}</div></div>
+        <a href="https://www.abuseipdb.com/check/${d.ip}" target="_blank" class="slc-btn">AbuseIPDB →</a>
+      </div>
+      <div class="slc-stats">
+        <div class="slcs"><div class="slcs-n" style="color:${col}">${d.abuse_score}%</div><div class="slcs-l">Abuse Score</div></div>
+        <div class="slcs"><div class="slcs-n">${d.total_reports}</div><div class="slcs-l">Reports</div></div>
+        <div class="slcs"><div class="slcs-n">${d.domain||"—"}</div><div class="slcs-l">Domain</div></div>
+        <div class="slcs"><div class="slcs-n">${d.last_reported||"Never"}</div><div class="slcs-l">Last Report</div></div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // ── Port Intelligence ──────────────────────────────────────────────────────
+  if((prefix==="port"||prefix==="port_auto") && /^\d+$/.test(term)){
+    saveSearch(q);
+    const r = await fetch("/api/live/port/"+term);
+    const d = await r.json();
+    const rc = {CRITICAL:"#ef4444",HIGH:"#f97316",MEDIUM:"#eab308",LOW:"#3b82f6",UNKNOWN:"#64748b"}[d.risk]||"#64748b";
+    const found = d.found_on_your_targets||[];
+    resultsEl.innerHTML = `<div class="sr-live-card">
+      <div class="slc-header">
+        <span class="slc-icon">🔌</span>
+        <div><div class="slc-title">Port ${term} — ${d.service}</div>
+        <div class="slc-sub">Risk: <span style="color:${rc};font-weight:700">${d.risk}</span></div></div>
+        <a href="/port-intel?port=${term}" class="slc-btn" onclick="closeSearch()">Full Details →</a>
+      </div>
+      <div class="slc-desc">${d.notes}</div>
+      <div class="slc-found">
+        <div class="slc-found-label">YOUR TARGETS WITH PORT ${term} OPEN (${found.length})</div>
+        ${found.length?found.map(f=>`<div class="slc-found-item"><span>🎯 ${f.target}${f.service?" · "+f.service:""}</span><a href="/scan/${f.session_id}" class="slc-btn" style="font-size:9px;" onclick="closeSearch()">VIEW SCAN</a></div>`).join("") : `<div style="font-size:11px;color:var(--text2);padding:6px 0;">Not found in your scans yet — <a href="/scan/new" style="color:var(--accent)">run a scan</a></div>`}
+      </div>
+      ${d.cves?.length?`<div class="slc-cves">Known CVEs: ${d.cves.map(c=>`<a href="https://nvd.nist.gov/vuln/detail/${c}" target="_blank" class="slc-cve-tag">${c}</a>`).join("")}</div>`:""}
+    </div>`;
+    return;
+  }
+
+  // ── VirusTotal ─────────────────────────────────────────────────────────────
+  if(prefix==="vt"||prefix==="virustotal"){
+    saveSearch(q);
+    const r = await fetch("/api/live/vt/"+encodeURIComponent(term));
+    const d = await r.json();
+    if(d.error){ resultsEl.innerHTML=`<div class="sr-no-results">❌ ${d.error}${d.setup?"<br><small style='color:#64748b'>"+d.setup+"</small>":""}</div>`; return; }
+    const mc = d.malicious>5?"#ef4444":d.malicious>0?"#f97316":"#00ff9d";
+    resultsEl.innerHTML = `<div class="sr-live-card">
+      <div class="slc-header">
+        <span class="slc-icon">🛡</span>
+        <div><div class="slc-title">${d.target}</div><div class="slc-sub">${d.as_owner||""} · ${d.country||""}</div></div>
+        <a href="${d.vt_url}" target="_blank" class="slc-btn">VirusTotal →</a>
+      </div>
+      <div class="slc-stats">
+        <div class="slcs"><div class="slcs-n" style="color:${mc}">${d.malicious}</div><div class="slcs-l">Malicious</div></div>
+        <div class="slcs"><div class="slcs-n" style="color:#eab308">${d.suspicious}</div><div class="slcs-l">Suspicious</div></div>
+        <div class="slcs"><div class="slcs-n" style="color:#00ff9d">${d.harmless}</div><div class="slcs-l">Clean</div></div>
+        <div class="slcs"><div class="slcs-n">${d.reputation}</div><div class="slcs-l">Reputation</div></div>
+      </div>
+    </div>`;
+    return;
+  }
+
+  // ── Exploit-DB ─────────────────────────────────────────────────────────────
+  if(prefix==="exploit"){
+    saveSearch(q);
+    const r = await fetch("/api/live/exploit/"+encodeURIComponent(term));
+    const d = await r.json();
+    resultsEl.innerHTML = `<div class="sr-live-card">
+      <div class="slc-header">
+        <span class="slc-icon">💀</span>
+        <div><div class="slc-title">Exploit-DB: ${term}</div><div class="slc-sub">Search known public exploits for this technology</div></div>
+        <a href="${d.redirect||"https://www.exploit-db.com/search?q="+encodeURIComponent(term)}" target="_blank" class="slc-btn">Search Exploit-DB →</a>
+      </div>
+      <div class="slc-desc">Exploit-DB contains 45,000+ verified exploits. Click the button to search for "${term}" exploits in your browser.</div>
+    </div>`;
+    return;
+  }
+
+  // ── Project Data (targets, CVEs, findings, reports) ────────────────────────
+  try{
+    const res  = await fetch("/api/search?q="+encodeURIComponent(q));
+    const data = await res.json();
+    if(!data.results||data.results.length===0){
+      resultsEl.innerHTML = `<div class="sr-no-results">
+        No results for "${q}"<br><br>
+        <small style="color:var(--text2)">Try: cve:CVE-2024-1234 · ip:192.168.1.1 · port:22 · vt:example.com · exploit:apache</small>
+      </div>`;
+      return;
+    }
+    saveSearch(q);
+    resultsEl.innerHTML = data.results.map(r=>`
+      <a href="${r.url}" class="sr-item" onclick="closeSearch()">
+        <div class="sr-icon">${r.icon}</div>
+        <div class="sr-main">
+          <div class="sr-title">${r.title}</div>
+          <div class="sr-sub">${r.subtitle}</div>
+        </div>
+        ${r.badge?`<span class="sr-badge" style="background:${r.badge_bg};color:${r.badge_color};">${r.badge}</span>`:""}
+      </a>`).join("");
+  }catch(e){
+    resultsEl.innerHTML="<div class='sr-no-results'>Search error — try again</div>";
+  }
+}
 
 loadRecent();
 loadTargets();

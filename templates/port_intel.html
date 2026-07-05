@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Port Intelligence — CyberScan Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#020810;--bg2:#060c14;--bg3:#0a1220;
+  --border:rgba(0,200,255,0.1);--border2:rgba(0,200,255,0.06);
+  --accent:#00c8ff;--green:#00ff9d;--red:#ef4444;
+  --orange:#f97316;--yellow:#eab308;--blue:#3b82f6;--purple:#a855f7;
+  --text:#e2eaf4;--text2:#304560;--text3:#4d6a85;
+  --mono:'Share Tech Mono',monospace;--sans:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
+.bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;}
+#bg-grid{background-image:linear-gradient(rgba(0,200,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.04) 1px,transparent 1px);background-size:44px 44px;}
+#bg-scan{background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 3px);animation:scanmove 20s linear infinite;}
+@keyframes scanmove{from{background-position:0 0}to{background-position:0 100%}}
+#bg-glow{background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,200,255,0.06) 0%,transparent 70%);}
+.corner{position:fixed;z-index:0;pointer-events:none;opacity:0.4;}
+.c-tl{top:0;left:0;width:100px;height:100px;border-top:1px solid var(--accent);border-left:1px solid var(--accent);}
+.c-tr{top:0;right:0;width:100px;height:100px;border-top:1px solid var(--accent);border-right:1px solid var(--accent);}
+
+/* Topbar */
+.topbar{position:sticky;top:0;z-index:15;background:rgba(6,12,20,0.96);border-bottom:1px solid var(--border);padding:13px 26px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(16px);}
+.tb-brand{display:flex;align-items:center;gap:10px;}
+.tb-title{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text);letter-spacing:2px;}
+.tb-title span{color:var(--accent);}
+.tb-right{display:flex;align-items:center;gap:10px;}
+.clock{font-family:var(--mono);font-size:11px;color:var(--text3);background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 11px;}
+.icon-btn{background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;cursor:pointer;color:var(--text3);font-size:14px;transition:all 0.2s;}
+.icon-btn:hover{color:var(--accent);}
+.back-btn{display:flex;align-items:center;gap:6px;color:var(--text2);text-decoration:none;font-size:11px;font-family:var(--mono);letter-spacing:1px;padding:8px 14px;border:1px solid var(--border);border-radius:6px;transition:all 0.2s;}
+.back-btn:hover{color:var(--accent);border-color:rgba(0,200,255,0.3);}
+
+/* Content */
+.content{position:relative;z-index:1;padding:24px 26px;max-width:1100px;margin:0 auto;}
+
+/* Search bar */
+.port-search{display:flex;gap:12px;margin-bottom:28px;}
+.port-search input{flex:1;background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:9px;padding:13px 18px;color:var(--text);font-family:var(--mono);font-size:15px;outline:none;transition:all 0.2s;}
+.port-search input:focus{border-color:rgba(0,200,255,0.4);box-shadow:0 0 0 3px rgba(0,200,255,0.07);}
+.port-search input::placeholder{color:var(--text2);}
+.port-search button{padding:13px 22px;background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.3);border-radius:9px;font-family:var(--mono);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:1px;transition:all 0.2s;}
+.port-search button:hover{background:rgba(0,200,255,0.18);}
+
+/* Port result card */
+.port-hero{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;}
+.port-hero-top{padding:22px 24px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.port-num{font-size:48px;font-weight:800;font-family:var(--mono);line-height:1;}
+.port-info{flex:1;}
+.port-service{font-size:22px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.port-protocol{font-size:12px;color:var(--text2);font-family:var(--mono);}
+.risk-pill{padding:8px 20px;border-radius:8px;font-size:14px;font-weight:800;font-family:var(--mono);letter-spacing:2px;flex-shrink:0;}
+
+.port-body{padding:22px 24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.port-section{background:var(--bg3);border:1px solid var(--border2);border-radius:9px;padding:16px;}
+.ps-title{font-size:9px;color:var(--text2);letter-spacing:2px;font-family:var(--mono);text-transform:uppercase;margin-bottom:12px;}
+.ps-content{font-size:12px;color:var(--text3);line-height:1.8;}
+
+/* Found on targets */
+.found-list{display:flex;flex-direction:column;gap:8px;}
+.found-item{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;}
+.found-target{font-size:12px;font-weight:600;color:var(--text);font-family:var(--mono);}
+.found-service{font-size:10px;color:var(--text2);margin-top:2px;}
+.view-btn{padding:5px 12px;background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.2);border-radius:5px;font-size:10px;font-weight:700;font-family:var(--mono);text-decoration:none;transition:all 0.2s;}
+.view-btn:hover{background:rgba(0,200,255,0.16);}
+
+/* CVE list */
+.cve-list{display:flex;flex-direction:column;gap:8px;}
+.cve-item{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:7px;}
+.cve-id{font-size:11px;font-weight:700;color:var(--red);font-family:var(--mono);flex-shrink:0;}
+.cve-link{margin-left:auto;font-size:10px;color:var(--accent);text-decoration:none;}
+
+/* Common ports grid */
+.common-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:20px;}
+.common-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:8px;padding:12px;cursor:pointer;transition:all 0.2s;text-align:center;}
+.common-card:hover{border-color:rgba(0,200,255,0.3);transform:translateY(-2px);}
+.cc-port{font-size:18px;font-weight:800;font-family:var(--mono);color:var(--accent);}
+.cc-service{font-size:10px;color:var(--text2);margin-top:4px;}
+.cc-risk{font-size:9px;font-weight:700;margin-top:6px;padding:2px 8px;border-radius:4px;display:inline-block;}
+
+.empty-state{text-align:center;padding:60px 20px;color:var(--text2);font-family:var(--mono);}
+.empty-icon{font-size:48px;opacity:0.3;margin-bottom:16px;}
+
+.section-title{font-size:10px;font-weight:700;color:var(--text2);letter-spacing:2px;font-family:var(--mono);text-transform:uppercase;margin-bottom:14px;margin-top:28px;}
+
+@media(max-width:700px){
+  .port-body{grid-template-columns:1fr;}
+  .content,.topbar{padding:14px 16px;}
+  .port-num{font-size:36px;}
+}
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
+</style>
+</head>
+<body>
+<div id="preloader">
+  <div class="pre-inner">
+    <div class="pre-logo">
+      <img src="/favicon.ico" class="pre-icon" id="pre-icon" alt="">
+      <div class="pre-rings">
+        <div class="pre-ring r1"></div>
+        <div class="pre-ring r2"></div>
+        <div class="pre-ring r3"></div>
+      </div>
+    </div>
+    <div class="pre-name">CyberScan<span>Pro</span></div>
+    <div class="pre-bar-wrap"><div class="pre-bar" id="pre-bar"></div></div>
+    <div class="pre-status" id="pre-status">Initializing...</div>
+  </div>
+</div>
+
+<style>
+#preloader{
+  position:fixed;inset:0;z-index:9999;
+  background:#020810;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 0.5s ease, visibility 0.5s ease;
+}
+#preloader.done{opacity:0;visibility:hidden;pointer-events:none;}
+.pre-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.pre-logo{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
+.pre-icon{width:40px;height:40px;z-index:2;position:relative;image-rendering:crisp-edges;}
+.pre-rings{position:absolute;inset:0;}
+.pre-ring{
+  position:absolute;border-radius:50%;
+  border:1px solid transparent;
+  animation:prerotate 2s linear infinite;
+}
+.r1{inset:0;border-top-color:rgba(0,200,255,0.8);border-right-color:rgba(0,200,255,0.2);animation-duration:1.2s;}
+.r2{inset:8px;border-top-color:rgba(0,255,157,0.6);border-left-color:rgba(0,255,157,0.1);animation-duration:1.8s;animation-direction:reverse;}
+.r3{inset:16px;border-bottom-color:rgba(0,200,255,0.4);animation-duration:2.4s;}
+@keyframes prerotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.pre-name{
+  font-family:'Share Tech Mono',monospace;
+  font-size:18px;font-weight:700;
+  color:#e2eaf4;letter-spacing:2px;
+}
+.pre-name span{color:#00c8ff;}
+.pre-bar-wrap{
+  width:180px;height:2px;
+  background:rgba(0,200,255,0.1);
+  border-radius:2px;overflow:hidden;
+}
+.pre-bar{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#00c8ff,#00ff9d);
+  border-radius:2px;
+  transition:width 0.3s ease;
+  box-shadow:0 0 8px rgba(0,200,255,0.5);
+}
+.pre-status{
+  font-family:'Share Tech Mono',monospace;
+  font-size:10px;color:#304560;
+  letter-spacing:2px;
+}
+</style>
+
+<script>
+(function(){
+  const steps = [
+    {w:20,  t:'Loading modules...'},
+    {w:45,  t:'Connecting to database...'},
+    {w:70,  t:'Checking CVE feed...'},
+    {w:90,  t:'Almost ready...'},
+    {w:100, t:'Done'},
+  ];
+  let i = 0;
+  const bar = document.getElementById('pre-bar');
+  const stat = document.getElementById('pre-status');
+  const iv = setInterval(()=>{
+    if(i >= steps.length){ clearInterval(iv); return; }
+    bar.style.width = steps[i].w + '%';
+    stat.textContent = steps[i].t;
+    i++;
+  }, 200);
+  window.addEventListener('load', ()=>{
+    setTimeout(()=>{
+      bar.style.width = '100%';
+      stat.textContent = 'Ready';
+      setTimeout(()=>{
+        document.getElementById('preloader').classList.add('done');
+      }, 400);
+    }, 300);
+  });
+})();
+</script>
+<div class="bg-fixed" id="bg-grid"></div>
+<div class="bg-fixed" id="bg-scan"></div>
+<div class="bg-fixed" id="bg-glow"></div>
+<div class="corner c-tl"></div>
+<div class="corner c-tr"></div>
+
+<div class="topbar">
+  <div class="tb-brand">
+    <a href="/" class="back-btn">← Back</a>
+    <div class="tb-title">// PORT <span>INTELLIGENCE</span></div>
+  </div>
+  <div class="tb-right">
+    <div class="clock" id="clock"></div>
+    <button class="icon-btn" onclick="openSearch()" title="Search">🔍</button>
+  </div>
+</div>
+
+<div class="content">
+
+  <!-- Search -->
+  <div class="port-search">
+    <input type="number" id="port-input" placeholder="Enter port number e.g. 22, 80, 443, 3306..."
+      min="1" max="65535" value="{{ port or '' }}"
+      onkeydown="if(event.key==='Enter')lookupPort()">
+    <button onclick="lookupPort()">▶ LOOKUP</button>
+  </div>
+
+  <!-- Result -->
+  <div id="port-result">
+    {% if port %}
+    <!-- Server-rendered result -->
+    {% set r = port_data %}
+    {% if r %}
+    <div class="port-hero">
+      <div class="port-hero-top">
+        <div class="port-num" style="color:
+          {% if r.risk == 'CRITICAL' %}var(--red)
+          {% elif r.risk == 'HIGH' %}var(--orange)
+          {% elif r.risk == 'MEDIUM' %}var(--yellow)
+          {% else %}var(--blue){% endif %};">
+          {{ port }}
+        </div>
+        <div class="port-info">
+          <div class="port-service">{{ r.service }}</div>
+          <div class="port-protocol">TCP/UDP · Port {{ port }}</div>
+        </div>
+        <div class="risk-pill" style="
+          {% if r.risk == 'CRITICAL' %}background:rgba(239,68,68,0.15);color:var(--red);
+          {% elif r.risk == 'HIGH' %}background:rgba(249,115,22,0.15);color:var(--orange);
+          {% elif r.risk == 'MEDIUM' %}background:rgba(234,179,8,0.15);color:var(--yellow);
+          {% else %}background:rgba(59,130,246,0.15);color:var(--blue);{% endif %}">
+          {{ r.risk }} RISK
+        </div>
+      </div>
+      <div class="port-body">
+        <div>
+          <div class="port-section">
+            <div class="ps-title">Security Notes</div>
+            <div class="ps-content">{{ r.notes }}</div>
+          </div>
+          {% if r.cves %}
+          <div class="port-section" style="margin-top:14px;">
+            <div class="ps-title">Known CVEs For This Service</div>
+            <div class="cve-list">
+              {% for cve in r.cves %}
+              <div class="cve-item">
+                <div class="cve-id">{{ cve }}</div>
+                <a href="https://nvd.nist.gov/vuln/detail/{{ cve }}" target="_blank" class="cve-link">NVD →</a>
+              </div>
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        <div>
+          <div class="port-section">
+            <div class="ps-title">Found On Your Targets</div>
+            {% if found_on %}
+            <div class="found-list">
+              {% for f in found_on %}
+              <div class="found-item">
+                <div>
+                  <div class="found-target">{{ f.target }}</div>
+                  <div class="found-service">{{ f.service }}{% if f.version %} · {{ f.version[:30] }}{% endif %}</div>
+                </div>
+                <a href="/scan/{{ f.session_id }}" class="view-btn">VIEW →</a>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div style="font-size:12px;color:var(--text2);font-family:var(--mono);padding:10px 0;">
+              Port {{ port }} not found in any of your scans.
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🔌</div>
+      <div style="font-size:14px;color:var(--text3);margin-bottom:8px;">Enter a port number above</div>
+      <div style="font-size:11px;color:var(--text2);">Get risk level, security notes, known CVEs, and which of your targets have this port open</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Common ports quick reference -->
+  <div class="section-title">// Common Ports Quick Reference</div>
+  <div class="common-grid">
+    {% set common_ports = [
+      (21,"FTP","HIGH"),(22,"SSH","MEDIUM"),(23,"Telnet","CRITICAL"),
+      (25,"SMTP","MEDIUM"),(53,"DNS","MEDIUM"),(80,"HTTP","MEDIUM"),
+      (443,"HTTPS","LOW"),(445,"SMB","CRITICAL"),(1433,"MSSQL","HIGH"),
+      (3306,"MySQL","HIGH"),(3389,"RDP","HIGH"),(5432,"PostgreSQL","HIGH"),
+      (6379,"Redis","CRITICAL"),(8080,"HTTP-Alt","MEDIUM"),(27017,"MongoDB","CRITICAL"),
+    ] %}
+    {% for p, svc, risk in common_ports %}
+    <div class="common-card" onclick="setPort({{ p }})">
+      <div class="cc-port">{{ p }}</div>
+      <div class="cc-service">{{ svc }}</div>
+      <div class="cc-risk" style="
+        {% if risk == 'CRITICAL' %}background:rgba(239,68,68,0.12);color:var(--red);
+        {% elif risk == 'HIGH' %}background:rgba(249,115,22,0.12);color:var(--orange);
+        {% elif risk == 'MEDIUM' %}background:rgba(234,179,8,0.1);color:var(--yellow);
+        {% else %}background:rgba(59,130,246,0.1);color:var(--blue);{% endif %}">
+        {{ risk }}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+</div>
+
+<div id="search-overlay">
+  <canvas id="space-canvas"></canvas>
+  <div class="search-box-wrap">
+    <button class="search-close" onclick="closeSearch()">✕</button>
+    <div class="search-input-row">
+      <span class="search-icon-big">🔍</span>
+      <input type="text" id="global-search-input" placeholder="Search targets, scans, reports, vulnerabilities..." autocomplete="off">
+      <span class="search-kbd">ESC</span>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="search-hint">
+        <div class="sh-row"><span class="sh-kbd">target:</span> search by domain or IP — e.g. <i>target:soap.fupre.edu.ng</i></div>
+        <div class="sh-row"><span class="sh-kbd">cve:</span> find a specific CVE — e.g. <i>cve:CVE-2024-1234</i></div>
+        <div class="sh-row"><span class="sh-kbd">risk:</span> filter by severity — e.g. <i>risk:critical</i></div>
+        <div class="sh-row"><span class="sh-kbd">report:</span> find reports by target name</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+#search-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:radial-gradient(ellipse at center, #050a14 0%, #000003 100%);
+  display:none;align-items:flex-start;justify-content:center;
+  padding-top:8vh;
+  opacity:0;transition:opacity 0.3s ease;
+}
+#search-overlay.show{display:flex;opacity:1;}
+#space-canvas{position:absolute;inset:0;z-index:0;}
+.search-box-wrap{
+  position:relative;z-index:2;
+  width:100%;max-width:640px;
+  padding:0 20px;
+  animation:searchIn 0.3s ease both;
+}
+@keyframes searchIn{from{opacity:0;transform:translateY(-12px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.search-close{
+  position:absolute;top:-46px;right:20px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(0,200,255,0.2);
+  color:#e2eaf4;width:32px;height:32px;border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all 0.2s;
+}
+.search-close:hover{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#ef4444;}
+.search-input-row{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(6,12,20,0.92);
+  border:1px solid rgba(0,200,255,0.25);
+  border-radius:14px;padding:18px 22px;
+  box-shadow:0 0 60px rgba(0,200,255,0.15),0 20px 60px rgba(0,0,0,0.6);
+  backdrop-filter:blur(20px);
+}
+.search-icon-big{font-size:20px;flex-shrink:0;}
+#global-search-input{
+  flex:1;background:none;border:none;outline:none;
+  color:#e2eaf4;font-family:'Inter',sans-serif;font-size:16px;
+}
+#global-search-input::placeholder{color:#304560;}
+.search-kbd{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:#4d6a85;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  padding:3px 8px;border-radius:5px;flex-shrink:0;
+}
+.search-results{
+  margin-top:14px;
+  background:rgba(6,12,20,0.88);
+  border:1px solid rgba(0,200,255,0.12);
+  border-radius:14px;overflow:hidden;
+  backdrop-filter:blur(20px);
+  max-height:50vh;overflow-y:auto;
+}
+.search-hint{padding:20px 22px;display:flex;flex-direction:column;gap:10px;}
+.sh-row{font-size:12px;color:#4d6a85;font-family:'Share Tech Mono',monospace;}
+.sh-kbd{color:#00c8ff;font-weight:700;}
+.sh-row i{color:#94a3b8;font-style:normal;}
+.sr-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 22px;border-bottom:1px solid rgba(0,200,255,0.06);
+  cursor:pointer;transition:background 0.15s;text-decoration:none;color:inherit;
+}
+.sr-item:hover{background:rgba(0,200,255,0.06);}
+.sr-item:last-child{border-bottom:none;}
+.sr-icon{width:32px;height:32px;border-radius:8px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sr-main{flex:1;min-width:0;}
+.sr-title{font-size:13px;font-weight:600;color:#e2eaf4;font-family:'Share Tech Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sr-sub{font-size:11px;color:#4d6a85;margin-top:2px;}
+.sr-badge{padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;font-family:'Share Tech Mono',monospace;flex-shrink:0;}
+.sr-no-results{padding:40px 22px;text-align:center;color:#304560;font-size:12px;font-family:'Share Tech Mono',monospace;}
+</style>
+
+<script>
+// ── SPACE BACKGROUND CANVAS ──────────────────────────────────────────────────
+(function(){
+  const canvas = document.getElementById('space-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [], shootingStars = [];
+
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+
+  function initStars(){
+    stars = [];
+    for(let i=0;i<200;i++){
+      stars.push({
+        x: Math.random()*W, y: Math.random()*H,
+        r: Math.random()*1.3 + 0.2,
+        baseAlpha: Math.random()*0.6 + 0.2,
+        twinkleSpeed: 0.01 + Math.random()*0.02,
+        phase: Math.random()*Math.PI*2,
+        depth: Math.random(), // parallax depth
+      });
+    }
+  }
+
+  function maybeSpawnShootingStar(){
+    if(Math.random() < 0.003 && shootingStars.length < 2){
+      const y = Math.random() * H * 0.5;
+      shootingStars.push({
+        x: Math.random()*W*0.3, y, len: 80+Math.random()*60,
+        speed: 8+Math.random()*6, angle: Math.PI/5, life: 1,
+      });
+    }
+  }
+
+  let frame = 0;
+  function draw(){
+    frame++;
+    ctx.clearRect(0,0,W,H);
+
+    // Nebula glow patches
+    const g1 = ctx.createRadialGradient(W*0.2,H*0.3,0,W*0.2,H*0.3,W*0.4);
+    g1.addColorStop(0,'rgba(0,150,255,0.04)'); g1.addColorStop(1,'transparent');
+    ctx.fillStyle = g1; ctx.fillRect(0,0,W,H);
+
+    const g2 = ctx.createRadialGradient(W*0.8,H*0.7,0,W*0.8,H*0.7,W*0.35);
+    g2.addColorStop(0,'rgba(168,85,247,0.03)'); g2.addColorStop(1,'transparent');
+    ctx.fillStyle = g2; ctx.fillRect(0,0,W,H);
+
+    // Stars with twinkle
+    stars.forEach(s=>{
+      const tw = Math.sin(frame * s.twinkleSpeed + s.phase) * 0.4 + 0.6;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,220,255,${s.baseAlpha * tw})`;
+      ctx.fill();
+      // Occasional glow on bright ones
+      if(s.r > 1){
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r*3, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(0,200,255,${0.03 * tw})`;
+        ctx.fill();
+      }
+    });
+
+    // Shooting stars
+    maybeSpawnShootingStar();
+    shootingStars = shootingStars.filter(s=>s.life > 0);
+    shootingStars.forEach(s=>{
+      const dx = Math.cos(s.angle)*s.speed, dy = Math.sin(s.angle)*s.speed;
+      s.x += dx; s.y += dy; s.life -= 0.012;
+      const grad = ctx.createLinearGradient(s.x, s.y, s.x - dx*s.len/s.speed, s.y - dy*s.len/s.speed);
+      grad.addColorStop(0, `rgba(255,255,255,${s.life})`);
+      grad.addColorStop(1, 'rgba(0,200,255,0)');
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - dx*s.len/s.speed, s.y - dy*s.len/s.speed);
+      ctx.strokeStyle = grad; ctx.lineWidth = 1.5; ctx.stroke();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', ()=>{ resize(); initStars(); });
+  resize(); initStars(); draw();
+})();
+
+// ── SEARCH LOGIC ──────────────────────────────────────────────────────────────
+function openSearch(){
+  document.getElementById('search-overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('global-search-input').focus(), 100);
+  document.body.style.overflow = 'hidden';
+}
+function closeSearch(){
+  document.getElementById('search-overlay').classList.remove('show');
+  document.body.style.overflow = '';
+  document.getElementById('global-search-input').value = '';
+}
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') closeSearch();
+  if((e.ctrlKey || e.metaKey) && e.key === 'k'){ e.preventDefault(); openSearch(); }
+});
+document.getElementById('search-overlay')?.addEventListener('click', (e)=>{
+  if(e.target.id === 'search-overlay') closeSearch();
+});
+
+let searchTimeout;
+document.getElementById('global-search-input')?.addEventListener('input', (e)=>{
+  clearTimeout(searchTimeout);
+  const q = e.target.value.trim();
+  if(!q){
+    document.getElementById('search-results').innerHTML = `
+      <div class="search-hint">
+        <div class="sh-row"><span class="sh-kbd">target:</span> search by domain or IP — e.g. <i>target:soap.fupre.edu.ng</i></div>
+        <div class="sh-row"><span class="sh-kbd">cve:</span> find a specific CVE — e.g. <i>cve:CVE-2024-1234</i></div>
+        <div class="sh-row"><span class="sh-kbd">risk:</span> filter by severity — e.g. <i>risk:critical</i></div>
+        <div class="sh-row"><span class="sh-kbd">report:</span> find reports by target name</div>
+      </div>`;
+    return;
+  }
+  searchTimeout = setTimeout(()=>runSearch(q), 250);
+});
+
+async function runSearch(q){
+  const resultsEl = document.getElementById('search-results');
+  resultsEl.innerHTML = '<div class="sr-no-results">Searching...</div>';
+  try{
+    const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+    const data = await res.json();
+    if(!data.results || data.results.length === 0){
+      resultsEl.innerHTML = '<div class="sr-no-results">No results for "' + q + '"</div>';
+      return;
+    }
+    resultsEl.innerHTML = data.results.map(r => `
+      <a href="${r.url}" class="sr-item">
+        <div class="sr-icon">${r.icon}</div>
+        <div class="sr-main">
+          <div class="sr-title">${r.title}</div>
+          <div class="sr-sub">${r.subtitle}</div>
+        </div>
+        ${r.badge ? `<span class="sr-badge" style="background:${r.badge_bg};color:${r.badge_color};">${r.badge}</span>` : ''}
+      </a>
+    `).join('');
+  }catch(e){
+    resultsEl.innerHTML = '<div class="sr-no-results">Search error — try again</div>';
+  }
+}
+</script>
+
+<script>
+function setPort(p){
+  document.getElementById("port-input").value = p;
+  lookupPort();
+}
+function lookupPort(){
+  const p = document.getElementById("port-input").value.trim();
+  if(!p || isNaN(p)) return;
+  window.location.href = "/port-intel?port=" + p;
+}
+function openSearch(){
+  const el = document.getElementById("search-overlay");
+  if(el) el.classList.add("visible");
+}
+function closeSidebar(){}
+(function tick(){const el=document.getElementById("clock");if(el){const n=new Date();el.textContent=n.toLocaleTimeString("en-GB");}setTimeout(tick,1000);})();
+</script>
+</body>
+</html>

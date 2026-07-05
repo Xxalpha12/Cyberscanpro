@@ -1202,6 +1202,75 @@ def targets_page():
 
 
 
+# ── PORT INTELLIGENCE PAGE ────────────────────────────────────────────────────
+
+PORT_DB = {
+    21:   {"service":"FTP","risk":"HIGH","notes":"Unencrypted file transfer. Credentials sent in plaintext. Replace with SFTP (port 22) immediately. Brute force and anonymous login attacks are common.","cves":["CVE-2010-4221","CVE-2011-2523","CVE-2015-3306"]},
+    22:   {"service":"SSH","risk":"MEDIUM","notes":"Secure remote access protocol. Risk increases with weak passwords, outdated SSH versions, or root login enabled. Disable password auth and use SSH keys. Restrict to known IPs.","cves":[]},
+    23:   {"service":"Telnet","risk":"CRITICAL","notes":"Completely unencrypted — username, password, and all data sent in plaintext. Never acceptable on production systems. Replace with SSH immediately. Attackers can intercept sessions trivially.","cves":["CVE-2020-10188"]},
+    25:   {"service":"SMTP","risk":"MEDIUM","notes":"Email transmission protocol. Open relays allow spam and phishing abuse. Require authentication, enable TLS, and configure SPF/DKIM/DMARC records.","cves":[]},
+    53:   {"service":"DNS","risk":"MEDIUM","notes":"Domain Name System. Open resolvers can be abused for DNS amplification DDoS attacks. Restrict recursion to authorised clients only.","cves":["CVE-2020-1350","CVE-2015-7547"]},
+    80:   {"service":"HTTP","risk":"MEDIUM","notes":"Unencrypted web traffic. All data visible to network observers. Should redirect all traffic to HTTPS (443). Check for sensitive data in HTTP responses.","cves":[]},
+    110:  {"service":"POP3","risk":"HIGH","notes":"Post Office Protocol — email retrieval. Transmits credentials in plaintext unless STARTTLS is used. Use POP3S (port 995) with TLS instead.","cves":[]},
+    143:  {"service":"IMAP","risk":"HIGH","notes":"Internet Message Access Protocol. Credentials sent in plaintext without TLS. Use IMAPS (port 993) instead.","cves":[]},
+    443:  {"service":"HTTPS","risk":"LOW","notes":"Encrypted web traffic. Verify TLS version — TLS 1.0 and 1.1 are deprecated and insecure. Check certificate validity, expiry, and cipher suites.","cves":[]},
+    445:  {"service":"SMB","risk":"CRITICAL","notes":"Windows file sharing. Responsible for WannaCry ransomware outbreak (EternalBlue exploit). Should NEVER be exposed to the internet. Block at firewall level immediately.","cves":["CVE-2017-0144","CVE-2017-0145","CVE-2020-0796"]},
+    1433: {"service":"MSSQL","risk":"HIGH","notes":"Microsoft SQL Server. Database should never be directly exposed to the internet. Use VPN or jump host for remote DBA access.","cves":["CVE-2020-0618","CVE-2019-1068"]},
+    1521: {"service":"Oracle DB","risk":"HIGH","notes":"Oracle Database listener. Direct internet exposure is a critical misconfiguration. Restrict to private network only.","cves":[]},
+    2082: {"service":"cPanel","risk":"HIGH","notes":"Web hosting control panel. Default HTTP access — should enforce HTTPS (2083). Brute force attacks are common.","cves":[]},
+    3306: {"service":"MySQL","risk":"HIGH","notes":"MySQL database server. Must never be publicly accessible. Bind to 127.0.0.1 only. Remote access should use SSH tunnelling exclusively.","cves":["CVE-2012-2122","CVE-2016-6662"]},
+    3389: {"service":"RDP","risk":"HIGH","notes":"Windows Remote Desktop. Frequent brute-force and ransomware delivery vector. Enable Network Level Authentication (NLA), use VPN, restrict by IP. BlueKeep vulnerability is wormable.","cves":["CVE-2019-0708","CVE-2019-1181"]},
+    5432: {"service":"PostgreSQL","risk":"HIGH","notes":"PostgreSQL database. Must never be publicly accessible. Default config binds to localhost — verify this has not been changed.","cves":["CVE-2019-10164"]},
+    5900: {"service":"VNC","risk":"CRITICAL","notes":"Virtual Network Computing — remote desktop. Often configured with weak or no authentication. Many internet-exposed VNC servers require no password.","cves":["CVE-2006-2369","CVE-2019-15681"]},
+    6379: {"service":"Redis","risk":"CRITICAL","notes":"Redis in-memory database. Early versions have NO authentication by default. Trivially exploitable — attackers can read/write all data and often achieve RCE via config manipulation.","cves":["CVE-2022-0543","CVE-2015-4335"]},
+    8080: {"service":"HTTP-Alt","risk":"MEDIUM","notes":"Alternative HTTP port. Often used by development/staging servers accidentally left exposed, or proxy servers. Verify this service is intentional and apply same hardening as port 80.","cves":[]},
+    8443: {"service":"HTTPS-Alt","risk":"LOW","notes":"Alternative HTTPS port. Verify certificate is valid and TLS configuration is up to date.","cves":[]},
+    9200: {"service":"Elasticsearch","risk":"CRITICAL","notes":"Elasticsearch REST API. Older versions have no authentication by default. Massive data breach risk — billions of records have been leaked from exposed Elasticsearch instances.","cves":["CVE-2014-3120","CVE-2015-1427"]},
+    27017:{"service":"MongoDB","risk":"CRITICAL","notes":"MongoDB database. Versions before 3.0 had NO authentication by default. Countless data breaches from exposed MongoDB instances. Enable authentication and bind to localhost.","cves":["CVE-2019-2389"]},
+}
+
+@app.route("/port-intel")
+@login_required
+def port_intel():
+    port = request.args.get("port","")
+    port_data = None
+    found_on  = []
+
+    if port and port.isdigit():
+        port_num = int(port)
+        port_data = PORT_DB.get(port_num, {
+            "service": f"Unknown Service",
+            "risk":    "UNKNOWN",
+            "notes":   f"Port {port_num} is not in our intelligence database. Investigate manually — check what process is listening and whether this service should be externally accessible.",
+            "cves":    []
+        })
+        # Cross-reference with actual scan data
+        db = Database()
+        sessions = db.get_all_sessions()
+        for s in sessions:
+            hosts = db.get_hosts(s["id"])
+            for h in hosts:
+                for p in h.get("ports",[]):
+                    if int(p.get("port",0)) == port_num and p.get("state") == "open":
+                        found_on.append({
+                            "target":     s["target"],
+                            "session_id": s["id"],
+                            "service":    p.get("service",""),
+                            "version":    p.get("version",""),
+                            "ip":         h.get("ip",""),
+                        })
+        db.close()
+
+    return render_template("port_intel.html",
+        port=port,
+        port_data=port_data,
+        found_on=found_on,
+        page="port_intel",
+        title="Port Intelligence"
+    )
+
+
+
 @app.route("/logout")
 def logout():
     session.clear()
