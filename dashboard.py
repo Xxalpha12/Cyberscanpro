@@ -1271,6 +1271,15 @@ def port_intel():
 
 
 
+@app.route("/defense-prep")
+@login_required
+def defense_prep():
+    return render_template("defense_prep.html",
+        page="settings", title="Defense Prep"
+    )
+
+
+
 @app.route("/logout")
 def logout():
     session.clear()
