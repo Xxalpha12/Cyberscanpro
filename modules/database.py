@@ -676,6 +676,56 @@ class Database:
         self.conn.commit()
         return True
 
+
+    def _init_screenshots_table(self):
+        c = self.conn.cursor()
+        if self._pg:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS screenshots (
+                    session_id TEXT PRIMARY KEY,
+                    image_data BYTEA NOT NULL,
+                    captured_at TEXT NOT NULL
+                )
+            """)
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS screenshots (
+                    session_id TEXT PRIMARY KEY,
+                    image_data BLOB NOT NULL,
+                    captured_at TEXT NOT NULL
+                )
+            """)
+        self.conn.commit()
+
+    def save_screenshot(self, session_id, image_bytes):
+        self._init_screenshots_table()
+        c = self.conn.cursor()
+        now = datetime.now().isoformat()
+        if self._pg:
+            c.execute(
+                "INSERT INTO screenshots (session_id, image_data, captured_at) "
+                "VALUES (%s, %s, %s) ON CONFLICT (session_id) DO UPDATE "
+                "SET image_data=EXCLUDED.image_data, captured_at=EXCLUDED.captured_at",
+                (session_id, psycopg2.Binary(image_bytes), now)
+            )
+        else:
+            c.execute(
+                "INSERT OR REPLACE INTO screenshots (session_id, image_data, captured_at) "
+                "VALUES (?,?,?)",
+                (session_id, image_bytes, now)
+            )
+        self.conn.commit()
+
+    def get_screenshot(self, session_id):
+        self._init_screenshots_table()
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT image_data FROM screenshots WHERE session_id=?"), (session_id,))
+        row = c.fetchone()
+        if not row:
+            return None
+        data = row["image_data"] if isinstance(row, dict) else row[0]
+        return bytes(data) if data else None
+
     # ── CLOSE ─────────────────────────────────────────────────────────────────
 
     def close(self):
