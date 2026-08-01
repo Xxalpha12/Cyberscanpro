@@ -178,6 +178,16 @@ def index():
         target_map[tgt]["latest_risk"] = risk
     top_targets = list(target_map.values())[:5]
 
+    # Stat card totals
+    total_hosts = sum(len(db.get_hosts(s["id"])) for s in enriched)
+    total_ports = sum(
+        len(h.get("ports", []))
+        for s in enriched
+        for h in db.get_hosts(s["id"])
+    )
+    total_web  = sum(len(db.get_web_findings(s["id"])) for s in enriched)
+    total_cves = sum(len(db.get_cve_findings(s["id"])) for s in enriched)
+
     db.close()
 
     return render_template("dashboard.html",
@@ -204,6 +214,10 @@ def index():
         nist_score=nist_score,
         recent_reports=[],
         top_targets=top_targets,
+        total_hosts=total_hosts,
+        total_ports=total_ports,
+        total_web=total_web,
+        total_cves=total_cves,
         page="home", title="Dashboard"
     )
 
@@ -397,31 +411,16 @@ def run_scan():
                     active_scans[session_id]["web_count"] = len(combined)
                     _log(f"Web scan done — Headers: {len(header_results)} | Vulns: {len(vuln_results)}")
 
-                    # Capture screenshot of target (stored in DB to survive redeploys)
+                    # Capture screenshot of target
                     try:
-                        api_key = os.environ.get("SCREENSHOT_API_KEY","")
-                        if api_key:
-                            import urllib.request
-                            sc_url = target if target.startswith("http") else f"https://{target}"
-                            sc_api_url = (
-                                f"https://api.screenshotone.com/take"
-                                f"?access_key={api_key}"
-                                f"&url={urllib.parse.quote(sc_url)}"
-                                f"&format=jpg&viewport_width=1280&viewport_height=800"
-                                f"&block_ads=true&block_cookie_banners=true"
-                            )
-                            req = urllib.request.Request(sc_api_url, headers={"User-Agent":"CyberScanPro/1.0"})
-                            with urllib.request.urlopen(req, timeout=15) as resp:
-                                sc_bytes = resp.read()
-                            if sc_bytes and len(sc_bytes) > 1000:
-                                db_sc = Database()
-                                db_sc.save_screenshot(session_id, sc_bytes)
-                                db_sc.close()
-                                _log(f"Screenshot captured and stored ({len(sc_bytes)//1024}KB)")
-                            else:
-                                _log("Screenshot: empty response from API")
+                        from modules.screenshot import ScreenshotCapture
+                        sc = ScreenshotCapture()
+                        sc_url = target if target.startswith("http") else f"http://{target}"
+                        sc_path = sc.capture(sc_url, session_id)
+                        if sc_path:
+                            _log(f"Screenshot captured: {os.path.basename(sc_path)}")
                         else:
-                            _log("Screenshot skipped: SCREENSHOT_API_KEY not configured")
+                            _log("Screenshot: target preview generated")
                     except Exception as e:
                         _log(f"Screenshot skipped: {e}")
                 except Exception as e:
@@ -754,57 +753,38 @@ def compare_page():
 @app.route("/api/screenshot/<session_id>", methods=["POST"])
 @login_required
 def capture_screenshot(session_id):
-    """Capture a screenshot of the target and store it in the database."""
-    import re, urllib.parse
     db = Database()
     sess = db.get_session(session_id)
+    db.close()
     if not sess:
-        db.close()
         return jsonify({"success": False, "error": "Session not found"})
     target = sess["target"]
-    api_key = os.environ.get("SCREENSHOT_API_KEY", "")
+    api_key = os.environ.get("SCREENSHOT_API_KEY","")
     if not api_key:
-        db.close()
-        return jsonify({"success": False, "error": "SCREENSHOT_API_KEY not configured in environment"})
+        return jsonify({"success": False, "error": "Screenshot API key not configured"})
     try:
         import urllib.request
-        sc_url   = target if target.startswith("http") else f"https://{target}"
-        api_url  = (
-            f"https://api.screenshotone.com/take"
-            f"?access_key={api_key}"
-            f"&url={urllib.parse.quote(sc_url)}"
-            f"&format=jpg&viewport_width=1280&viewport_height=800"
-            f"&block_ads=true&block_cookie_banners=true"
-        )
-        req = urllib.request.Request(api_url, headers={"User-Agent": "CyberScanPro/1.0"})
-        with urllib.request.urlopen(req, timeout=15) as resp:
-            sc_bytes = resp.read()
-        if not sc_bytes or len(sc_bytes) < 1000:
-            db.close()
-            return jsonify({"success": False, "error": "Empty response from screenshot API"})
-        db.save_screenshot(session_id, sc_bytes)
-        db.close()
+        url = f"https://api.screenshotone.com/take?access_key={api_key}&url=https://{target}&format=jpg&viewport_width=1280&viewport_height=800"
+        screenshot_dir = os.path.join(os.path.dirname(__file__), "static", "screenshots")
+        os.makedirs(screenshot_dir, exist_ok=True)
+        save_path = os.path.join(screenshot_dir, f"{session_id}.jpg")
+        urllib.request.urlretrieve(url, save_path)
         return jsonify({"success": True, "url": f"/screenshots/{session_id}"})
     except Exception as e:
-        db.close()
         return jsonify({"success": False, "error": str(e)})
 
 
 @app.route("/screenshots/<session_id>")
 @login_required
 def serve_screenshot(session_id):
-    """Serve screenshot from database (persistent across Render redeploys)."""
     import re
-    if not re.match(r"^[\w\-]+$", session_id):
+    if not re.match(r'^[\w\-]+$', session_id):
         abort(400)
-    db = Database()
-    sc_bytes = db.get_screenshot(session_id)
-    db.close()
-    if not sc_bytes:
+    screenshot_dir = os.path.join(os.path.dirname(__file__), "static", "screenshots")
+    path = os.path.join(screenshot_dir, f"{session_id}.jpg")
+    if not os.path.exists(path):
         abort(404)
-    from io import BytesIO
-    return send_file(BytesIO(sc_bytes), mimetype="image/jpeg",
-                     download_name=f"screenshot_{session_id}.jpg")
+    return send_file(path, mimetype="image/jpeg")
 
 
 # ── NOTES API ─────────────────────────────────────────────────────────────────

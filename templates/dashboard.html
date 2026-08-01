@@ -667,6 +667,30 @@ body{animation:pagein 0.3s ease both;}
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
+
+/* ── Stat cards ─────────────────────────────────────────────────── */
+.stat-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;}
+.stat-card:hover{border-color:rgba(0,200,255,0.25);transform:translateY(-2px);}
+.stat-card-danger{border-color:rgba(239,68,68,0.3) !important;background:rgba(239,68,68,0.04) !important;}
+.stat-card-warn{border-color:rgba(249,115,22,0.3) !important;background:rgba(249,115,22,0.04) !important;}
+.stat-icon{font-size:24px;flex-shrink:0;}
+.stat-n{font-size:32px;font-weight:800;font-family:var(--mono);color:var(--text);line-height:1;}
+.stat-l{font-size:10px;color:var(--text2);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase;}
+/* ── Severity cards ──────────────────────────────────────────────── */
+.sev-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
+.sev-card-n{font-size:36px;font-weight:800;font-family:var(--mono);line-height:1;}
+.sev-card-l{font-size:10px;color:var(--text2);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase;}
+.sev-card-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:12px;overflow:hidden;}
+.sev-card-fill{height:100%;border-radius:2px;transition:width 1.2s ease;}
+/* ── Quick actions ───────────────────────────────────────────────── */
+.qa-btn{display:flex;align-items:center;gap:14px;background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;padding:16px 18px;text-decoration:none;color:var(--text);transition:all 0.25s;}
+.qa-btn:hover{border-color:rgba(0,200,255,0.3);background:rgba(0,200,255,0.04);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3);}
+.qa-primary{border-color:rgba(0,255,157,0.2);background:rgba(0,255,157,0.03);}
+.qa-primary:hover{border-color:rgba(0,255,157,0.4);background:rgba(0,255,157,0.08);}
+.qa-icon{font-size:22px;flex-shrink:0;}
+.qa-title{font-size:13px;font-weight:700;color:var(--text);}
+.qa-sub{font-size:10px;color:var(--text2);margin-top:2px;}
+
 </style>
 
 <style>
@@ -808,146 +832,7 @@ body{animation:pagein 0.3s ease both;}
 <div class="corner corner-bl"></div>
 <div class="corner corner-br"></div>
 <!-- ══ AI ANIMATION CANVAS ══ -->
-<canvas id="ai-canvas"></canvas>
-<style>
-#ai-canvas{
-  position:fixed;inset:0;z-index:0;
-  pointer-events:none;
-  opacity:0.6;
-}
-</style>
-<script>
-(function(){
-  const canvas = document.getElementById('ai-canvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W, H, nodes = [], particles = [], frame = 0;
 
-  function resize(){
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-
-  // Neural network nodes
-  function initNodes(){
-    nodes = [];
-    const count = Math.floor((W * H) / 22000);
-    for(let i = 0; i < Math.max(count, 20); i++){
-      nodes.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        r:  Math.random() * 1.5 + 0.5,
-        pulse: Math.random() * Math.PI * 2,
-        speed: 0.02 + Math.random() * 0.02,
-        alpha: 0.3 + Math.random() * 0.4,
-      });
-    }
-  }
-
-  // Data particles moving along edges
-  function spawnParticle(n1, n2){
-    if(particles.length > 60) return;
-    particles.push({
-      x: n1.x, y: n1.y,
-      tx: n2.x, ty: n2.y,
-      t: 0, speed: 0.008 + Math.random() * 0.012,
-      color: Math.random() > 0.7 ? '#00ff9d' : '#00c8ff',
-    });
-  }
-
-  function draw(){
-    ctx.clearRect(0, 0, W, H);
-    frame++;
-
-    // Update nodes
-    nodes.forEach(n => {
-      n.x += n.vx; n.y += n.vy;
-      n.pulse += n.speed;
-      if(n.x < 0||n.x > W) n.vx *= -1;
-      if(n.y < 0||n.y > H) n.vy *= -1;
-    });
-
-    // Draw edges between nearby nodes
-    for(let i = 0; i < nodes.length; i++){
-      for(let j = i+1; j < nodes.length; j++){
-        const a = nodes[i], b = nodes[j];
-        const dx = a.x - b.x, dy = a.y - b.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const maxDist = Math.min(W, H) * 0.22;
-        if(dist < maxDist){
-          const alpha = (1 - dist/maxDist) * 0.12;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = `rgba(0,200,255,${alpha})`;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-          // Randomly spawn data particles
-          if(frame % 120 === 0 && Math.random() < 0.15){
-            spawnParticle(a, b);
-          }
-        }
-      }
-    }
-
-    // Draw nodes
-    nodes.forEach(n => {
-      const pulse = Math.sin(n.pulse) * 0.5 + 0.5;
-      const r = n.r + pulse * 0.8;
-      const alpha = n.alpha * (0.5 + pulse * 0.5);
-      // Outer glow
-      const grad = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,r*4);
-      grad.addColorStop(0, `rgba(0,200,255,${alpha * 0.3})`);
-      grad.addColorStop(1, 'rgba(0,200,255,0)');
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, r*4, 0, Math.PI*2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-      // Core dot
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(0,200,255,${alpha})`;
-      ctx.fill();
-    });
-
-    // Draw + update particles
-    particles = particles.filter(p => p.t < 1);
-    particles.forEach(p => {
-      p.t += p.speed;
-      const t = p.t;
-      const x = p.x + (p.tx - p.x) * t;
-      const y = p.y + (p.ty - p.y) * t;
-      ctx.beginPath();
-      ctx.arc(x, y, 1.5, 0, Math.PI*2);
-      ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 6;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    });
-
-    // Occasional scan line effect
-    if(frame % 300 === 0){
-      const scanY = Math.random() * H;
-      ctx.beginPath();
-      ctx.moveTo(0, scanY);
-      ctx.lineTo(W, scanY);
-      ctx.strokeStyle = 'rgba(0,200,255,0.08)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener('resize', ()=>{ resize(); initNodes(); });
-  resize();
-  initNodes();
-  draw();
-})();
-</script>
 
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
@@ -1072,225 +957,47 @@ body{animation:pagein 0.3s ease both;}
     </a>
     {% endif %}
 
-    <!-- ROW 1: Donut + Stat grid -->
-    <div class="g2">
-
-      <!-- Security Score Donut -->
-      <div class="card">
-        <div class="card-hd">
-          <span class="card-title">Security Score</span>
-          <span class="card-meta">Calculated from findings</span>
-        </div>
-        <div class="card-bd">
-          <div class="donut-row">
-
-            {% set score = security_score %}
-            {% set circ  = 283 %}
-            {% set off   = ((100 - score) / 100 * circ)|int %}
-            {% set col   = '#00ff9d' if score >= 80 else '#eab308' if score >= 60 else '#f97316' if score >= 40 else '#ef4444' %}
-
-            <div class="donut-container">
-              <svg viewBox="0 0 100 100" width="140" height="140">
-                <!-- BG track -->
-                <circle cx="50" cy="50" r="45" fill="none"
-                  stroke="rgba(0,200,255,0.07)" stroke-width="9"/>
-                <!-- Tick marks every 10% -->
-                {% for i in range(10) %}
-                  {% set a = i * 36 * 3.14159 / 180 %}
-                {% endfor %}
-                <!-- Score arc -->
-                <circle cx="50" cy="50" r="45" fill="none"
-                  stroke="{{ col }}" stroke-width="9"
-                  stroke-dasharray="{{ circ }}"
-                  stroke-dashoffset="{{ off }}"
-                  stroke-linecap="round"
-                  style="filter:drop-shadow(0 0 8px {{ col }});transition:stroke-dashoffset 1s ease;"/>
-                <!-- Inner ring decoration -->
-                <circle cx="50" cy="50" r="36" fill="none"
-                  stroke="rgba(0,200,255,0.05)" stroke-width="1"/>
-              </svg>
-              <div class="donut-inner">
-                <div class="donut-num" style="color:{{ col }};">{{ score }}</div>
-                <div class="donut-denom">/ 100</div>
-              </div>
-            </div>
-
-            <div class="score-aside">
-              <div class="score-grade
-                {% if score >= 80 %}grade-good
-                {% elif score >= 60 %}grade-medium
-                {% elif score >= 40 %}grade-high
-                {% else %}grade-critical{% endif %}">
-                {{ risk_rating }}
-              </div>
-              <div class="score-line">
-                {% if score >= 80 %}Strong security posture. Maintain regular scanning.
-                {% elif score >= 60 %}Moderate risk. Address high severity findings this week.
-                {% elif score >= 40 %}Elevated risk. Multiple vulnerabilities need attention.
-                {% else %}Critical exposure. Immediate remediation required.{% endif %}
-              </div>
-              <div class="trend-box">
-                <div class="trend-row">
-                  <span class="trend-k">Previous</span>
-                  <span class="trend-v">{{ security_score_last_week }}</span>
-                </div>
-                <div class="trend-row">
-                  <span class="trend-k">Current</span>
-                  <span class="trend-v">{{ score }}</span>
-                </div>
-                <div class="trend-row">
-                  <span class="trend-k">Change</span>
-                  {% set d = score - security_score_last_week %}
-                  <span class="{% if d > 0 %}delta-up{% elif d < 0 %}delta-dn{% else %}delta-eq{% endif %}">
-                    {% if d > 0 %}▲ +{{ d }} improved
-                    {% elif d < 0 %}▼ {{ d }} declined
-                    {% else %}→ No change{% endif %}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-          </div>
+        <!-- STAT CARDS -->
+    <div class="g4" style="margin-bottom:16px;">
+      <div class="stat-card">
+        <div class="stat-icon">🖥</div>
+        <div class="stat-body">
+          <div class="stat-n">{{ total_hosts }}</div>
+          <div class="stat-l">Hosts Discovered</div>
         </div>
       </div>
-
-      <!-- 2×2 stat grid -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:14px;">
-        <div class="card">
-          <div class="stat-row">
-            <div class="stat-ico ico-b">🔍</div>
-            <div>
-              <div class="stat-n">{{ total_scans }}</div>
-              <div class="stat-l">Total Scans</div>
-              <div class="stat-s sc-b">All time</div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="stat-row">
-            <div class="stat-ico ico-g">✅</div>
-            <div>
-              <div class="stat-n">{{ completed_scans }}</div>
-              <div class="stat-l">Completed</div>
-              <div class="stat-s sc-g">{{ success_rate }}% success</div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="stat-row">
-            <div class="stat-ico ico-r">⚠️</div>
-            <div>
-              <div class="stat-n">{{ total_findings }}</div>
-              <div class="stat-l">Total Findings</div>
-              <div class="stat-s sc-y">{{ severity_counts.Critical }}C · {{ severity_counts.High }}H · {{ severity_counts.Medium }}M</div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="stat-row">
-            <div class="stat-ico ico-p">🎯</div>
-            <div>
-              <div class="stat-n">{{ unique_targets }}</div>
-              <div class="stat-l">Targets</div>
-              <div class="stat-s sc-b">Unique hosts</div>
-            </div>
-          </div>
+      <div class="stat-card">
+        <div class="stat-icon">🔌</div>
+        <div class="stat-body">
+          <div class="stat-n">{{ total_ports }}</div>
+          <div class="stat-l">Open Ports</div>
         </div>
       </div>
-
+      <div class="stat-card {% if severity_counts.Critical > 0 or severity_counts.High > 0 %}stat-card-warn{% endif %}">
+        <div class="stat-icon">🌐</div>
+        <div class="stat-body">
+          <div class="stat-n">{{ total_web }}</div>
+          <div class="stat-l">Web Findings</div>
+        </div>
+      </div>
+      <div class="stat-card {% if severity_counts.Critical > 0 %}stat-card-danger{% endif %}">
+        <div class="stat-icon">🔴</div>
+        <div class="stat-body">
+          <div class="stat-n">{{ total_cves }}</div>
+          <div class="stat-l">CVEs Identified</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Risk Trend — Full Width Professional Chart -->
-    <div class="card risk-trend-card">
-      <div class="card-hd">
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span class="card-title">📈 Risk Trend Analysis</span>
-          <span class="live-badge"><div class="live-dot"></div>LIVE</span>
-        </div>
-        <div class="rt-range-toggle">
-          <button class="rt-range-btn active" data-range="all">All</button>
-          <button class="rt-range-btn" data-range="7">7 Scans</button>
-          <button class="rt-range-btn" data-range="14">14 Scans</button>
-        </div>
+    <!-- SEVERITY BREAKDOWN -->
+    <div class="g4" style="margin-bottom:20px;">
+      {% for sev, col in [('Critical','var(--red)'),('High','var(--orange)'),('Medium','var(--yellow)'),('Low','var(--blue)')] %}
+      <div class="sev-card">
+        <div class="sev-card-n" style="color:{{ col }};">{{ severity_counts[sev] }}</div>
+        <div class="sev-card-l">{{ sev }}</div>
+        <div class="sev-card-bar"><div class="sev-card-fill" style="background:{{ col }};width:{{ [severity_counts[sev] * 10, 100]|min }}%;"></div></div>
       </div>
-      <div class="card-bd">
-        {% if trend_points and trend_points|length > 1 %}
-
-        <!-- Summary stats row -->
-        <div class="rt-summary">
-          <div class="rt-sum-item">
-            <div class="rt-sum-label">CURRENT SCORE</div>
-            <div class="rt-sum-val" id="rt-current" style="color:var(--accent);">{{ security_score }}</div>
-          </div>
-          <div class="rt-sum-divider"></div>
-          <div class="rt-sum-item">
-            <div class="rt-sum-label">AVERAGE</div>
-            <div class="rt-sum-val" id="rt-avg" style="color:var(--text);">—</div>
-          </div>
-          <div class="rt-sum-divider"></div>
-          <div class="rt-sum-item">
-            <div class="rt-sum-label">PEAK</div>
-            <div class="rt-sum-val" id="rt-peak" style="color:var(--green);">—</div>
-          </div>
-          <div class="rt-sum-divider"></div>
-          <div class="rt-sum-item">
-            <div class="rt-sum-label">LOWEST</div>
-            <div class="rt-sum-val" id="rt-low" style="color:var(--red);">—</div>
-          </div>
-          <div class="rt-sum-divider"></div>
-          <div class="rt-sum-item">
-            <div class="rt-sum-label">TREND</div>
-            <div class="rt-sum-val" id="rt-direction">—</div>
-          </div>
-        </div>
-
-        <!-- Chart with tooltip -->
-        <div class="chart-wrap" id="chart-wrap">
-          <canvas id="riskChart"></canvas>
-          <div class="chart-tooltip" id="chart-tooltip">
-            <div class="ct-date" id="ct-date"></div>
-            <div class="ct-score" id="ct-score"></div>
-            <div class="ct-target" id="ct-target"></div>
-          </div>
-          <div class="chart-crosshair" id="chart-crosshair"></div>
-        </div>
-
-        {% if trend_labels %}
-        <div class="chart-xlabels">
-          {% for l in trend_labels %}<span>{{ l }}</span>{% endfor %}
-        </div>
-        {% endif %}
-
-        <!-- Severity breakdown mini bar -->
-        <div class="rt-sev-bar">
-          <div class="rt-sev-bar-label">CURRENT FINDINGS DISTRIBUTION</div>
-          <div class="rt-sev-bar-track">
-            {% set total = severity_counts.Critical + severity_counts.High + severity_counts.Medium + severity_counts.Low %}
-            {% if total > 0 %}
-            <div class="rt-sev-seg" style="width:{{ (severity_counts.Critical/total*100)|round(1) }}%;background:var(--red);" title="Critical: {{ severity_counts.Critical }}"></div>
-            <div class="rt-sev-seg" style="width:{{ (severity_counts.High/total*100)|round(1) }}%;background:var(--orange);" title="High: {{ severity_counts.High }}"></div>
-            <div class="rt-sev-seg" style="width:{{ (severity_counts.Medium/total*100)|round(1) }}%;background:var(--yellow);" title="Medium: {{ severity_counts.Medium }}"></div>
-            <div class="rt-sev-seg" style="width:{{ (severity_counts.Low/total*100)|round(1) }}%;background:var(--blue);" title="Low: {{ severity_counts.Low }}"></div>
-            {% else %}
-            <div class="rt-sev-seg" style="width:100%;background:var(--green);opacity:0.3;"></div>
-            {% endif %}
-          </div>
-          <div class="rt-sev-legend">
-            <span><i style="background:var(--red);"></i>Critical {{ severity_counts.Critical }}</span>
-            <span><i style="background:var(--orange);"></i>High {{ severity_counts.High }}</span>
-            <span><i style="background:var(--yellow);"></i>Medium {{ severity_counts.Medium }}</span>
-            <span><i style="background:var(--blue);"></i>Low {{ severity_counts.Low }}</span>
-          </div>
-        </div>
-
-        {% else %}
-        <div class="chart-empty">
-          <div class="chart-empty-icon">📊</div>
-          <span>Run at least 2 scans to unlock risk trend analysis</span>
-          <a href="/scan/new" class="btn-scan" style="margin-top:10px;font-size:11px;padding:8px 16px;">▶ Start Scanning</a>
-        </div>
-        {% endif %}
-      </div>
+      {% endfor %}
     </div>
 
     <!-- Live Feed -->
@@ -1316,7 +1023,29 @@ body{animation:pagein 0.3s ease both;}
         {% endfor %}
       </div>
       <a href="/history" class="view-all">VIEW ALL ACTIVITY →</a>
+    
+
+    <!-- QUICK ACTIONS -->
+    <div class="g4" style="margin-top:20px;">
+      <a href="/scan/new" class="qa-btn qa-primary">
+        <span class="qa-icon">▶</span>
+        <div><div class="qa-title">New Scan</div><div class="qa-sub">Run a vulnerability assessment</div></div>
+      </a>
+      <a href="/reports" class="qa-btn">
+        <span class="qa-icon">📄</span>
+        <div><div class="qa-title">Reports</div><div class="qa-sub">View generated reports</div></div>
+      </a>
+      <a href="/port-intel" class="qa-btn">
+        <span class="qa-icon">🔌</span>
+        <div><div class="qa-title">Port Intel</div><div class="qa-sub">Lookup any port</div></div>
+      </a>
+      <a href="/defense-prep" class="qa-btn">
+        <span class="qa-icon">🎓</span>
+        <div><div class="qa-title">Defense Prep</div><div class="qa-sub">FYP quiz and study notes</div></div>
+      </a>
     </div>
+
+</div>
 
   </div>
 </div>
