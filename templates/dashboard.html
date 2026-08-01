@@ -691,6 +691,38 @@ body{animation:pagein 0.3s ease both;}
 .qa-title{font-size:13px;font-weight:700;color:var(--text);}
 .qa-sub{font-size:10px;color:var(--text2);margin-top:2px;}
 
+
+/* ── Donut chart ─────────────────────────────────────────────────── */
+.donut-row{display:grid;grid-template-columns:280px 1fr;gap:16px;}
+.donut-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;padding:22px;display:flex;align-items:center;gap:22px;}
+.donut-wrap{position:relative;width:110px;height:110px;flex-shrink:0;}
+.donut-svg{width:110px;height:110px;transform:rotate(-90deg);}
+.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(0deg);}
+.donut-score{font-size:26px;font-weight:800;font-family:var(--mono);color:var(--text);line-height:1;}
+.donut-label{font-size:8px;color:var(--text2);letter-spacing:1.5px;text-align:center;margin-top:3px;line-height:1.3;}
+.donut-meta{flex:1;}
+.donut-grade{font-size:11px;font-weight:800;font-family:var(--mono);letter-spacing:2px;padding:4px 12px;border-radius:5px;display:inline-block;margin-bottom:8px;}
+.grade-A{background:rgba(0,255,157,0.1);color:var(--green);border:1px solid rgba(0,255,157,0.2);}
+.grade-B{background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.2);}
+.grade-C{background:rgba(234,179,8,0.1);color:var(--yellow);border:1px solid rgba(234,179,8,0.2);}
+.grade-D{background:rgba(249,115,22,0.1);color:var(--orange);border:1px solid rgba(249,115,22,0.2);}
+.grade-F{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
+.donut-desc{font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5;}
+.donut-trend{font-size:10px;font-family:var(--mono);}
+/* Compliance card */
+.compliance-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
+.comp-title{font-size:9px;color:var(--accent);letter-spacing:2px;font-family:var(--mono);margin-bottom:16px;}
+.comp-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.comp-row:last-child{margin-bottom:0;}
+.comp-label{font-size:11px;color:var(--text3);font-family:var(--mono);width:95px;flex-shrink:0;}
+.comp-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;}
+.comp-bar-fill{height:100%;border-radius:3px;transition:width 1.2s ease;}
+.comp-pct{font-size:11px;font-family:var(--mono);color:var(--text3);width:36px;text-align:right;flex-shrink:0;}
+@media(max-width:700px){
+  .donut-row{grid-template-columns:1fr;}
+  .donut-card{flex-direction:column;text-align:center;}
+}
+
 </style>
 
 <style>
@@ -957,7 +989,70 @@ body{animation:pagein 0.3s ease both;}
     </a>
     {% endif %}
 
-        <!-- STAT CARDS -->
+        <!-- SECURITY SCORE DONUT -->
+    <div class="donut-row" style="margin-bottom:20px;">
+      <div class="donut-card">
+        <div class="donut-wrap">
+          <svg viewBox="0 0 120 120" class="donut-svg">
+            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(0,200,255,0.07)" stroke-width="12"/>
+            <circle cx="60" cy="60" r="50" fill="none"
+              stroke="url(#donutGrad)" stroke-width="12"
+              stroke-linecap="round"
+              stroke-dasharray="{{ (security_score / 100 * 314.16) | round(1) }} 314.16"
+              stroke-dashoffset="78.5"
+              style="transition:stroke-dasharray 1.5s cubic-bezier(0.4,0,0.2,1);"
+            />
+            <defs>
+              <linearGradient id="donutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#00e5ff"/>
+                <stop offset="100%" stop-color="#0066ff"/>
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="donut-center">
+            <div class="donut-score">{{ security_score }}</div>
+            <div class="donut-label">SECURITY<br>SCORE</div>
+          </div>
+        </div>
+        <div class="donut-meta">
+          <div class="donut-grade grade-{{ 'A' if security_score >= 90 else 'B' if security_score >= 75 else 'C' if security_score >= 60 else 'D' if security_score >= 45 else 'F' }}">
+            GRADE {{ 'A' if security_score >= 90 else 'B' if security_score >= 75 else 'C' if security_score >= 60 else 'D' if security_score >= 45 else 'F' }}
+          </div>
+          <div class="donut-desc">
+            {% if security_score >= 90 %}Excellent security posture
+            {% elif security_score >= 75 %}Good — minor issues detected
+            {% elif security_score >= 60 %}Fair — attention required
+            {% elif security_score >= 45 %}Poor — significant risks
+            {% else %}Critical — immediate action required{% endif %}
+          </div>
+          <div class="donut-trend">
+            {% if security_score > security_score_last_week %}
+            <span style="color:var(--green);">▲ {{ security_score - security_score_last_week }} pts from last week</span>
+            {% elif security_score < security_score_last_week %}
+            <span style="color:var(--red);">▼ {{ security_score_last_week - security_score }} pts from last week</span>
+            {% else %}
+            <span style="color:var(--text2);">→ No change from last week</span>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <!-- Compliance mini-bars beside donut -->
+      <div class="compliance-card">
+        <div class="comp-title">// COMPLIANCE OVERVIEW</div>
+        {% for label, score in [('OWASP Top 10', owasp_score), ('PCI-DSS', pci_score), ('ISO 27001', iso_score), ('NIST CSF', nist_score)] %}
+        <div class="comp-row">
+          <span class="comp-label">{{ label }}</span>
+          <div class="comp-bar-wrap">
+            <div class="comp-bar-fill" style="width:{{ score }}%;background:{% if score >= 80 %}var(--green){% elif score >= 60 %}var(--yellow){% else %}var(--red){% endif %};"></div>
+          </div>
+          <span class="comp-pct">{{ score }}%</span>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- STAT CARDS -->
     <div class="g4" style="margin-bottom:16px;">
       <div class="stat-card">
         <div class="stat-icon">🖥</div>
