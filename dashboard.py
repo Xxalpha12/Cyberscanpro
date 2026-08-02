@@ -21,11 +21,48 @@ from modules.database import Database
 from modules.logger import get_logger
 from modules.risk_scorer import score_all_hosts
 from auth import auth, login_required
+
+# ── Rate limiting & session timeout ───────────────────────────────────────────
+import time
+from collections import defaultdict
+
+# Login rate limiter: max 5 attempts per 15 minutes per IP
+_login_attempts = defaultdict(list)
+SESSION_TIMEOUT_MINUTES = 30
+
+def _check_rate_limit(ip):
+    now = time.time()
+    window = 15 * 60  # 15 minutes
+    attempts = [t for t in _login_attempts[ip] if now - t < window]
+    _login_attempts[ip] = attempts
+    return len(attempts) < 5
+
+def _record_attempt(ip):
+    _login_attempts[ip].append(time.time())
+
+def _clear_attempts(ip):
+    _login_attempts.pop(ip, None)
 from flask import send_from_directory
 
 logger = get_logger(__name__)
 
 app = Flask(__name__)
+
+@app.before_request
+def check_session_timeout():
+    """Auto-logout after SESSION_TIMEOUT_MINUTES of inactivity."""
+    from flask import request as req, session as sess
+    # Skip login page and static assets
+    if req.endpoint in ("auth.login", "favicon", "static"):
+        return
+    if "username" in sess:
+        last_active = sess.get("last_active", 0)
+        now = time.time()
+        if last_active and (now - last_active) > SESSION_TIMEOUT_MINUTES * 60:
+            sess.clear()
+            from flask import redirect, url_for
+            return redirect(url_for("auth.login"))
+        sess["last_active"] = now
 app.secret_key = os.environ.get("SECRET_KEY", "cyberscanpro-secret-2025-change-me")
 app.register_blueprint(auth)
 

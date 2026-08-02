@@ -257,6 +257,8 @@ body{
   body{align-items:flex-start;padding-top:10px;}
   .left{display:none;}
 }
+
+.login-locked{background:rgba(239,68,68,0.12) !important;border-color:rgba(239,68,68,0.4) !important;color:var(--red) !important;}
 </style>
 </head>
 <body>
@@ -637,6 +639,19 @@ function togglePass(){
   const i=document.getElementById('pass');
   i.type=i.type==='password'?'text':'password';
 }
+</script>
+
+<script>
+(function(){
+  const el = document.getElementById('cdown');
+  if(!el) return;
+  let s = parseInt(el.textContent);
+  const t = setInterval(()=>{
+    s--;
+    if(s <= 0){ clearInterval(t); location.reload(); return; }
+    el.textContent = s;
+  }, 1000);
+})();
 </script>
 </body>
 </html>
