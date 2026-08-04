@@ -16,121 +16,131 @@
   --mono:'Share Tech Mono',monospace;--sans:'Inter',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--text);font-size:13px;}
-
-/* Background */
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;}
 #bg-grid{position:fixed;inset:0;z-index:0;pointer-events:none;background-image:linear-gradient(rgba(0,200,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,0.04) 1px,transparent 1px);background-size:44px 44px;}
 #bg-scan{position:fixed;inset:0;z-index:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 3px);animation:scanmove 20s linear infinite;}
 @keyframes scanmove{from{background-position:0 0}to{background-position:0 100%}}
-#bg-glow{position:fixed;inset:0;z-index:0;pointer-events:none;background:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,200,255,0.05) 0%,transparent 70%);}
 
-/* Layout */
 .topbar{position:sticky;top:0;z-index:15;background:rgba(6,12,20,0.96);border-bottom:1px solid var(--border);padding:13px 26px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(16px);}
 .tb-title{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text);letter-spacing:2px;}
 .tb-title span{color:var(--accent);}
 .back-btn{display:flex;align-items:center;gap:6px;color:var(--text2);text-decoration:none;font-size:11px;font-family:var(--mono);letter-spacing:1px;padding:8px 14px;border:1px solid var(--border);border-radius:6px;transition:all 0.2s;}
 .back-btn:hover{color:var(--accent);border-color:rgba(0,200,255,0.3);}
 
-.page-wrap{position:relative;z-index:1;max-width:1100px;margin:0 auto;padding:24px 26px;}
+.page{position:relative;z-index:1;max-width:900px;margin:0 auto;padding:24px 26px;}
 
 /* Tabs */
 .tabs{display:flex;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:24px;}
 .tab{flex:1;padding:10px;text-align:center;border-radius:7px;cursor:pointer;font-size:12px;font-weight:600;color:var(--text3);transition:all 0.2s;font-family:var(--mono);letter-spacing:0.5px;}
-.tab:hover{color:var(--text);}
 .tab.active{background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.25);}
 
-/* ── QUIZ TAB ── */
-.quiz-header{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;padding:22px 24px;margin-bottom:20px;}
-.quiz-progress-wrap{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
-.quiz-label{font-family:var(--mono);font-size:11px;color:var(--text2);letter-spacing:1px;}
-.quiz-score-badge{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--accent);}
-.progress-bar{height:6px;background:rgba(0,200,255,0.08);border-radius:3px;overflow:hidden;}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:3px;transition:width 0.4s ease;}
+/* Progress */
+.progress-bar-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:16px 20px;margin-bottom:20px;}
+.progress-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.progress-label{font-size:10px;color:var(--text2);font-family:var(--mono);letter-spacing:1px;}
+.progress-score{font-size:13px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+.progress-track{height:6px;background:rgba(0,200,255,0.08);border-radius:3px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--green));border-radius:3px;transition:width 0.5s ease;}
 
-.question-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;animation:cardIn 0.3s ease both;}
+/* Question card */
+.q-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:20px;animation:cardIn 0.3s ease both;}
 @keyframes cardIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-.qc-head{padding:18px 22px;border-bottom:1px solid var(--border);background:rgba(0,200,255,0.015);}
-.q-num{font-size:10px;color:var(--text2);font-family:var(--mono);letter-spacing:2px;margin-bottom:6px;}
-.q-text{font-size:15px;font-weight:600;color:var(--text);line-height:1.6;}
-.qc-body{padding:18px 22px;}
-.answer-area{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;resize:vertical;min-height:100px;transition:all 0.2s;line-height:1.7;}
+.q-head{padding:18px 22px;border-bottom:1px solid var(--border);background:rgba(0,200,255,0.015);}
+.q-num{font-size:9px;color:var(--text2);font-family:var(--mono);letter-spacing:2px;margin-bottom:6px;}
+.q-text{font-size:15px;font-weight:700;color:var(--text);line-height:1.6;}
+.q-hint{font-size:11px;color:var(--text2);margin-top:6px;font-style:italic;}
+.q-body{padding:18px 22px;}
+.answer-area{width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none;resize:vertical;min-height:120px;line-height:1.7;transition:all 0.2s;}
 .answer-area:focus{border-color:rgba(0,200,255,0.35);background:rgba(0,200,255,0.02);}
 .answer-area::placeholder{color:var(--text2);}
-.qc-foot{padding:14px 22px;border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;}
-.btn{padding:9px 20px;border-radius:7px;font-size:12px;font-weight:700;font-family:var(--mono);letter-spacing:1px;cursor:pointer;transition:all 0.2s;border:1px solid;}
-.btn-primary{background:rgba(0,200,255,0.1);color:var(--accent);border-color:rgba(0,200,255,0.3);}
-.btn-primary:hover{background:rgba(0,200,255,0.18);box-shadow:0 0 20px rgba(0,200,255,0.15);}
-.btn-secondary{background:rgba(255,255,255,0.04);color:var(--text3);border-color:var(--border);}
-.btn-secondary:hover{color:var(--text);}
-.btn-success{background:rgba(0,255,157,0.1);color:var(--green);border-color:rgba(0,255,157,0.25);}
-.btn-danger{background:rgba(239,68,68,0.1);color:var(--red);border-color:rgba(239,68,68,0.25);}
+.answer-area:disabled{opacity:0.7;cursor:not-allowed;}
 
 /* Feedback */
-.feedback{margin-top:14px;border-radius:8px;padding:16px;display:none;}
-.feedback.correct{background:rgba(0,255,157,0.07);border:1px solid rgba(0,255,157,0.2);display:block;}
-.feedback.wrong{background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.2);display:block;}
-.feedback-title{font-size:13px;font-weight:700;margin-bottom:8px;}
-.feedback.correct .feedback-title{color:var(--green);}
-.feedback.wrong .feedback-title{color:var(--red);}
-.feedback-model{font-size:12px;color:var(--text3);line-height:1.8;}
-.feedback-model strong{color:var(--text);}
+.feedback-card{margin-top:14px;border-radius:10px;overflow:hidden;display:none;}
+.feedback-card.show{display:block;animation:cardIn 0.3s ease both;}
+.feedback-head{padding:14px 18px;display:flex;align-items:center;gap:10px;}
+.feedback-head.correct{background:rgba(0,255,157,0.1);border:1px solid rgba(0,255,157,0.2);}
+.feedback-head.partial{background:rgba(234,179,8,0.1);border:1px solid rgba(234,179,8,0.2);}
+.feedback-head.wrong{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);}
+.feedback-icon{font-size:22px;}
+.feedback-verdict{font-size:14px;font-weight:700;}
+.feedback-head.correct .feedback-verdict{color:var(--green);}
+.feedback-head.partial .feedback-verdict{color:var(--yellow);}
+.feedback-head.wrong .feedback-verdict{color:var(--red);}
+.feedback-score{margin-left:auto;font-size:13px;font-weight:800;font-family:var(--mono);}
+.feedback-body{padding:16px 18px;background:rgba(0,0,0,0.2);border:1px solid var(--border2);border-top:none;}
+.fb-section{margin-bottom:12px;}
+.fb-section:last-child{margin-bottom:0;}
+.fb-label{font-size:9px;font-weight:700;letter-spacing:2px;font-family:var(--mono);text-transform:uppercase;margin-bottom:6px;}
+.fb-label.good{color:var(--green);}
+.fb-label.missing{color:var(--orange);}
+.fb-label.model{color:var(--accent);}
+.fb-text{font-size:12px;color:var(--text3);line-height:1.8;}
+.fb-model{font-size:12px;color:var(--text2);line-height:1.8;background:rgba(0,200,255,0.03);border:1px solid var(--border2);border-radius:6px;padding:12px 14px;}
+
+/* Buttons */
+.q-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.btn{padding:10px 20px;border-radius:7px;font-size:12px;font-weight:700;font-family:var(--mono);letter-spacing:0.5px;cursor:pointer;transition:all 0.2s;border:1px solid;display:flex;align-items:center;gap:6px;}
+.btn-submit{background:rgba(0,200,255,0.1);color:var(--accent);border-color:rgba(0,200,255,0.3);}
+.btn-submit:hover:not(:disabled){background:rgba(0,200,255,0.18);box-shadow:0 0 20px rgba(0,200,255,0.15);}
+.btn-submit:disabled{opacity:0.4;cursor:not-allowed;}
+.btn-next{background:rgba(0,255,157,0.1);color:var(--green);border-color:rgba(0,255,157,0.25);}
+.btn-next:hover{background:rgba(0,255,157,0.18);}
+.btn-prev{background:rgba(255,255,255,0.04);color:var(--text3);border-color:var(--border);}
+.btn-prev:hover{color:var(--text);}
+.btn-skip{background:transparent;color:var(--text2);border-color:var(--border2);font-size:11px;}
+.btn-skip:hover{color:var(--text3);}
+
+/* Spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(0,200,255,0.3);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
 
 /* Results */
 .results-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;padding:30px;text-align:center;margin-bottom:20px;}
-.score-big{font-size:72px;font-weight:800;font-family:var(--mono);line-height:1;}
+.score-big{font-size:80px;font-weight:800;font-family:var(--mono);line-height:1;}
 .score-grade{font-size:18px;font-weight:700;margin-top:8px;}
 .score-sub{font-size:12px;color:var(--text2);margin-top:6px;}
-.result-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;}
-.rb-box{border-radius:8px;padding:14px;text-align:center;}
-.rb-n{font-size:28px;font-weight:800;font-family:var(--mono);}
-.rb-l{font-size:10px;margin-top:4px;letter-spacing:1px;}
-.rb-correct{background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.15);}
-.rb-correct .rb-n{color:var(--green);}
-.rb-correct .rb-l{color:rgba(0,255,157,0.6);}
-.rb-wrong{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);}
-.rb-wrong .rb-n{color:var(--red);}
-.rb-wrong .rb-l{color:rgba(239,68,68,0.6);}
-.rb-total{background:rgba(0,200,255,0.06);border:1px solid rgba(0,200,255,0.15);}
-.rb-total .rb-n{color:var(--accent);}
-.rb-total .rb-l{color:rgba(0,200,255,0.5);}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px;}
+.rg-box{border-radius:8px;padding:14px;text-align:center;}
+.rg-n{font-size:28px;font-weight:800;font-family:var(--mono);}
+.rg-l{font-size:9px;margin-top:4px;letter-spacing:1px;text-transform:uppercase;}
+.rg-correct{background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.15);}
+.rg-correct .rg-n{color:var(--green);}
+.rg-partial{background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.15);}
+.rg-partial .rg-n{color:var(--yellow);}
+.rg-wrong{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);}
+.rg-wrong .rg-n{color:var(--red);}
 
-.review-item{background:rgba(6,12,20,0.96);border-left:4px solid;border-radius:8px;padding:14px 18px;margin-bottom:10px;}
-.review-item.correct{border-color:var(--green);}
-.review-item.wrong{border-color:var(--red);}
-.review-q{font-size:12px;font-weight:600;color:var(--text);margin-bottom:8px;}
-.review-your{font-size:11px;color:var(--text3);margin-bottom:6px;}
-.review-model{font-size:11px;line-height:1.7;}
-.review-item.correct .review-model{color:rgba(0,255,157,0.7);}
-.review-item.wrong .review-model{color:rgba(239,68,68,0.7);}
+.review-block{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;}
+.review-head{padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid var(--border);}
+.review-head.correct{border-left:4px solid var(--green);}
+.review-head.partial{border-left:4px solid var(--yellow);}
+.review-head.wrong{border-left:4px solid var(--red);}
+.review-q{font-size:12px;font-weight:600;color:var(--text);flex:1;}
+.review-s{font-size:11px;font-family:var(--mono);font-weight:700;}
+.review-body{padding:12px 16px;font-size:11px;color:var(--text3);line-height:1.8;}
 
-/* ── NOTES TAB ── */
-.notes-section{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;}
-.notes-header{padding:16px 20px;border-bottom:1px solid var(--border);background:rgba(0,200,255,0.015);display:flex;align-items:center;gap:12px;cursor:pointer;}
-.notes-header-icon{font-size:18px;}
-.notes-header-title{font-size:13px;font-weight:700;color:var(--text);}
-.notes-header-sub{font-size:11px;color:var(--text2);margin-left:auto;}
-.notes-toggle{color:var(--text2);transition:transform 0.2s;}
-.notes-body{padding:20px;display:none;}
+/* Notes */
+.notes-section{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:14px;}
+.notes-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;cursor:pointer;background:rgba(0,200,255,0.015);}
+.notes-head-left{display:flex;align-items:center;gap:10px;}
+.notes-icon{font-size:18px;}
+.notes-title{font-size:13px;font-weight:700;color:var(--text);}
+.notes-tag{font-size:9px;color:var(--text2);background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:2px 8px;font-family:var(--mono);}
+.notes-toggle{color:var(--text2);transition:transform 0.2s;font-size:12px;}
+.notes-body{padding:18px;display:none;font-size:12px;color:var(--text3);line-height:1.9;}
 .notes-body.open{display:block;}
-.notes-body h3{font-size:13px;font-weight:700;color:var(--accent);font-family:var(--mono);letter-spacing:1px;margin:16px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--border2);}
-.notes-body h3:first-child{margin-top:0;}
-.notes-body p{font-size:12px;color:var(--text3);line-height:1.9;margin-bottom:10px;}
-.notes-body .note-list{margin:8px 0 12px;display:flex;flex-direction:column;gap:6px;}
-.notes-body .note-item{display:flex;gap:10px;font-size:12px;color:var(--text3);line-height:1.7;}
-.note-num{color:var(--accent);font-family:var(--mono);font-weight:700;flex-shrink:0;min-width:20px;}
-.key-term{display:inline-block;background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.15);border-radius:4px;padding:2px 8px;font-size:11px;font-family:var(--mono);margin:2px;}
-.diagram{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:16px;margin:12px 0;font-family:var(--mono);font-size:11px;color:var(--text3);line-height:1.9;}
-.diagram-title{font-size:10px;color:var(--accent);letter-spacing:2px;margin-bottom:10px;}
-.highlight-box{background:rgba(234,179,8,0.05);border:1px solid rgba(234,179,8,0.2);border-left:3px solid var(--yellow);border-radius:6px;padding:12px 16px;margin:10px 0;font-size:12px;color:var(--text3);line-height:1.8;}
-.danger-box{background:rgba(239,68,68,0.05);border:1px solid rgba(239,68,68,0.2);border-left:3px solid var(--red);border-radius:6px;padding:12px 16px;margin:10px 0;font-size:12px;color:var(--text3);line-height:1.8;}
+.notes-body h4{font-size:11px;font-weight:700;color:var(--accent);font-family:var(--mono);letter-spacing:1px;text-transform:uppercase;margin:14px 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border2);}
+.notes-body h4:first-child{margin-top:0;}
+.notes-body p{margin-bottom:8px;}
+.nb-num{display:flex;gap:10px;margin-bottom:6px;}
+.nb-n{color:var(--accent);font-family:var(--mono);font-weight:700;flex-shrink:0;min-width:18px;}
+.diagram{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px;font-family:var(--mono);font-size:10px;color:var(--text3);line-height:2;margin:10px 0;}
+.diagram-title{font-size:9px;color:var(--accent);letter-spacing:2px;margin-bottom:8px;}
+.hl{background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.2);border-left:3px solid var(--yellow);border-radius:5px;padding:10px 14px;margin:8px 0;font-size:11px;}
+.key{display:inline-block;background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.15);border-radius:4px;padding:1px 7px;font-size:10px;font-family:var(--mono);margin:2px;}
 
-@media(max-width:700px){
-  .page-wrap{padding:14px 16px;}
-  .result-breakdown{grid-template-columns:1fr;}
-  .tabs{flex-direction:column;}
-  .qc-foot{flex-direction:column;}
-  .btn{width:100%;text-align:center;}
-}
+@media(max-width:600px){.page{padding:14px 14px;}.result-grid{grid-template-columns:1fr;}.tabs{flex-direction:column;}}
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
 </style>
@@ -138,7 +148,6 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
 <body>
 <div id="bg-grid"></div>
 <div id="bg-scan"></div>
-<div id="bg-glow"></div>
 
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:14px;">
@@ -148,426 +157,503 @@ html,body{height:100%;font-family:var(--sans);background:var(--bg);color:var(--t
   <div style="font-family:var(--mono);font-size:11px;color:var(--text2);" id="clock"></div>
 </div>
 
-<div class="page-wrap">
-
-  <!-- Tabs -->
+<div class="page">
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('quiz')">📝 Practice Quiz</div>
+    <div class="tab active" onclick="switchTab('quiz')">📝 AI-Graded Quiz</div>
     <div class="tab" onclick="switchTab('notes')">📚 Study Notes</div>
   </div>
 
-  <!-- ══ QUIZ TAB ══ -->
+  <!-- ══ QUIZ ══ -->
   <div id="tab-quiz">
-
-    <div class="quiz-header">
-      <div class="quiz-progress-wrap">
-        <span class="quiz-label" id="q-label">QUESTION 1 OF 12</span>
-        <span class="quiz-score-badge" id="q-score">Score: 0/0</span>
+    <div class="progress-bar-wrap">
+      <div class="progress-meta">
+        <span class="progress-label" id="q-label">QUESTION 1 OF 14</span>
+        <span class="progress-score" id="q-score">Score: 0 / 0</span>
       </div>
-      <div class="progress-bar"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
+      <div class="progress-track"><div class="progress-fill" id="q-progress" style="width:0%"></div></div>
     </div>
-
-    <div id="quiz-content"></div>
-
-    <div id="quiz-results" style="display:none;"></div>
-
+    <div id="quiz-area"></div>
+    <div id="results-area" style="display:none;"></div>
   </div>
 
-  <!-- ══ NOTES TAB ══ -->
+  <!-- ══ NOTES ══ -->
   <div id="tab-notes" style="display:none;">
 
-    <!-- Theory -->
     <div class="notes-section">
-      <div class="notes-header" onclick="toggleNote(this)">
-        <span class="notes-header-icon">🔬</span>
-        <div>
-          <div class="notes-header-title">Theory Used — Technology Acceptance Model (TAM)</div>
-          <div class="notes-header-sub">Likely defense question #1</div>
-        </div>
-        <span class="notes-toggle">▼</span>
+      <div class="notes-head" onclick="toggleNote(this)">
+        <div class="notes-head-left"><span class="notes-icon">🔬</span><span class="notes-title">Theory — Technology Acceptance Model (TAM)</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="notes-tag">LIKELY Q1</span><span class="notes-toggle">▼</span></div>
       </div>
       <div class="notes-body">
-        <h3>What is TAM?</h3>
-        <p>The Technology Acceptance Model (TAM), developed by Fred Davis in 1989, explains how users come to accept and use a technology system. It identifies two primary factors that determine whether someone will use a system:</p>
-        <div class="note-list">
-          <div class="note-item"><span class="note-num">1.</span><span><strong style="color:var(--text)">Perceived Usefulness (PU)</strong> — the degree to which a user believes the system will enhance their work performance. In your project: does CyberScan Pro make vulnerability assessment more efficient?</span></div>
-          <div class="note-item"><span class="note-num">2.</span><span><strong style="color:var(--text)">Perceived Ease of Use (PEOU)</strong> — the degree to which a user believes the system will be free of effort. In your project: is the scanning interface intuitive enough for security practitioners to adopt?</span></div>
-        </div>
+        <h4>What is TAM?</h4>
+        <p>The Technology Acceptance Model (TAM), developed by Fred Davis in 1989, explains why people accept and use technology. It has two core constructs:</p>
+        <div class="nb-num"><span class="nb-n">1.</span><span><strong style="color:var(--text)">Perceived Usefulness (PU)</strong> — the degree to which a user believes the system improves their performance. For CyberScan Pro: does it find vulnerabilities faster and better than alternatives?</span></div>
+        <div class="nb-num"><span class="nb-n">2.</span><span><strong style="color:var(--text)">Perceived Ease of Use (PEOU)</strong> — the degree to which a user believes the system is free of effort. For CyberScan Pro: is the dashboard intuitive without needing command-line expertise?</span></div>
         <div class="diagram">
-          <div class="diagram-title">// TAM DIAGRAM</div>
-          External Variables ──→ Perceived Usefulness (PU) ──→ Behavioural Intention ──→ Actual Use
-              └──────────────→ Perceived Ease of Use (PEOU) ─────────────────────────────↑
-                                          └──────────────────────────────────────→ PU
+          <div class="diagram-title">// TAM FLOW</div>
+          External Variables → PU (Perceived Usefulness) → Behavioural Intention → Actual Use
+                           ↘ PEOU (Perceived Ease of Use) ↗          ↑
+                                        └──────────────────────────────┘
         </div>
-        <h3>Why TAM for CyberScan Pro?</h3>
-        <p>CyberScan Pro is a technical tool built for security professionals and organisations. TAM is appropriate because the project aims to develop a system that is both functionally effective (high PU) and practically usable without advanced configuration (high PEOU). The success of the tool depends on whether users will actually adopt it over commercial alternatives.</p>
-        <div class="highlight-box">
-          <strong style="color:var(--yellow)">Key answer for defense:</strong> "I adopted the Technology Acceptance Model (TAM) by Davis (1989) because my research evaluates not just whether CyberScan Pro can detect vulnerabilities, but whether it is practically useful and easy enough for real-world adoption by IT security teams and organisations."
-        </div>
+        <div class="hl"><strong style="color:var(--yellow)">Defense answer:</strong> "I used the Technology Acceptance Model by Davis (1989) because CyberScan Pro's success depends on actual adoption. TAM's two constructs — PU and PEOU — directly map to whether users find the tool effective and easy enough to use over existing alternatives."</div>
+        <h4>Why NOT UTAUT or Waterfall?</h4>
+        <p>UTAUT adds social influence and facilitating conditions — better for large organisational rollouts. TAM is simpler and sufficient for evaluating a single-user security tool. Waterfall is a development model, not a theoretical framework — it does not explain user adoption.</p>
+        <h4>TAM vs Agile — they are NOT the same thing</h4>
+        <p><span class="key">TAM</span> = theoretical framework for evaluating user acceptance → Chapter 2<br><span class="key">Agile</span> = development methodology for building the system → Chapter 3</p>
       </div>
     </div>
 
-    <!-- Empirical Review -->
     <div class="notes-section">
-      <div class="notes-header" onclick="toggleNote(this)">
-        <span class="notes-header-icon">📖</span>
-        <div>
-          <div class="notes-header-title">Empirical Review — What Others Have Written</div>
-          <div class="notes-header-sub">What other researchers found about your topic</div>
-        </div>
-        <span class="notes-toggle">▼</span>
+      <div class="notes-head" onclick="toggleNote(this)">
+        <div class="notes-head-left"><span class="notes-icon">📖</span><span class="notes-title">Empirical Review — What Others Wrote About Your Topic</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="notes-tag">LIKELY Q2</span><span class="notes-toggle">▼</span></div>
       </div>
       <div class="notes-body">
-        <h3>What is Empirical Review?</h3>
-        <p>An empirical review presents findings from existing research studies, experiments, and surveys that are directly relevant to your project. Unlike a conceptual review (which discusses theories and concepts), an empirical review focuses on what other researchers have actually tested, measured, and concluded.</p>
-        <h3>Relevant Empirical Studies for CyberScan Pro</h3>
-        <div class="note-list">
-          <div class="note-item"><span class="note-num">1.</span><span><strong style="color:var(--text)">Nessus vs Open-Source Scanners (Gordon et al., 2020)</strong> — Found that open-source tools like OpenVAS detected 78% of vulnerabilities found by commercial tools, but generated 34% more false positives. This supports your rationale for building an improved automated tool.</span></div>
-          <div class="note-item"><span class="note-num">2.</span><span><strong style="color:var(--text)">Web Application Vulnerability Prevalence (OWASP, 2021)</strong> — The OWASP Top 10 report found SQL Injection, XSS, and Broken Authentication remain the three most critical web vulnerabilities, appearing in over 60% of tested web applications. CyberScan Pro specifically targets these.</span></div>
-          <div class="note-item"><span class="note-num">3.</span><span><strong style="color:var(--text)">CVE Disclosure Impact (NVD/NIST, 2022)</strong> — Studies show the average time between CVE publication and active exploitation is now under 7 days. Automated scanning tools that cross-reference live CVE databases are therefore essential.</span></div>
-          <div class="note-item"><span class="note-num">4.</span><span><strong style="color:var(--text)">SME Cybersecurity Posture (Ponemon Institute, 2022)</strong> — 68% of small-to-medium enterprises do not conduct regular vulnerability assessments due to cost and complexity. This validates the need for an accessible, automated tool like CyberScan Pro.</span></div>
-        </div>
-        <div class="highlight-box">
-          <strong style="color:var(--yellow)">Key answer for defense:</strong> "The empirical review examines existing studies on vulnerability assessment tools, penetration testing methodologies, and web security frameworks. Evidence from OWASP (2021) and NVD/NIST (2022) confirms the persistent prevalence of the vulnerabilities my tool targets, while Ponemon Institute (2022) validates the gap in accessible automated scanning solutions."
-        </div>
+        <h4>What is an Empirical Review?</h4>
+        <p>An empirical review presents findings from actual studies, experiments, and surveys — NOT theories. It shows what researchers tested and concluded. Yours is in Chapter 2, Section 2.4 (10 studies from 2015–2020).</p>
+        <h4>Key Studies to Know</h4>
+        <div class="nb-num"><span class="nb-n">1.</span><span><strong style="color:var(--text)">OWASP Foundation (2021)</strong> — SQL Injection, XSS, and Broken Authentication are the top 3 web vulnerabilities, in over 60% of web applications tested.</span></div>
+        <div class="nb-num"><span class="nb-n">2.</span><span><strong style="color:var(--text)">Verizon DBIR (2019)</strong> — 80% of data breaches exploited vulnerabilities that had patches available at the time.</span></div>
+        <div class="nb-num"><span class="nb-n">3.</span><span><strong style="color:var(--text)">Gordon et al. (2018)</strong> — Organisations with regular vulnerability assessment had 47% fewer successful cyberattacks.</span></div>
+        <div class="nb-num"><span class="nb-n">4.</span><span><strong style="color:var(--text)">Peltier (2018)</strong> — Reports with plain-English explanations achieved 63% higher remediation completion than raw technical output.</span></div>
+        <div class="nb-num"><span class="nb-n">5.</span><span><strong style="color:var(--text)">Abubakar et al. (2021)</strong> — 87% of Nigerian university websites had at least one High severity vulnerability; 63% had never been assessed.</span></div>
+        <div class="nb-num"><span class="nb-n">6.</span><span><strong style="color:var(--text)">Kim & Solomon (2020)</strong> — Commercial tools cost ~USD 3,000/year — prohibitive for small organisations. Open-source tools with integrated scanning are the only viable option.</span></div>
       </div>
     </div>
 
-    <!-- Research Design -->
     <div class="notes-section">
-      <div class="notes-header" onclick="toggleNote(this)">
-        <span class="notes-header-icon">🔭</span>
-        <div>
-          <div class="notes-header-title">Research Design</div>
-          <div class="notes-header-sub">Design type, population, sampling, data collection</div>
-        </div>
-        <span class="notes-toggle">▼</span>
+      <div class="notes-head" onclick="toggleNote(this)">
+        <div class="notes-head-left"><span class="notes-icon">🔭</span><span class="notes-title">Research Design, Population, Sampling, Data Collection</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="notes-tag">LIKELY Q3–Q7</span><span class="notes-toggle">▼</span></div>
       </div>
       <div class="notes-body">
-        <h3>Research Design Type</h3>
-        <p>CyberScan Pro uses a <strong style="color:var(--text)">Design and Development Research (DDR)</strong> methodology, also known as Design Science Research. This is appropriate because the primary output of the study is a working software artefact (the scanning system) rather than a survey or experiment.</p>
-        <div class="note-list">
-          <div class="note-item"><span class="note-num">1.</span><span><strong style="color:var(--text)">Problem Identification</strong> — Lack of accessible, affordable automated vulnerability assessment tools for Nigerian institutions.</span></div>
-          <div class="note-item"><span class="note-num">2.</span><span><strong style="color:var(--text)">Design and Development</strong> — Building CyberScan Pro using Python/Flask, integrating NVD, network scanning, and report generation.</span></div>
-          <div class="note-item"><span class="note-num">3.</span><span><strong style="color:var(--text)">Evaluation</strong> — Testing the system against known vulnerable targets and comparing findings against established tools.</span></div>
-          <div class="note-item"><span class="note-num">4.</span><span><strong style="color:var(--text)">Communication</strong> — Documenting results in this project report and defending findings.</span></div>
-        </div>
+        <h4>Research Design</h4>
+        <p><strong style="color:var(--text)">Design and Development Research (DDR)</strong> — also called Design Science Research. Used because the primary output is a working software artefact. It has two activities: <span class="key">Building</span> (creating CyberScan Pro) and <span class="key">Evaluating</span> (testing it against targets and surveying users). Reference: Hevner et al. (2004).</p>
+        <h4>Development Methodology</h4>
+        <p><strong style="color:var(--text)">Agile Software Development</strong> (Beck et al., 2001). Organised into 9 sprints: infrastructure → network scanner → web tester → CVE engine → report generator → API enrichment → dashboard redesign → security hardening → testing & deployment.</p>
         <div class="diagram">
-          <div class="diagram-title">// RESEARCH DESIGN FLOW</div>
+          <div class="diagram-title">// RESEARCH FLOW</div>
           Problem Statement
                ↓
-          Literature Review (Conceptual + Empirical)
+          Literature Review (Ch.2) → Theoretical Framework (TAM)
                ↓
-          System Design (Architecture, Database Schema)
+          System Design (Architecture, DB Schema)
                ↓
-          System Development (Python/Flask, PostgreSQL)
+          System Development (Agile — 9 Sprints)
                ↓
-          System Testing (Functional + Vulnerability Tests)
+          System Testing (scanme.nmap.org, testphp.vulnweb.com, FUPRE)
                ↓
-          Results Analysis & Report Generation
+          User Evaluation (Questionnaire — 30 participants)
                ↓
-          Conclusion & Recommendations
+          Results Analysis (Quantitative + Qualitative)
+               ↓
+          Conclusions & Recommendations
         </div>
-        <h3>Population of Study</h3>
-        <p>The population of study consists of IT security professionals, system administrators, and network engineers within Nigerian tertiary institutions and SMEs who are responsible for managing and securing digital infrastructure. FUPRE's internal network and web systems serve as the primary test environment.</p>
-        <h3>Sampling Technique</h3>
-        <p>A <strong style="color:var(--text)">purposive (judgement) sampling</strong> technique was used. This means participants or test environments were deliberately selected based on their relevance to the research objectives — specifically, systems with known network exposure and web applications accessible for ethical testing. This is appropriate for technical research where random sampling would not guarantee relevant system characteristics.</p>
-        <h3>Data Collection Method</h3>
-        <div class="note-list">
-          <div class="note-item"><span class="note-num">1.</span><span><strong style="color:var(--text)">Primary Data</strong> — Collected through the system itself. Each scan generates structured data: open ports, detected services, web vulnerabilities, and CVE mappings stored in a PostgreSQL database.</span></div>
-          <div class="note-item"><span class="note-num">2.</span><span><strong style="color:var(--text)">Secondary Data</strong> — From NVD/NIST CVE database, OWASP documentation, and existing vulnerability assessment literature.</span></div>
-          <div class="note-item"><span class="note-num">3.</span><span><strong style="color:var(--text)">Questionnaire</strong> — A structured questionnaire using a 5-point Likert scale was administered to IT professionals to evaluate the system's usability (PEOU) and effectiveness (PU), aligned with the TAM framework.</span></div>
-        </div>
-        <h3>Data Analysis Method</h3>
-        <p>Both quantitative and qualitative analysis methods were employed. Quantitative analysis involved statistical tabulation of questionnaire responses using frequency tables and percentage scores. Qualitative analysis involved comparing CyberScan Pro's findings against manually verified vulnerabilities to calculate detection accuracy and false positive rates.</p>
+        <h4>Population of Study</h4>
+        <p>IT security professionals, system administrators, network engineers, and cybersecurity students within Nigerian tertiary institutions and SMEs. Technical population: FUPRE's web systems and authorised test targets.</p>
+        <h4>Sampling Technique</h4>
+        <p><strong style="color:var(--text)">Purposive (Judgement) Sampling</strong> — deliberately selecting participants based on their relevance to the research: at least 1 year experience in IT/security role, and test targets with documented scanning authorisation. Used instead of random sampling because random selection would not guarantee the expertise or system characteristics needed.</p>
+        <h4>Sample Size</h4>
+        <p>30 participants: 15 IT administrators, 10 final-year CS students, 5 external cybersecurity practitioners.</p>
+        <h4>Questionnaire</h4>
+        <p><strong style="color:var(--text)">Structured Likert-scale questionnaire</strong> (5-point: 1=Strongly Disagree to 5=Strongly Agree). Three sections: demographics, 10 PU items, 10 PEOU items. Aligned with Davis (1989) TAM instrument. Distributed via physical copies at FUPRE and Google Forms digitally. Respondents given a live demo before answering.</p>
+        <h4>Data Analysis</h4>
+        <p><strong style="color:var(--text)">Quantitative:</strong> frequency distribution, mean scores, detection accuracy %, false positive rate. <strong style="color:var(--text)">Qualitative:</strong> thematic analysis of open-ended responses (Braun & Clarke, 2006). <strong style="color:var(--text)">Triangulation:</strong> both methods cross-referenced for comprehensive conclusions.</p>
       </div>
     </div>
 
-    <!-- Statement of Problem -->
     <div class="notes-section">
-      <div class="notes-header" onclick="toggleNote(this)">
-        <span class="notes-header-icon">⚠️</span>
-        <div>
-          <div class="notes-header-title">Statement of Problem</div>
-          <div class="notes-header-sub">Know this word for word</div>
-        </div>
-        <span class="notes-toggle">▼</span>
+      <div class="notes-head" onclick="toggleNote(this)">
+        <div class="notes-head-left"><span class="notes-icon">⚠️</span><span class="notes-title">Statement of Problem & Research Gap</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="notes-tag">LIKELY Q8–Q9</span><span class="notes-toggle">▼</span></div>
       </div>
       <div class="notes-body">
-        <h3>The Problem</h3>
-        <p>Despite the growing sophistication of cyber threats, many Nigerian institutions and small-to-medium enterprises lack the resources to deploy commercial vulnerability assessment tools such as Nessus or Qualys. Existing open-source alternatives, while functional, often require significant technical expertise to configure and operate, limiting their adoption.</p>
-        <p>Furthermore, most available tools do not provide contextual, plain-English vulnerability reports with actionable remediation guidance — a critical requirement for non-specialist stakeholders such as management and compliance officers. The absence of an accessible, integrated, and intelligible vulnerability assessment platform contributes directly to the persistently poor cybersecurity posture of many Nigerian organisations.</p>
-        <div class="danger-box">
-          <strong style="color:var(--red)">Core Problem Statement:</strong> The lack of an affordable, accessible, and automated web-based vulnerability assessment platform that integrates network scanning, web vulnerability testing, CVE intelligence, and professional report generation represents a critical gap in cybersecurity tooling available to Nigerian institutions.
-        </div>
-        <h3>How CyberScan Pro Solves This</h3>
-        <div class="note-list">
-          <div class="note-item"><span class="note-num">1.</span><span>Provides a web-based interface eliminating the need for command-line expertise.</span></div>
-          <div class="note-item"><span class="note-num">2.</span><span>Integrates NVD for real-time CVE intelligence without manual lookup.</span></div>
-          <div class="note-item"><span class="note-num">3.</span><span>Generates professional PDF and HTML reports with plain English explanations.</span></div>
-          <div class="note-item"><span class="note-num">4.</span><span>Operates at zero licensing cost, making it viable for resource-constrained institutions.</span></div>
-        </div>
+        <h4>Statement of Problem</h4>
+        <p>Despite growing cybersecurity threats, many Nigerian institutions and SMEs lack access to affordable, automated vulnerability assessment tools. Commercial tools like Nessus cost USD 3,000+/year. Open-source alternatives require command-line expertise. No existing tool combines network scanning, web application testing, and CVE intelligence in one accessible platform with professional reporting. This results in organisations remaining exposed to known, preventable vulnerabilities.</p>
+        <div class="hl"><strong style="color:var(--yellow)">One sentence version:</strong> "The lack of an affordable, accessible, integrated web-based vulnerability assessment platform with professional reporting capabilities represents a critical gap in cybersecurity tooling available to Nigerian institutions."</div>
+        <h4>Research Gap (3 maximum)</h4>
+        <div class="nb-num"><span class="nb-n">1.</span><span><strong style="color:var(--text)">Integration gap</strong> — No open-source tool combines network scanning, web testing, and live CVE mapping in one interface (Bace & Mell, 2016; Weidman, 2018).</span></div>
+        <div class="nb-num"><span class="nb-n">2.</span><span><strong style="color:var(--text)">Accessibility gap</strong> — Existing tools require command-line proficiency, excluding non-specialist users (Kim & Solomon, 2020; Cybereason, 2022).</span></div>
+        <div class="nb-num"><span class="nb-n">3.</span><span><strong style="color:var(--text)">Reporting inadequacy</strong> — Tools produce XML/JSON output unsuitable for management reporting; plain-English reports produce 63% better remediation (Peltier, 2018).</span></div>
       </div>
     </div>
 
-    <!-- Significance -->
     <div class="notes-section">
-      <div class="notes-header" onclick="toggleNote(this)">
-        <span class="notes-header-icon">⭐</span>
-        <div>
-          <div class="notes-header-title">Significance of the Study</div>
-          <div class="notes-header-sub">Why your project matters</div>
-        </div>
-        <span class="notes-toggle">▼</span>
+      <div class="notes-head" onclick="toggleNote(this)">
+        <div class="notes-head-left"><span class="notes-icon">⭐</span><span class="notes-title">Significance & Objectives</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span class="notes-tag">LIKELY Q10–Q11</span><span class="notes-toggle">▼</span></div>
       </div>
       <div class="notes-body">
-        <h3>Why This Study Matters</h3>
-        <div class="note-list">
-          <div class="note-item"><span class="note-num">1.</span><span><strong style="color:var(--text)">To Institutions:</strong> Provides FUPRE and similar Nigerian tertiary institutions with a no-cost automated tool to identify security weaknesses in their network and web infrastructure before attackers do.</span></div>
-          <div class="note-item"><span class="note-num">2.</span><span><strong style="color:var(--text)">To IT Professionals:</strong> Reduces the time and expertise required to conduct comprehensive vulnerability assessments by automating network scanning, web testing, and CVE correlation into a single dashboard.</span></div>
-          <div class="note-item"><span class="note-num">3.</span><span><strong style="color:var(--text)">To Policy Makers:</strong> The generated reports provide evidence-based documentation of security deficiencies, supporting data-driven decisions on cybersecurity investment and policy.</span></div>
-          <div class="note-item"><span class="note-num">4.</span><span><strong style="color:var(--text)">To Academic Research:</strong> Contributes a practical, evaluated implementation of an integrated vulnerability assessment framework to the body of knowledge in cybersecurity engineering.</span></div>
-          <div class="note-item"><span class="note-num">5.</span><span><strong style="color:var(--text)">To Society:</strong> Improved cybersecurity posture at the institutional level reduces the risk of data breaches, service disruptions, and cyberattacks that affect students, staff, and stakeholders.</span></div>
-        </div>
+        <h4>Significance of the Study</h4>
+        <div class="nb-num"><span class="nb-n">1.</span><span>Provides Nigerian institutions with a zero-cost vulnerability assessment tool.</span></div>
+        <div class="nb-num"><span class="nb-n">2.</span><span>Reduces expertise required through a web-based interface requiring no installation.</span></div>
+        <div class="nb-num"><span class="nb-n">3.</span><span>Professional reports enable management and compliance decision-making.</span></div>
+        <div class="nb-num"><span class="nb-n">4.</span><span>Educational platform for cybersecurity students and practitioners.</span></div>
+        <div class="nb-num"><span class="nb-n">5.</span><span>Contributes to applied cybersecurity engineering research.</span></div>
+        <div class="nb-num"><span class="nb-n">6.</span><span>Addresses documented gap in Nigerian institutional security (Abubakar et al., 2021).</span></div>
+        <h4>Objectives (6)</h4>
+        <div class="nb-num"><span class="nb-n">1.</span><span>Design a network scanning module for host/port/service discovery.</span></div>
+        <div class="nb-num"><span class="nb-n">2.</span><span>Develop a web application vulnerability tester for OWASP Top 10.</span></div>
+        <div class="nb-num"><span class="nb-n">3.</span><span>Integrate NVD REST API for CVE mapping with CVSS severity.</span></div>
+        <div class="nb-num"><span class="nb-n">4.</span><span>Implement PDF and HTML report generation with plain-English explanations.</span></div>
+        <div class="nb-num"><span class="nb-n">5.</span><span>Build a secure web dashboard with authentication and real-time monitoring.</span></div>
+        <div class="nb-num"><span class="nb-n">6.</span><span>Deploy and evaluate the system against authorised targets.</span></div>
       </div>
     </div>
 
-    <!-- Research Gap -->
-    <div class="notes-section">
-      <div class="notes-header" onclick="toggleNote(this)">
-        <span class="notes-header-icon">🕳️</span>
-        <div>
-          <div class="notes-header-title">Research Gap</div>
-          <div class="notes-header-sub">The flaw in previous work your project solves</div>
-        </div>
-        <span class="notes-toggle">▼</span>
-      </div>
-      <div class="notes-body">
-        <h3>Identified Research Gaps</h3>
-        <div class="note-list">
-          <div class="note-item"><span class="note-num">1.</span><span><strong style="color:var(--text)">Lack of Integration:</strong> Existing tools such as OpenVAS, Nikto, and Nmap operate as standalone utilities. No previous study in the Nigerian context has presented a single integrated platform combining network scanning, web vulnerability testing, and CVE intelligence with automated report generation.</span></div>
-          <div class="note-item"><span class="note-num">2.</span><span><strong style="color:var(--text)">Accessibility Gap:</strong> Prior tools require command-line proficiency and complex installation procedures, making them inaccessible to non-specialist IT staff. CyberScan Pro addresses this through a browser-based interface deployable without local installation.</span></div>
-          <div class="note-item"><span class="note-num">3.</span><span><strong style="color:var(--text)">Reporting Inadequacy:</strong> Existing tools produce technical output (XML, JSON, terminal text) that is unsuitable for management-level reporting. CyberScan Pro generates professional PDF and HTML reports with plain English explanations and remediation guidance.</span></div>
-        </div>
-        <div class="highlight-box">
-          <strong style="color:var(--yellow)">Primary gap to emphasise in defense:</strong> No existing open-source or academic tool provides a fully web-based, integrated vulnerability assessment platform with professional reporting capabilities suitable for deployment in Nigerian institutional environments without commercial licensing.
-        </div>
-      </div>
-    </div>
-
-  </div><!-- /tab-notes -->
+  </div>
 </div>
 
 <script>
-// ── QUESTIONS DATA ─────────────────────────────────────────────────────────────
+// ── QUESTIONS ──────────────────────────────────────────────────────────────────
 const QUESTIONS = [
   {
-    q: "What theory did you use in your research and why?",
-    hint: "Name the theory, its author, year, and explain why it is relevant to CyberScan Pro specifically.",
-    model: "I used the Technology Acceptance Model (TAM) developed by Fred Davis in 1989. TAM identifies two key determinants of technology adoption: Perceived Usefulness (PU) and Perceived Ease of Use (PEOU). I selected TAM because CyberScan Pro is a technical tool whose success depends on actual adoption by security professionals. The theory allowed me to evaluate not just whether the system detects vulnerabilities, but whether end users find it useful and intuitive enough to adopt over existing alternatives."
+    q: "What theory did you use in your research and why is it appropriate for CyberScan Pro?",
+    hint: "Name the theory, author, year, the two core constructs, and explain why it fits this specific project.",
+    keyPoints: ["Technology Acceptance Model","TAM","Davis","1989","Perceived Usefulness","PU","Perceived Ease of Use","PEOU","adoption","user acceptance"],
+    model: "I used the Technology Acceptance Model (TAM) by Fred Davis (1989). TAM explains technology adoption through two constructs: Perceived Usefulness (PU) — whether the system improves user performance — and Perceived Ease of Use (PEOU) — whether the system is free of effort. I selected TAM because CyberScan Pro's success depends on actual adoption by IT professionals. PU maps to whether the tool effectively detects vulnerabilities better than alternatives, and PEOU maps to whether the web-based interface is intuitive enough for users without deep technical expertise."
   },
   {
-    q: "What do you know about empirical review? What did others write about your topic?",
-    hint: "Define empirical review and cite at least 2-3 specific studies relevant to vulnerability assessment.",
-    model: "An empirical review presents findings from actual research studies, experiments, and surveys related to the topic. For CyberScan Pro, the empirical review examined: (1) OWASP Top 10 (2021) which confirmed SQL Injection, XSS, and Broken Authentication remain the most prevalent web vulnerabilities; (2) Ponemon Institute (2022) which found 68% of SMEs do not conduct regular vulnerability assessments due to cost and complexity; and (3) NVD/NIST studies showing the average exploitation time after CVE publication is under 7 days, emphasising the need for automated, real-time CVE-aware scanning tools."
+    q: "What do you understand by empirical review? What did other researchers find about your topic?",
+    hint: "Define empirical review and cite at least 3 specific studies with their findings relevant to vulnerability assessment.",
+    keyPoints: ["empirical review","studies","experiments","surveys","OWASP","Verizon","Gordon","Peltier","Abubakar","Nigerian","vulnerability","findings"],
+    model: "An empirical review presents findings from actual research studies, experiments, and surveys — not theories. My empirical review in Chapter 2 covers ten studies. Key findings include: OWASP Foundation (2021) confirmed SQL Injection and XSS remain the most prevalent web vulnerabilities; Verizon (2019) found 80% of breaches exploited known vulnerabilities with available patches; Gordon et al. (2018) found organisations with regular assessments had 47% fewer successful attacks; Peltier (2018) showed plain-English reports achieve 63% higher remediation rates; and Abubakar et al. (2021) found 87% of Nigerian university websites had High severity vulnerabilities with 63% never assessed — directly validating CyberScan Pro's relevance."
   },
   {
-    q: "What is the significance of your study?",
-    hint: "Cover at least 4 different beneficiaries: institutions, IT professionals, policy makers, and academia.",
-    model: "The study is significant for multiple stakeholders: (1) For institutions like FUPRE, it provides a zero-cost tool to identify security weaknesses before attackers exploit them; (2) For IT professionals, it reduces the expertise and time required for comprehensive assessments by automating scanning, CVE correlation, and reporting; (3) For policy makers, the generated reports provide evidence-based documentation to support cybersecurity investment decisions; (4) For academia, it contributes a practical implemented framework to the body of knowledge in cybersecurity engineering; (5) For society at large, improving institutional cybersecurity reduces the risk of data breaches affecting students and staff."
+    q: "What is your research design and why did you choose it?",
+    hint: "Name the specific design type, explain what it means, and justify why it suits a software development project.",
+    keyPoints: ["Design and Development Research","DDR","Design Science","artefact","building","evaluating","Hevner","software","system"],
+    model: "I used Design and Development Research (DDR), also known as Design Science Research (Hevner et al., 2004). DDR is appropriate when the primary research output is a novel software artefact rather than a survey finding or theory. It has two core activities: building — constructing CyberScan Pro to address the identified integration, accessibility, and reporting gaps — and evaluating — testing the system against authorised targets and assessing user acceptance through a TAM-aligned questionnaire. DDR was chosen over experimental or survey designs because the study's contribution is the system itself."
   },
   {
-    q: "What is your research design?",
-    hint: "Name the specific design type, explain it, and describe how it applies to your project.",
-    model: "I used a Design and Development Research (DDR) methodology, also known as Design Science Research. This is appropriate because the primary output is a working software artefact — CyberScan Pro — rather than a survey or experiment. The design follows four phases: (1) Problem Identification — identifying the lack of accessible vulnerability assessment tools; (2) Design and Development — building the system using Python, Flask, and PostgreSQL; (3) Evaluation — testing against real targets and assessing results; (4) Communication — documenting and presenting findings in this report."
+    q: "What development methodology did you use to build CyberScan Pro?",
+    hint: "Name the methodology, explain its principles, and describe how you applied it in the development process.",
+    keyPoints: ["Agile","iterative","incremental","sprint","Beck","flexible","requirements","evolving","module"],
+    model: "I used the Agile Software Development Methodology (Beck et al., 2001). Agile organises development into iterative sprints, each delivering a working, testable increment. I applied it through 9 sprints covering: core infrastructure and authentication, network scanner, web application tester, CVE mapping engine, report generator, API enrichment with Shodan and VirusTotal, dashboard redesign, security hardening, and final testing and deployment. Agile was preferred over Waterfall because security tool requirements evolve — cloud deployment constraints, API behaviours, and user interface needs all changed during development, which Agile accommodated without requiring a full redesign."
   },
   {
-    q: "What is your population of study?",
-    hint: "Be specific about who or what constitutes the population. Include institution context.",
-    model: "The population of study consists of IT security professionals, system administrators, and network engineers within Nigerian tertiary institutions and SMEs who are responsible for managing and securing digital infrastructure. More specifically, FUPRE's internal network systems and web applications served as the primary test environment, representing the broader population of under-resourced institutional networks that lack formal vulnerability assessment procedures."
+    q: "What is the population of your study?",
+    hint: "Be specific about who and what makes up the study population — both human participants and technical targets.",
+    keyPoints: ["IT professionals","administrators","students","Nigerian","institutions","FUPRE","SME","network","web systems"],
+    model: "The population of study comprises IT security professionals, system administrators, network engineers, and cybersecurity students within Nigerian tertiary institutions and small-to-medium enterprises responsible for managing digital infrastructure. FUPRE serves as the primary institutional context. The technical population includes FUPRE's internal network and web systems, as well as publicly authorised test environments including scanme.nmap.org and testphp.vulnweb.com. This population is directly relevant because Abubakar et al. (2021) documented that 87% of Nigerian university web systems have undetected High severity vulnerabilities."
   },
   {
-    q: "What is your sampling technique?",
-    hint: "Name the specific technique and justify why you used it over alternatives like random sampling.",
-    model: "I used purposive sampling, also known as judgement sampling. This means test environments and systems were deliberately selected based on their relevance to the research objectives — specifically, systems with known network exposure and web applications accessible for ethical testing. Purposive sampling was appropriate for this technical research because random sampling would not guarantee that selected systems would have the characteristics necessary to evaluate the tool's capabilities. The selection criteria included system accessibility, ethical permission for testing, and representativeness of typical institutional network configurations."
+    q: "What sampling technique did you use and why?",
+    hint: "Name the specific technique, explain it, and justify why random sampling would not work here.",
+    keyPoints: ["purposive","judgement","deliberate","selection","relevant","expertise","random","characteristics","criteria"],
+    model: "I used purposive sampling, also known as judgement sampling. This involves deliberately selecting participants based on their specific characteristics relevant to the research — in this case, IT or security roles with at least one year of experience. Purposive sampling was appropriate because random sampling would not guarantee that selected participants have the domain expertise necessary to meaningfully evaluate CyberScan Pro's Perceived Usefulness and Perceived Ease of Use. For system testing targets, purposive selection ensured the environments had documented authorisation and sufficient service diversity to evaluate all scanning modules."
   },
   {
-    q: "Which questionnaire did you use and how was it structured?",
-    hint: "Describe the questionnaire type, scale used, sections, and how it relates to your theoretical framework.",
-    model: "A structured questionnaire using a 5-point Likert scale was developed and administered to IT professionals. The questionnaire was divided into three sections: (1) Respondent demographics — role, years of experience, familiarity with vulnerability assessment tools; (2) Perceived Usefulness (PU) items — evaluating whether CyberScan Pro improves efficiency and effectiveness of vulnerability assessment; (3) Perceived Ease of Use (PEOU) items — evaluating interface intuitiveness and learnability. The structure was directly aligned with the Technology Acceptance Model (TAM) framework used as the theoretical basis of the study."
+    q: "What questionnaire did you use and how was it structured?",
+    hint: "Describe the type of scale, the number of sections, and how it connects to your theoretical framework.",
+    keyPoints: ["Likert","5-point","structured","TAM","Perceived Usefulness","Perceived Ease of Use","sections","Davis","items"],
+    model: "I used a structured questionnaire with a 5-point Likert scale (1=Strongly Disagree to 5=Strongly Agree), designed in alignment with Davis's (1989) original TAM instrument. The questionnaire had three sections: Section 1 collected demographics including role and years of experience. Section 2 contained 10 Perceived Usefulness (PU) items measuring whether respondents believed CyberScan Pro improved their assessment efficiency. Section 3 contained 10 Perceived Ease of Use (PEOU) items measuring interface intuitiveness and accessibility. This structure enables direct, theoretically-grounded measurement of the TAM constructs."
   },
   {
     q: "How did you distribute your questionnaire and collect your data?",
-    hint: "Cover both the distribution method and the data collection process end-to-end.",
-    model: "The questionnaire was distributed using a combination of methods: (1) Physical copies were administered directly to IT staff and security professionals at FUPRE; (2) A digital version was distributed via Google Forms to reach respondents in other institutions. Data was collected over a defined period with follow-up reminders. Primary data also included scan results generated directly by CyberScan Pro during testing, stored systematically in the PostgreSQL database. Secondary data was collected from the NVD CVE database, OWASP documentation, and published academic literature."
+    hint: "Cover both the distribution method and what respondents did before answering. Also mention the sample size.",
+    keyPoints: ["physical","Google Forms","digital","30","demonstration","live","FUPRE","distribution","participants"],
+    model: "The questionnaire was distributed through two channels: physical copies administered directly to IT staff and final-year students at FUPRE, and a digital version via Google Forms for participants at other institutions. The sample comprised 30 participants — 15 IT administrators, 10 final-year Computer Science students, and 5 external cybersecurity practitioners. Crucially, all respondents were given a live demonstration of CyberScan Pro's core functions before completing the questionnaire, ensuring their assessments were based on direct system interaction rather than abstract description — consistent with Davis's (1989) original evaluation protocol."
   },
   {
-    q: "What method of data analysis did you use?",
-    hint: "Cover both quantitative and qualitative analysis methods and what each was used for.",
-    model: "Two complementary data analysis methods were employed: (1) Quantitative analysis — questionnaire responses were tabulated using frequency distribution and percentage scores to measure user-perceived usefulness and ease of use. Simple statistical measures (mean, percentage) were used to interpret Likert-scale responses; (2) Qualitative analysis — the system's vulnerability findings were compared against manually verified results to calculate detection accuracy, false positive rates, and coverage of OWASP Top 10 categories. This triangulation of quantitative user feedback and qualitative system evaluation provided a comprehensive assessment of CyberScan Pro's effectiveness."
+    q: "What data analysis method did you use?",
+    hint: "Cover both quantitative and qualitative methods and explain what each was applied to.",
+    keyPoints: ["quantitative","qualitative","frequency","mean","thematic","triangulation","Likert","detection accuracy","false positive"],
+    model: "I used a mixed-methods data analysis approach. Quantitative analysis was applied to questionnaire responses — frequency distribution tables and mean scores were calculated for PU and PEOU subscales. For system performance, detection accuracy was calculated as the ratio of true positives to verified vulnerabilities, and false positive rate was recorded. Qualitative analysis was applied to open-ended questionnaire responses using thematic analysis (Braun & Clarke, 2006), identifying recurring themes about system strengths and weaknesses. Both methods were triangulated — cross-referenced — to produce a comprehensive, reliable assessment of CyberScan Pro's effectiveness."
   },
   {
     q: "What is your statement of problem?",
-    hint: "Be concise and specific. Include the gap, the context (Nigeria/tertiary institutions), and the consequence.",
-    model: "The statement of problem is: Despite the growing prevalence of cyber threats, many Nigerian tertiary institutions and small-to-medium enterprises lack access to affordable, automated vulnerability assessment tools. Existing commercial solutions such as Nessus are cost-prohibitive, while open-source alternatives require significant technical expertise and do not produce management-ready reports. This gap results in irregular or absent security assessments, leaving institutional networks and web systems exposed to known and preventable vulnerabilities. This study therefore proposes the design and development of CyberScan Pro — a web-based integrated vulnerability assessment platform that addresses these limitations."
+    hint: "Cover the gap, the context (Nigeria), the consequences, and what CyberScan Pro addresses.",
+    keyPoints: ["affordable","accessible","integrated","Nigerian","institutions","commercial","expensive","open-source","reporting","vulnerability","gap"],
+    model: "The statement of problem is: despite growing cyber threats, many Nigerian tertiary institutions and SMEs lack access to affordable, automated vulnerability assessment tools. Commercial platforms like Nessus cost over USD 3,000 annually, making them inaccessible to resource-constrained organisations. Existing open-source alternatives require significant technical expertise and do not integrate network scanning, web application testing, and CVE intelligence in a single accessible platform. Furthermore, no existing tool generates management-ready reports with plain-English explanations, resulting in organisations remaining exposed to known, preventable vulnerabilities. CyberScan Pro addresses all three gaps."
   },
   {
-    q: "What are the objectives of your study?",
-    hint: "List specific, measurable objectives that align with what CyberScan Pro actually does.",
-    model: "The objectives of the study are: (1) To review existing literature on vulnerability assessment methodologies and tools; (2) To design and develop a web-based automated vulnerability assessment platform (CyberScan Pro) integrating network scanning, web vulnerability testing, and CVE intelligence; (3) To implement professional report generation in PDF and HTML formats with plain English vulnerability explanations; (4) To evaluate the system's detection accuracy against known vulnerable targets; (5) To assess user-perceived usefulness and ease of use using the Technology Acceptance Model (TAM) framework."
+    q: "What is the significance of your study?",
+    hint: "Name at least 4 different groups who benefit and explain specifically what each gains.",
+    keyPoints: ["institutions","professionals","management","students","academic","research","Nigeria","zero-cost","accessible","reporting"],
+    model: "The study is significant for multiple stakeholders. For Nigerian institutions, it provides a zero-cost tool to identify security weaknesses before attackers exploit them. For IT professionals, it reduces the expertise and time required for comprehensive assessment by automating scanning, CVE correlation, and reporting in one dashboard. For management and policy makers, the generated reports provide evidence-based documentation for cybersecurity investment decisions. For academic research, it contributes a practical implementation of an integrated vulnerability assessment framework to the body of knowledge in cybersecurity engineering. For students like myself, it demonstrates applied integration of network security, web development, database systems, and API integration."
   },
   {
-    q: "What is the scope and limitation of your study?",
-    hint: "Scope defines what's included. Limitations are honest constraints on the research.",
-    model: "The scope of the study covers the design, development, and evaluation of CyberScan Pro as a web-based vulnerability assessment platform, tested on Nigerian institutional networks with ethical permission. The study focuses on network-layer scanning and OWASP Top 10 web vulnerabilities. Limitations include: (1) The platform is deployed on a cloud environment (Render/Oracle Cloud) that restricts raw socket access, limiting full Nmap functionality; (2) The study is constrained to targets for which explicit ethical permission was obtained; (3) The CVE database lookup is rate-limited without a premium NVD API key; (4) The questionnaire sample size is limited to accessible IT professionals, which may affect generalisability of the user acceptance findings."
-  }
+    q: "What are the three research gaps your project addresses?",
+    hint: "State each gap clearly, cite the researchers who identified it, and explain how CyberScan Pro solves it.",
+    keyPoints: ["integration","accessibility","reporting","Bace","Mell","Weidman","Peltier","Kim","open-source","command-line","plain-English"],
+    model: "Three research gaps were identified. First, the integration gap — no widely adopted open-source tool combines network scanning, web application testing, and live CVE mapping in a single interface (Bace & Mell, 2016; Weidman, 2018). CyberScan Pro addresses this through its integrated four-module architecture. Second, the accessibility gap — existing tools require command-line proficiency, excluding non-specialist users (Kim & Solomon, 2020). CyberScan Pro addresses this through a web dashboard requiring no installation. Third, the reporting inadequacy — tools produce XML/JSON output unsuitable for management reporting, while plain-English reports achieve 63% higher remediation rates (Peltier, 2018). CyberScan Pro addresses this through its integrated report generation engine."
+  },
+  {
+    q: "What APIs did you integrate and what does each one add to the system?",
+    hint: "Name all external APIs and describe the specific intelligence each one provides.",
+    keyPoints: ["NVD","Shodan","VirusTotal","AbuseIPDB","URLScan","CVE","reputation","malware","screenshot","enrichment"],
+    model: "CyberScan Pro integrates five external APIs. The NVD REST API from NIST provides CVE records matched to detected service versions, with CVSS severity scores and remediation references. Shodan provides historical internet exposure data — past open ports, organisation details, and CVEs Shodan already knows about the target. VirusTotal checks target domains and IPs against 70+ antivirus and blacklist engines, automatically creating a finding if malicious detections exceed a threshold. AbuseIPDB provides IP abuse reputation — crowdsourced reports of malicious activity — and flags high-score IPs as findings. URLScan.io performs a visual browser analysis of the target, capturing a screenshot and detecting redirects, scripts, and certificate details."
+  },
+  {
+    q: "What is the system architecture of CyberScan Pro? Describe its layers.",
+    hint: "Describe all four layers and what technologies are in each one.",
+    keyPoints: ["presentation","application","data","external","Flask","Python","PostgreSQL","Supabase","scanner","dashboard","API"],
+    model: "CyberScan Pro is built on a four-layer architecture. The Presentation Layer is the web dashboard built with Flask and Jinja2 HTML templates, providing the user interface for initiating scans and viewing reports. The Application Layer comprises the four Python scanning modules — Network Scanner, Web Application Tester, CVE Mapping Engine, and API Enrichment module — coordinated by the main Flask application. Scan execution runs in background threads to avoid blocking the HTTP response cycle. The Data Layer is a PostgreSQL database on Supabase storing all scan data, report files as BYTEA, and screenshots. The External Integration Layer connects to five APIs — NVD, Shodan, VirusTotal, AbuseIPDB, and URLScan.io — for threat intelligence enrichment during each scan."
+  },
 ];
 
-let currentQ = 0;
-let score = 0;
-let answered = [];
-let userAnswers = [];
-let revealed = [];
+// ── State ──────────────────────────────────────────────────────────────────────
+let currentQ   = 0;
+let scores     = [];    // per question: 0, 5, or 10
+let feedbacks  = [];    // per question: feedback text
+let answered   = [];    // per question: bool
+let totalScore = 0;
+let maxScore   = QUESTIONS.length * 10;
 
 function init(){
-  currentQ = 0; score = 0;
+  currentQ = 0;
+  scores   = new Array(QUESTIONS.length).fill(null);
+  feedbacks= new Array(QUESTIONS.length).fill(null);
   answered = new Array(QUESTIONS.length).fill(false);
-  userAnswers = new Array(QUESTIONS.length).fill("");
-  revealed = new Array(QUESTIONS.length).fill(false);
-  document.getElementById("quiz-results").style.display = "none";
-  renderQuestion();
+  totalScore = 0;
+  document.getElementById("results-area").style.display = "none";
+  renderQ();
 }
 
-function renderQuestion(){
-  const q = QUESTIONS[currentQ];
+function renderQ(){
+  const q   = QUESTIONS[currentQ];
   const pct = (currentQ / QUESTIONS.length) * 100;
-  document.getElementById("q-label").textContent = `QUESTION ${currentQ+1} OF ${QUESTIONS.length}`;
-  document.getElementById("q-score").textContent = `Score: ${score}/${answered.filter(Boolean).length}`;
+  const answered_count = answered.filter(Boolean).length;
+  const earned = scores.filter(s=>s!==null).reduce((a,b)=>a+b,0);
+
+  document.getElementById("q-label").textContent    = `QUESTION ${currentQ+1} OF ${QUESTIONS.length}`;
+  document.getElementById("q-score").textContent    = `Score: ${earned} / ${answered_count * 10}`;
   document.getElementById("q-progress").style.width = pct + "%";
 
   const isAnswered = answered[currentQ];
-  const isRevealed = revealed[currentQ];
+  const myFeedback = feedbacks[currentQ];
+  const myScore    = scores[currentQ];
 
-  document.getElementById("quiz-content").innerHTML = `
-    <div class="question-card">
-      <div class="qc-head">
+  document.getElementById("quiz-area").innerHTML = `
+    <div class="q-card">
+      <div class="q-head">
         <div class="q-num">// QUESTION ${currentQ+1} OF ${QUESTIONS.length}</div>
         <div class="q-text">${q.q}</div>
+        <div class="q-hint">💡 ${q.hint}</div>
       </div>
-      <div class="qc-body">
-        <textarea class="answer-area" id="user-answer" placeholder="Type your answer here... (${q.hint})"
-          ${isAnswered ? "disabled" : ""}>${userAnswers[currentQ]}</textarea>
+      <div class="q-body">
+        <textarea class="answer-area" id="ans" placeholder="Type your answer here in your own words..."
+          ${isAnswered ? "disabled" : ""}>${isAnswered ? (window._savedAnswers?.[currentQ] || "") : ""}</textarea>
 
-        ${isRevealed || isAnswered ? `
-        <div class="feedback ${isRevealed && !answered[currentQ] ? 'wrong' : answered[currentQ] ? (score > 0 ? 'correct' : 'wrong') : ''}">
-          <div class="feedback-title">${isRevealed ? "📋 Model Answer" : answered[currentQ] ? "📋 Model Answer" : ""}</div>
-          <div class="feedback-model">${q.model}</div>
-        </div>` : ""}
-      </div>
-      <div class="qc-foot">
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${currentQ > 0 ? `<button class="btn btn-secondary" onclick="goTo(${currentQ-1})">← Previous</button>` : ""}
-          ${!isAnswered && !isRevealed ? `<button class="btn btn-secondary" onclick="revealAnswer()">Show Answer</button>` : ""}
+        ${isAnswered && myFeedback ? renderFeedback(myFeedback, myScore) : ""}
+
+        <div class="q-actions">
+          ${currentQ > 0 ? `<button class="btn btn-prev" onclick="goTo(${currentQ-1})">← Previous</button>` : ""}
+          ${!isAnswered ? `
+            <button class="btn btn-submit" id="submit-btn" onclick="submitAnswer()">
+              Submit Answer
+            </button>
+            <button class="btn btn-skip" onclick="skipQ()">Skip →</button>
+          ` : ""}
+          ${isAnswered && currentQ < QUESTIONS.length - 1 ? `
+            <button class="btn btn-next" onclick="goTo(${currentQ+1})">Next Question →</button>
+          ` : ""}
+          ${isAnswered && currentQ === QUESTIONS.length - 1 ? `
+            <button class="btn btn-next" onclick="showResults()">See Final Results →</button>
+          ` : ""}
         </div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap;">
-          ${!isAnswered && !isRevealed ? `
-            <button class="btn btn-danger" onclick="markAnswer(false)">✗ Mark Wrong</button>
-            <button class="btn btn-success" onclick="markAnswer(true)">✓ Mark Correct</button>` : ""}
-          ${currentQ < QUESTIONS.length - 1 ?
-            `<button class="btn btn-primary" onclick="goTo(${currentQ+1})">Next →</button>` :
-            `<button class="btn btn-primary" onclick="showResults()">See Results →</button>`}
-        </div>
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
-function revealAnswer(){
-  revealed[currentQ] = true;
-  renderQuestion();
+function renderFeedback(fb, score){
+  const verdict   = score >= 8 ? "correct" : score >= 5 ? "partial" : "wrong";
+  const icon      = score >= 8 ? "✅" : score >= 5 ? "⚠️" : "❌";
+  const label     = score >= 8 ? "Correct" : score >= 5 ? "Partially Correct" : "Needs Improvement";
+  const scoreDisp = `${score}/10`;
+
+  return `
+    <div class="feedback-card show">
+      <div class="feedback-head ${verdict}">
+        <span class="feedback-icon">${icon}</span>
+        <span class="feedback-verdict">${label}</span>
+        <span class="feedback-score" style="color:${score>=8?"var(--green)":score>=5?"var(--yellow)":"var(--red)"};">${scoreDisp}</span>
+      </div>
+      <div class="feedback-body">
+        ${fb.strengths ? `<div class="fb-section"><div class="fb-label good">✓ What you got right</div><div class="fb-text">${fb.strengths}</div></div>` : ""}
+        ${fb.missing   ? `<div class="fb-section"><div class="fb-label missing">→ What was missing or could be stronger</div><div class="fb-text">${fb.missing}</div></div>` : ""}
+        <div class="fb-section"><div class="fb-label model">📋 Model Answer</div><div class="fb-model">${fb.model}</div></div>
+      </div>
+    </div>`;
 }
 
-function markAnswer(correct){
-  if(answered[currentQ]) return;
-  userAnswers[currentQ] = document.getElementById("user-answer")?.value || "";
-  answered[currentQ] = true;
-  if(correct) score++;
-  renderQuestion();
+async function submitAnswer(){
+  const ans = document.getElementById("ans")?.value?.trim();
+  if(!ans || ans.length < 10){
+    document.getElementById("ans").style.borderColor = "var(--red)";
+    return;
+  }
+
+  // Save answer
+  if(!window._savedAnswers) window._savedAnswers = {};
+  window._savedAnswers[currentQ] = ans;
+
+  // Show loading
+  const btn = document.getElementById("submit-btn");
+  if(btn){ btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> AI is grading...`; }
+
+  const q = QUESTIONS[currentQ];
+
+  try{
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 1000,
+        system: `You are grading a final year project defense quiz for a Computer Science student at FUPRE, Nigeria. 
+The student's project is CyberScan Pro — a web-based cybersecurity vulnerability assessment platform.
+Be fair, encouraging, and flexible. Paraphrasing the correct concept counts as correct.
+Different wording of the same idea counts as correct.
+Only mark wrong if a key concept is genuinely missing or factually incorrect.
+
+Respond ONLY with valid JSON, no markdown, no explanation outside JSON:
+{
+  "score": <integer 0-10>,
+  "strengths": "<what they got right, specific>",
+  "missing": "<what was missing or weak, specific and helpful, empty string if nothing missing>",
+  "model": "<the ideal answer in 3-5 sentences>"
 }
 
-function goTo(idx){
-  if(idx >= 0 && idx < QUESTIONS.length){
-    userAnswers[currentQ] = document.getElementById("user-answer")?.value || "";
-    currentQ = idx;
-    renderQuestion();
+Score guide:
+8-10: Covers the key points correctly, even if worded differently
+5-7: Gets the main idea but missing important details  
+2-4: Partially correct but significant gaps
+0-1: Fundamentally wrong or too vague to assess`,
+        messages:[{
+          role:"user",
+          content:`Question: ${q.q}
+
+Key points the answer should cover: ${q.keyPoints.join(", ")}
+
+Student's answer: ${ans}
+
+Grade this answer and return JSON only.`
+        }]
+      })
+    });
+
+    const data = await res.json();
+    let text = data.content?.[0]?.text || "";
+    text = text.replace(/```json|```/g,"").trim();
+    const fb = JSON.parse(text);
+
+    scores[currentQ]   = fb.score;
+    feedbacks[currentQ]= {strengths: fb.strengths, missing: fb.missing, model: fb.model};
+    answered[currentQ] = true;
+
+    const earned = scores.filter(s=>s!==null).reduce((a,b)=>a+b,0);
+    const count  = answered.filter(Boolean).length;
+    document.getElementById("q-score").textContent = `Score: ${earned} / ${count * 10}`;
+
+    renderQ();
+
+  } catch(e){
+    // Fallback: keyword-based grading if API fails
+    const ansLow = ans.toLowerCase();
+    const matched = q.keyPoints.filter(kp => ansLow.includes(kp.toLowerCase()));
+    const ratio   = matched.length / q.keyPoints.length;
+    const score   = Math.round(ratio * 10);
+
+    scores[currentQ]   = score;
+    feedbacks[currentQ]= {
+      strengths: matched.length > 0 ? `You mentioned: ${matched.slice(0,3).join(", ")}` : "",
+      missing:   "AI grading temporarily unavailable — using keyword matching. Your answer has been recorded.",
+      model:     q.model
+    };
+    answered[currentQ] = true;
+    renderQ();
   }
 }
 
+function skipQ(){
+  scores[currentQ]   = 0;
+  feedbacks[currentQ]= {strengths:"", missing:"Skipped.", model: QUESTIONS[currentQ].model};
+  answered[currentQ] = true;
+  if(currentQ < QUESTIONS.length - 1){ goTo(currentQ+1); }
+  else { showResults(); }
+}
+
+function goTo(idx){
+  currentQ = idx;
+  renderQ();
+}
+
 function showResults(){
-  const total = QUESTIONS.length;
-  const pct   = Math.round((score/total)*100);
-  const grade = pct>=80?"DISTINCTION":pct>=70?"CREDIT":pct>=60?"PASS":"NEEDS WORK";
-  const gradeColor = pct>=80?"var(--green)":pct>=70?"var(--accent)":pct>=60?"var(--yellow)":"var(--red)";
+  document.getElementById("quiz-area").style.display = "none";
+  document.getElementById("results-area").style.display = "block";
 
-  document.getElementById("quiz-content").style.display = "none";
+  const earned  = scores.filter(s=>s!==null).reduce((a,b)=>a+b,0);
+  const possible= QUESTIONS.length * 10;
+  const pct     = Math.round((earned/possible)*100);
+  const grade   = pct>=80?"DISTINCTION":pct>=70?"CREDIT":pct>=60?"PASS":"NEEDS WORK";
+  const gc      = pct>=80?"var(--green)":pct>=70?"var(--accent)":pct>=60?"var(--yellow)":"var(--red)";
+  const correct = scores.filter(s=>s>=8).length;
+  const partial = scores.filter(s=>s>=5&&s<8).length;
+  const wrong   = scores.filter(s=>s<5).length;
 
-  const reviewHTML = QUESTIONS.map((q,i)=>`
-    <div class="review-item ${answered[i] && score > 0 ? 'correct' : 'wrong'}">
-      <div class="review-q">Q${i+1}: ${q.q}</div>
-      ${userAnswers[i] ? `<div class="review-your"><em style="color:var(--text2)">Your answer:</em> ${userAnswers[i].substring(0,200)}${userAnswers[i].length>200?"...":""}</div>` : ""}
-      <div class="review-model"><strong>Model answer:</strong> ${q.model.substring(0,300)}...</div>
-    </div>`).join("");
-
-  document.getElementById("quiz-results").style.display = "block";
-  document.getElementById("quiz-results").innerHTML = `
-    <div class="results-card">
-      <div class="score-big" style="color:${gradeColor}">${pct}%</div>
-      <div class="score-grade" style="color:${gradeColor}">${grade}</div>
-      <div class="score-sub">You answered ${score} out of ${total} questions correctly</div>
-      <div class="result-breakdown">
-        <div class="rb-box rb-correct"><div class="rb-n">${score}</div><div class="rb-l">CORRECT</div></div>
-        <div class="rb-box rb-wrong"><div class="rb-n">${total-score}</div><div class="rb-l">NEEDS REVIEW</div></div>
-        <div class="rb-box rb-total"><div class="rb-n">${total}</div><div class="rb-l">TOTAL</div></div>
+  const reviewHTML = QUESTIONS.map((q,i)=>{
+    const s  = scores[i] ?? 0;
+    const fb = feedbacks[i] || {};
+    const cls= s>=8?"correct":s>=5?"partial":"wrong";
+    const ic = s>=8?"✅":s>=5?"⚠️":"❌";
+    return `<div class="review-block">
+      <div class="review-head ${cls}">
+        <span style="font-size:16px;">${ic}</span>
+        <span class="review-q">Q${i+1}: ${q.q}</span>
+        <span class="review-s" style="color:${s>=8?"var(--green)":s>=5?"var(--yellow)":"var(--red)"};">${s}/10</span>
       </div>
-      ${pct < 80 ? `<div style="margin-top:16px;font-size:12px;color:var(--text2);">Go through the Study Notes tab and try again. Focus on the questions you got wrong.</div>` : `<div style="margin-top:16px;font-size:12px;color:var(--green);">Excellent preparation! You are ready to defend your project.</div>`}
+      ${fb.missing||fb.strengths ? `<div class="review-body">
+        ${fb.strengths?`<span style="color:var(--green);">✓ ${fb.strengths}</span><br>`:""}
+        ${fb.missing?`<span style="color:var(--orange);">→ ${fb.missing}</span>`:""}
+      </div>` : ""}
+    </div>`;
+  }).join("");
+
+  document.getElementById("results-area").innerHTML = `
+    <div class="results-card">
+      <div class="score-big" style="color:${gc}">${pct}%</div>
+      <div class="score-grade" style="color:${gc}">${grade}</div>
+      <div class="score-sub">${earned} out of ${possible} points · ${correct} fully correct · ${partial} partially correct · ${wrong} need work</div>
+      <div class="result-grid">
+        <div class="rg-box rg-correct"><div class="rg-n">${correct}</div><div class="rg-l">Correct</div></div>
+        <div class="rg-box rg-partial"><div class="rg-n">${partial}</div><div class="rg-l">Partial</div></div>
+        <div class="rg-box rg-wrong"><div class="rg-n">${wrong}</div><div class="rg-l">Need Work</div></div>
+      </div>
+      ${pct < 70 ? `<p style="margin-top:16px;font-size:12px;color:var(--text2);">Study the notes tab and retry — focus on the questions marked ❌</p>` : `<p style="margin-top:16px;font-size:12px;color:var(--green);">Strong preparation. You are ready to defend.</p>`}
     </div>
-    <div style="margin-bottom:14px;font-size:10px;color:var(--text2);font-family:var(--mono);letter-spacing:2px;">// REVIEW YOUR ANSWERS</div>
+    <div style="margin-bottom:14px;font-size:9px;color:var(--text2);font-family:var(--mono);letter-spacing:2px;">// REVIEW</div>
     ${reviewHTML}
-    <button class="btn btn-primary" onclick="retryQuiz()" style="width:100%;margin-top:16px;padding:14px;">↺ RETRY QUIZ</button>
+    <button class="btn btn-next" onclick="retryQuiz()" style="width:100%;margin-top:16px;padding:14px;justify-content:center;">↺ Retry Quiz</button>
   `;
 }
 
 function retryQuiz(){
-  document.getElementById("quiz-content").style.display = "block";
+  document.getElementById("quiz-area").style.display = "block";
+  window._savedAnswers = {};
   init();
 }
 
-// Tabs
-function switchTab(tab){
-  document.querySelectorAll(".tab").forEach((t,i)=>{
-    t.classList.toggle("active", (i===0&&tab==="quiz")||(i===1&&tab==="notes"));
+function switchTab(t){
+  document.querySelectorAll(".tab").forEach((el,i)=>{
+    el.classList.toggle("active",(i===0&&t==="quiz")||(i===1&&t==="notes"));
   });
-  document.getElementById("tab-quiz").style.display   = tab==="quiz"  ? "block" : "none";
-  document.getElementById("tab-notes").style.display  = tab==="notes" ? "block" : "none";
+  document.getElementById("tab-quiz").style.display  = t==="quiz" ?"block":"none";
+  document.getElementById("tab-notes").style.display = t==="notes"?"block":"none";
 }
 
-// Notes accordion
-function toggleNote(header){
-  const body = header.nextElementSibling;
-  const toggle = header.querySelector(".notes-toggle");
+function toggleNote(hdr){
+  const body   = hdr.nextElementSibling;
+  const toggle = hdr.querySelector(".notes-toggle");
   const isOpen = body.classList.contains("open");
   document.querySelectorAll(".notes-body").forEach(b=>b.classList.remove("open"));
   document.querySelectorAll(".notes-toggle").forEach(t=>t.style.transform="");
-  if(!isOpen){
-    body.classList.add("open");
-    toggle.style.transform = "rotate(180deg)";
-  }
+  if(!isOpen){ body.classList.add("open"); toggle.style.transform="rotate(180deg)"; }
 }
 
-// Clock
 (function tick(){const el=document.getElementById("clock");if(el){const n=new Date();el.textContent=n.toLocaleTimeString("en-GB");}setTimeout(tick,1000);})();
 
-// Init
 init();
 </script>
 </body>
