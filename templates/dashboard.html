@@ -2,2098 +2,494 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<link rel="icon" type="image/x-icon" href="/favicon.ico">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="theme-color" content="#020810">
-<title>{{ title }} — CyberScan Pro</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Dashboard Demo B — CyberScan Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:       #020810;
-  --bg2:      #060c14;
-  --bg3:      #0a1220;
-  --bg4:      #0d1826;
-  --border:   rgba(0,200,255,0.1);
-  --border2:  rgba(0,200,255,0.06);
-  --accent:   #00c8ff;
-  --accent2:  #00ff9d;
-  --red:      #ef4444;
-  --orange:   #f97316;
-  --yellow:   #eab308;
-  --blue:     #3b82f6;
-  --purple:   #a855f7;
-  --text:     #e2eaf4;
-  --text2:    #304560;
-  --text3:    #4d6a85;
-  --mono:     'Share Tech Mono',monospace;
-  --sans:     'Inter',sans-serif;
-  --glow:     0 0 20px rgba(0,200,255,0.12);
-  --glow-lg:  0 0 40px rgba(0,200,255,0.08);
+  --bg:#050912;--bg2:#0a1020;--bg3:#0f172a;
+  --border:rgba(120,140,255,0.12);--border2:rgba(120,140,255,0.06);
+  --accent:#7c8dff;--green:#34d399;--red:#f87171;
+  --orange:#fb923c;--yellow:#fbbf24;--blue:#60a5fa;
+  --text:#e8eaf6;--text2:#2a3050;--text3:#4a5580;
+  --mono:'DM Mono',monospace;--sans:'Syne',sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html,body{height:100%;}
-body{
-  font-family:var(--sans);
-  background:var(--bg);
-  color:var(--text);
-  display:flex;
-  min-height:100vh;
-  font-size:13px;
-  overflow-x:hidden;
-}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:100vh;font-size:13px;overflow-x:hidden;}
 
-/* ═══════════════════════════════════════════════════
-   BACKGROUND — SAME AS LOGIN
-═══════════════════════════════════════════════════ */
-.bg-fixed{position:fixed;inset:0;z-index:0;pointer-events:none;}
-
-#bg-grid{
-  background-image:
-    linear-gradient(rgba(0,200,255,0.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,200,255,0.04) 1px,transparent 1px);
-  background-size:44px 44px;
-}
-#bg-scan{
-  background:repeating-linear-gradient(
-    0deg,transparent,transparent 2px,
-    rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 3px
-  );
-  animation:scanmove 20s linear infinite;
-}
-@keyframes scanmove{from{background-position:0 0}to{background-position:0 100%}}
-
-#bg-glow{
-  background:
-    radial-gradient(ellipse 60% 50% at 50% 0%,   rgba(0,200,255,0.07) 0%,transparent 70%),
-    radial-gradient(ellipse 40% 30% at 80% 80%,   rgba(0,150,255,0.04) 0%,transparent 60%),
-    radial-gradient(ellipse 30% 25% at 10% 60%,   rgba(0,255,157,0.03) 0%,transparent 60%);
-}
-
-/* Corner accents */
-.corner{position:fixed;z-index:0;pointer-events:none;opacity:0.5;}
-.corner-tl{top:0;left:0;width:120px;height:120px;border-top:1px solid var(--accent);border-left:1px solid var(--accent);}
-.corner-tr{top:0;right:0;width:120px;height:120px;border-top:1px solid var(--accent);border-right:1px solid var(--accent);}
-.corner-bl{bottom:0;left:0;width:80px;height:80px;border-bottom:1px solid var(--accent);border-left:1px solid var(--accent);}
-.corner-br{bottom:0;right:0;width:80px;height:80px;border-bottom:1px solid var(--accent);border-right:1px solid var(--accent);}
-
-/* ═══════════════════════════════════════════════════
-   SIDEBAR
-═══════════════════════════════════════════════════ */
-.sidebar{
-  width:260px;flex-shrink:0;
-  background:rgba(6,12,20,0.98);
-  border-right:1px solid var(--border);
-  display:flex;flex-direction:column;
-  position:fixed;top:0;left:0;bottom:0;height:100vh;
-  overflow-y:auto;z-index:50;
-  box-shadow:8px 0 40px rgba(0,0,0,0.5);
-  transform:translateX(-100%);
-  transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);
-  backdrop-filter:blur(20px);
-}
-.sidebar.open{
-  transform:translateX(0);
-}
-.sidebar.open .nav-link{
-  animation:navItemIn 0.4s ease both;
-}
-.sidebar.open .nav-link:nth-child(1){animation-delay:0.05s;}
-.sidebar.open .nav-link:nth-child(2){animation-delay:0.08s;}
-.sidebar.open .nav-link:nth-child(3){animation-delay:0.11s;}
-.sidebar.open .nav-link:nth-child(4){animation-delay:0.14s;}
-.sidebar.open .nav-link:nth-child(5){animation-delay:0.17s;}
-.sidebar.open .nav-link:nth-child(6){animation-delay:0.20s;}
-.sidebar.open .nav-link:nth-child(7){animation-delay:0.23s;}
-@keyframes navItemIn{from{opacity:0;transform:translateX(-12px)}to{opacity:1;transform:translateX(0)}}
-
-.sb-top{
-  padding:22px 20px 18px;
-  border-bottom:1px solid var(--border);
-}
-.brand{display:flex;align-items:center;gap:12px;}
-.brand-icon{display:flex;align-items:center;justify-content:center;
-  width:36px;height:36px;border-radius:9px;flex-shrink:0;
-  background:linear-gradient(135deg,rgba(0,200,255,0.2),rgba(0,200,255,0.04));
-  border:1px solid rgba(0,200,255,0.25);
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;
-  box-shadow:0 0 14px rgba(0,200,255,0.12);
-}
-.brand-name{
-  font-family:var(--mono);font-size:16px;
-  font-weight:700;color:var(--text);letter-spacing:0.5px;
-}
-.brand-name span{color:var(--accent);}
-.brand-sub{
-  font-family:var(--mono);font-size:9px;
-  color:var(--text2);margin-top:6px;letter-spacing:2px;
-}
-
-/* System status row */
-.sb-status{
-  padding:10px 20px;
-  border-bottom:1px solid var(--border2);
-  display:flex;align-items:center;gap:8px;
-  font-size:10px;color:var(--text2);font-family:var(--mono);
-}
-.status-ok-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:var(--accent2);
-  box-shadow:0 0 6px var(--accent2);
-  animation:pulsegreen 2s infinite;
-}
-@keyframes pulsegreen{0%,100%{opacity:1}50%{opacity:0.4}}
-
-/* Search */
-.sb-search{padding:10px 14px;border-bottom:1px solid var(--border2);}
-.search-wrap{
-  display:flex;align-items:center;gap:8px;
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:6px;padding:7px 12px;
-}
-.search-wrap:focus-within{border-color:rgba(0,200,255,0.3);}
-.search-wrap input{
-  background:none;border:none;outline:none;
-  color:var(--text);font-size:11px;width:100%;
-  font-family:var(--sans);
-}
-.search-wrap input::placeholder{color:var(--text2);}
-
-/* Nav */
-nav{flex:1;overflow-y:auto;padding:8px 0;}
-.nav-sec{
-  font-size:9px;letter-spacing:3px;
-  color:var(--text2);padding:12px 20px 5px;
-  text-transform:uppercase;font-family:var(--mono);
-}
-.nav-link{
-  display:flex;align-items:center;gap:10px;
-  padding:9px 20px;color:var(--text3);
-  text-decoration:none;font-size:12px;font-weight:500;
-  transition:all 0.15s;border-left:2px solid transparent;
-  letter-spacing:0.2px;
-}
-.nav-link:hover{
-  color:var(--text);
-  background:rgba(0,200,255,0.04);
-}
-.nav-link.active{
-  color:var(--accent);
-  background:rgba(0,200,255,0.07);
-  border-left-color:var(--accent);
-}
-.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
-
-.sb-foot{
-  padding:14px 20px;
-  border-top:1px solid var(--border);
-  font-size:9px;color:var(--text2);
-  font-family:var(--mono);letter-spacing:1px;
-}
-
-/* ═══════════════════════════════════════════════════
-   MAIN
-═══════════════════════════════════════════════════ */
-.main{
-  flex:1;overflow-y:auto;
-  display:flex;flex-direction:column;
-  position:relative;z-index:1;
-}
+body::before{content:'';position:fixed;inset:0;
+  background:radial-gradient(ellipse 70% 50% at 50% -10%,rgba(124,141,255,0.08) 0%,transparent 70%);
+  pointer-events:none;z-index:0;}
 
 /* Topbar */
-.topbar{
-  background:rgba(6,12,20,0.96);
-  border-bottom:1px solid var(--border);
-  padding:14px 28px;
-  display:flex;align-items:center;
-  justify-content:space-between;gap:14px;
-  flex-wrap:wrap;
-  position:sticky;top:0;z-index:15;
-  backdrop-filter:blur(16px);
-  box-shadow:0 2px 20px rgba(0,0,0,0.4);
+.topbar{position:sticky;top:0;z-index:20;background:rgba(5,9,18,0.9);border-bottom:1px solid var(--border);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);}
+.tb-left{display:flex;align-items:center;gap:16px;}
+.menu-btn{background:none;border:1px solid var(--border);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:15px;transition:all 0.2s;}
+.menu-btn:hover{color:var(--accent);border-color:rgba(124,141,255,0.3);}
+.tb-logo{font-size:17px;font-weight:800;letter-spacing:-0.5px;}
+.tb-logo em{color:var(--accent);font-style:normal;}
+.tb-right{display:flex;align-items:center;gap:8px;}
+.clock{font-family:var(--mono);font-size:11px;color:var(--text3);padding:6px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:6px;}
+.ib{background:var(--bg2);border:1px solid var(--border);border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text3);font-size:13px;transition:all 0.2s;}
+.ib:hover{color:var(--accent);}
+.ns-btn{background:var(--accent);color:#fff;border:none;border-radius:8px;padding:8px 18px;font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;letter-spacing:0.2px;transition:all 0.2s;}
+.ns-btn:hover{opacity:0.85;}
+
+/* Main */
+.main{position:relative;z-index:1;padding:32px;}
+
+/* Header row */
+.header-row{margin-bottom:32px;}
+.header-row h1{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:8px;}
+.header-row h1 .hi{color:var(--accent);}
+.header-row p{font-size:13px;color:var(--text3);max-width:480px;}
+.status-chip{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--green);background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:20px;padding:4px 12px;font-family:var(--mono);margin-top:12px;}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* Score strip — full width top row */
+.top-strip{display:grid;grid-template-columns:260px 1fr;gap:16px;margin-bottom:16px;}
+
+/* Donut card */
+.donut-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:24px;display:flex;align-items:center;gap:20px;animation:riseIn 0.5s 0.1s cubic-bezier(0.16,1,0.3,1) both;}
+@keyframes riseIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.donut-svg-wrap{position:relative;width:100px;height:100px;flex-shrink:0;}
+.donut-svg-wrap svg{width:100px;height:100px;transform:rotate(-90deg);}
+.dc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.dc-n{font-size:24px;font-weight:800;font-family:var(--mono);line-height:1;}
+.dc-l{font-size:8px;color:var(--text3);letter-spacing:1.5px;margin-top:2px;}
+.donut-meta h3{font-size:15px;font-weight:700;margin-bottom:4px;}
+.donut-meta .grade{display:inline-block;font-size:10px;font-weight:700;font-family:var(--mono);padding:3px 10px;border-radius:5px;background:rgba(124,141,255,0.1);color:var(--accent);border:1px solid rgba(124,141,255,0.2);margin-bottom:8px;}
+.donut-meta p{font-size:11px;color:var(--text3);line-height:1.6;}
+
+/* Stats strip */
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;animation:riseIn 0.5s 0.15s cubic-bezier(0.16,1,0.3,1) both;}
+.stat-tile{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px;cursor:pointer;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);position:relative;overflow:hidden;}
+.stat-tile::before{content:'';position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--accent),var(--green));opacity:0;transition:opacity 0.3s;}
+.stat-tile:hover{transform:translateY(-4px);border-color:rgba(124,141,255,0.3);}
+.stat-tile:hover::before{opacity:1;}
+.st-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.st-icon{font-size:20px;}
+.st-change{font-size:9px;font-family:var(--mono);padding:2px 8px;border-radius:4px;}
+.sc-up{background:rgba(52,211,153,0.08);color:var(--green);}
+.sc-warn{background:rgba(251,146,60,0.1);color:var(--orange);}
+.st-n{font-size:42px;font-weight:800;font-family:var(--mono);line-height:1;margin-bottom:4px;}
+.st-l{font-size:10px;color:var(--text3);letter-spacing:0.5px;font-weight:600;}
+
+/* Severity band */
+.sev-band{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px;animation:riseIn 0.5s 0.25s cubic-bezier(0.16,1,0.3,1) both;}
+.sev-tile{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px 16px;cursor:pointer;transition:all 0.3s;display:flex;align-items:center;gap:14px;}
+.sev-tile:hover{transform:translateY(-3px);border-color:rgba(124,141,255,0.25);}
+.sev-circle{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;font-weight:900;font-family:var(--mono);}
+.sc-crit{background:rgba(248,113,113,0.1);color:var(--red);border:1px solid rgba(248,113,113,0.2);}
+.sc-high{background:rgba(251,146,60,0.1);color:var(--orange);border:1px solid rgba(251,146,60,0.2);}
+.sc-med{background:rgba(251,191,36,0.1);color:var(--yellow);border:1px solid rgba(251,191,36,0.2);}
+.sc-low{background:rgba(96,165,250,0.1);color:var(--blue);border:1px solid rgba(96,165,250,0.2);}
+.sev-info{}
+.sev-n{font-size:22px;font-weight:800;font-family:var(--mono);line-height:1;}
+.sev-l{font-size:10px;color:var(--text3);letter-spacing:0.5px;margin-top:2px;}
+.sev-bar{height:2px;background:rgba(255,255,255,0.05);border-radius:1px;margin-top:10px;overflow:hidden;}
+.sev-fill{height:100%;border-radius:1px;transition:width 1.4s cubic-bezier(0.16,1,0.3,1);}
+
+/* Bottom row */
+.bottom-row{display:grid;grid-template-columns:1fr 300px;gap:16px;animation:riseIn 0.5s 0.35s cubic-bezier(0.16,1,0.3,1) both;}
+
+/* Feed */
+.feed-card{background:var(--bg2);border:1px solid var(--border);border-radius:18px;overflow:hidden;}
+.feed-head{padding:18px 22px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.fh-left{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;}
+.live-pill{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--green);background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.15);border-radius:20px;padding:3px 9px;font-family:var(--mono);}
+.lp-dot{width:5px;height:5px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.view-all{font-size:10px;color:var(--text3);text-decoration:none;font-family:var(--mono);transition:color 0.2s;}
+.view-all:hover{color:var(--accent);}
+.feed-body{padding:4px 0;}
+.fi{display:flex;align-items:flex-start;gap:14px;padding:14px 22px;border-bottom:1px solid var(--border2);transition:background 0.2s;cursor:default;}
+.fi:last-child{border-bottom:none;}
+.fi:hover{background:rgba(124,141,255,0.02);}
+.fi-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0;}
+.fd-crit{background:var(--red);box-shadow:0 0 8px rgba(248,113,113,0.4);}
+.fd-ok{background:var(--green);}
+.fd-info{background:var(--accent);}
+.fd-warn{background:var(--orange);}
+.fi-content{flex:1;}
+.fi-title{font-size:12px;font-weight:600;color:var(--text);margin-bottom:3px;line-height:1.4;}
+.fi-sub{font-size:10px;color:var(--text3);}
+.fi-right{display:flex;flex-direction:column;align-items:flex-end;gap:4px;}
+.fi-time{font-size:9px;color:var(--text2);font-family:var(--mono);}
+.fi-tag{font-size:8px;font-weight:700;font-family:var(--mono);padding:2px 7px;border-radius:3px;letter-spacing:0.5px;}
+.ft-crit{background:rgba(248,113,113,0.1);color:var(--red);}
+.ft-ok{background:rgba(52,211,153,0.08);color:var(--green);}
+.ft-info{background:rgba(124,141,255,0.08);color:var(--accent);}
+
+/* Quick actions panel */
+.qa-panel{background:var(--bg2);border:1px solid var(--border);border-radius:18px;padding:20px;display:flex;flex-direction:column;gap:10px;}
+.qa-head{font-size:12px;font-weight:700;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;font-family:var(--mono);}
+.qa-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:12px;cursor:pointer;text-decoration:none;color:var(--text);transition:all 0.2s;}
+.qa-item:hover{border-color:rgba(124,141,255,0.3);background:rgba(124,141,255,0.04);transform:translateX(3px);}
+.qa-item.primary{border-color:rgba(52,211,153,0.25);background:rgba(52,211,153,0.04);}
+.qi-ico{font-size:18px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.04);border-radius:8px;flex-shrink:0;}
+.qi-text{flex:1;}
+.qi-title{font-size:12px;font-weight:700;}
+.qi-sub{font-size:10px;color:var(--text3);margin-top:1px;}
+.qi-arrow{color:var(--text3);font-size:12px;transition:transform 0.2s;}
+.qa-item:hover .qi-arrow{transform:translateX(3px);color:var(--accent);}
+
+/* Modal */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(12px);z-index:100;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;animation:fadeIn 0.2s ease both;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-box{background:rgba(10,16,32,0.95);border:1px solid rgba(124,141,255,0.2);border-radius:24px;padding:32px;width:92%;max-width:440px;animation:popIn 0.35s cubic-bezier(0.16,1,0.3,1) both;position:relative;overflow:hidden;}
+.modal-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(124,141,255,0.4),transparent);}
+@keyframes popIn{from{opacity:0;transform:scale(0.9) translateY(16px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.mb-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.mb-title{font-size:18px;font-weight:800;}
+.mb-close{background:rgba(255,255,255,0.06);border:none;border-radius:8px;width:32px;height:32px;cursor:pointer;color:var(--text3);font-size:16px;display:flex;align-items:center;justify-content:center;transition:all 0.2s;}
+.mb-close:hover{color:var(--text);background:rgba(255,255,255,0.1);}
+.mb-center{text-align:center;margin-bottom:24px;}
+.mb-n{font-size:80px;font-weight:800;font-family:var(--mono);line-height:1;}
+.mb-l{font-size:11px;color:var(--text3);margin-top:4px;letter-spacing:1.5px;}
+.mb-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;}
+.mbg-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:12px;padding:14px;text-align:center;}
+.mbg-n{font-size:24px;font-weight:800;font-family:var(--mono);}
+.mbg-l{font-size:9px;color:var(--text3);margin-top:3px;letter-spacing:0.5px;}
+.mb-tip{font-size:11px;color:var(--text3);line-height:1.7;background:rgba(124,141,255,0.04);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:16px;}
+.mb-btn{display:block;width:{{ [severity_counts.Medium * 10, 100]|min }}%;padding:13px;background:rgba(124,141,255,0.1);border:1px solid rgba(124,141,255,0.25);border-radius:12px;color:var(--accent);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;transition:all 0.2s;letter-spacing:0.3px;}
+.mb-btn:hover{background:rgba(124,141,255,0.18);}
+
+@media(max-width:900px){
+  .top-strip,.stats-strip,.sev-band{grid-template-columns:1fr 1fr;}
+  .bottom-row{grid-template-columns:1fr;}
 }
-.tb-left{}
-.tb-title{
-  font-family:var(--mono);font-size:16px;
-  font-weight:700;color:var(--text);letter-spacing:2px;
-}
-.tb-title span{color:var(--accent);}
-.tb-sub{
-  font-family:var(--mono);font-size:9px;
-  color:var(--text2);margin-top:5px;letter-spacing:1.5px;
-}
-.tb-right{display:flex;align-items:center;gap:10px;}
-.clock{
-  font-family:var(--mono);font-size:11px;
-  color:var(--text3);background:var(--bg3);
-  border:1px solid var(--border);
-  border-radius:5px;padding:6px 12px;letter-spacing:1px;
-}
-.icon-btn{
-  background:var(--bg3);border:1px solid var(--border);
-  border-radius:7px;padding:8px 10px;cursor:pointer;
-  color:var(--text3);font-size:15px;position:relative;
-  transition:all 0.2s;
-}
-.icon-btn:hover{border-color:rgba(0,200,255,0.3);color:var(--accent);}
-.notif-dot{
-  position:absolute;top:4px;right:4px;
-  width:7px;height:7px;background:var(--red);
-  border-radius:50%;border:2px solid var(--bg2);
-}
-.btn-scan{
-  background:rgba(0,200,255,0.1);
-  color:var(--accent);
-  border:1px solid rgba(0,200,255,0.35);
-  padding:9px 20px;border-radius:7px;
-  font-size:12px;font-weight:700;
-  font-family:var(--mono);letter-spacing:1.5px;
-  cursor:pointer;display:flex;align-items:center;gap:8px;
-  transition:all 0.2s;text-decoration:none;
-  box-shadow:0 0 20px rgba(0,200,255,0);
-}
-.btn-scan:hover{
-  background:rgba(0,200,255,0.18);
-  box-shadow:0 0 20px rgba(0,200,255,0.15);
-  transform:translateY(-1px);
+@media(max-width:600px){
+  .main{padding:16px;}
+  .stats-strip,.sev-band{grid-template-columns:1fr 1fr;}
+  .top-strip{grid-template-columns:1fr;}
 }
 
-/* Content */
-.content{
-  padding:24px 28px;
-  display:flex;flex-direction:column;
-  gap:20px;flex:1;
-}
-
-/* ═══════════════════════════════════════════════════
-   CRITICAL ALERT
-═══════════════════════════════════════════════════ */
-.crit-alert{
-  background:rgba(239,68,68,0.06);
-  border:1px solid rgba(239,68,68,0.2);
-  border-left:3px solid var(--red);
-  border-radius:8px;padding:13px 18px;
-  display:flex;align-items:center;gap:14px;
-  cursor:pointer;text-decoration:none;
-  position:relative;overflow:hidden;
-  animation:alertglow 3s ease-in-out infinite;
-}
-@keyframes alertglow{
-  0%,100%{box-shadow:0 0 0 rgba(239,68,68,0);}
-  50%{box-shadow:0 0 20px rgba(239,68,68,0.12);}
-}
-.crit-alert::before{
-  content:"";position:absolute;inset:0;
-  background:linear-gradient(90deg,rgba(239,68,68,0.04),transparent);
-  pointer-events:none;
-}
-.crit-icon{font-size:20px;flex-shrink:0;}
-.crit-text{font-size:13px;font-weight:700;color:var(--red);letter-spacing:0.3px;}
-.crit-sub{font-size:11px;color:rgba(239,68,68,0.55);margin-top:3px;font-family:var(--mono);}
-.crit-arrow{margin-left:auto;color:rgba(239,68,68,0.5);font-size:20px;flex-shrink:0;}
-
-/* ═══════════════════════════════════════════════════
-   GRID LAYOUTS
-═══════════════════════════════════════════════════ */
-.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px;}
-.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
-.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;}
-.gcol{display:flex;flex-direction:column;gap:18px;}
-
-/* ═══════════════════════════════════════════════════
-   CARDS
-═══════════════════════════════════════════════════ */
-.card{
-  background:rgba(6,12,20,0.96);
-  border:1px solid var(--border);
-  border-radius:10px;overflow:hidden;
-  backdrop-filter:blur(8px);
-  transition:border-color 0.2s,box-shadow 0.2s;
-}
-.card:hover{
-  border-color:rgba(0,200,255,0.18);
-  box-shadow:0 4px 30px rgba(0,0,0,0.3);
-}
-.card-hd{
-  padding:13px 18px;
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(0,200,255,0.018);
-}
-.card-title{
-  font-size:10px;font-weight:700;
-  color:var(--text3);text-transform:uppercase;
-  letter-spacing:2px;font-family:var(--mono);
-}
-.card-meta{font-size:10px;color:var(--text2);font-family:var(--mono);}
-.card-bd{padding:20px 18px;}
-
-/* ═══════════════════════════════════════════════════
-   DONUT CHART
-═══════════════════════════════════════════════════ */
-.donut-row{display:flex;align-items:center;gap:28px;flex-wrap:wrap;}
-.donut-container{position:relative;width:140px;height:140px;flex-shrink:0;}
-.donut-container svg{transform:rotate(-90deg);}
-.donut-inner{
-  position:absolute;inset:0;
-  display:flex;flex-direction:column;
-  align-items:center;justify-content:center;
-}
-.donut-num{
-  font-size:32px;font-weight:800;
-  color:var(--text);line-height:1;
-  font-family:var(--mono);letter-spacing:-1px;
-}
-.donut-denom{font-size:11px;color:var(--text2);margin-top:2px;font-family:var(--mono);}
-
-.score-aside{flex:1;min-width:140px;}
-.score-grade{
-  font-size:22px;font-weight:800;
-  letter-spacing:1px;margin-bottom:4px;
-}
-.grade-good{color:var(--accent2);}
-.grade-medium{color:var(--yellow);}
-.grade-high{color:var(--orange);}
-.grade-critical{color:var(--red);}
-.score-line{font-size:12px;color:var(--text3);margin-bottom:16px;line-height:1.6;}
-.trend-box{
-  background:var(--bg3);
-  border:1px solid var(--border);
-  border-radius:7px;padding:12px 14px;
-}
-.trend-row{
-  display:flex;justify-content:space-between;align-items:center;
-  font-size:11px;padding:3px 0;
-}
-.trend-row:not(:last-child){border-bottom:1px solid var(--border2);}
-.trend-k{color:var(--text2);font-family:var(--mono);}
-.trend-v{color:var(--text);font-weight:700;font-family:var(--mono);}
-.delta-up{color:var(--accent2);font-weight:800;font-family:var(--mono);}
-.delta-dn{color:var(--red);font-weight:800;font-family:var(--mono);}
-.delta-eq{color:var(--text2);font-family:var(--mono);}
-
-/* ═══════════════════════════════════════════════════
-   STAT MINI CARDS
-═══════════════════════════════════════════════════ */
-.stat-row{display:flex;align-items:center;gap:14px;padding:16px 18px;}
-.stat-ico{
-  width:38px;height:38px;border-radius:8px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:17px;flex-shrink:0;
-}
-.ico-b{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.15);}
-.ico-g{background:rgba(0,255,157,0.08);border:1px solid rgba(0,255,157,0.12);}
-.ico-r{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.12);}
-.ico-y{background:rgba(234,179,8,0.08);border:1px solid rgba(234,179,8,0.12);}
-.ico-p{background:rgba(168,85,247,0.08);border:1px solid rgba(168,85,247,0.12);}
-.stat-n{font-size:24px;font-weight:800;color:var(--text);line-height:1;font-family:var(--mono);}
-.stat-l{font-size:10px;color:var(--text2);margin-top:3px;text-transform:uppercase;letter-spacing:1px;}
-.stat-s{font-size:10px;margin-top:4px;font-family:var(--mono);}
-.sc-g{color:var(--accent2);}
-.sc-r{color:var(--red);}
-.sc-b{color:var(--accent);}
-.sc-y{color:var(--yellow);}
-
-/* ═══════════════════════════════════════════════════
-   RISK TREND CANVAS
-═══════════════════════════════════════════════════ */
-.chart-wrap{position:relative;width:100%;height:170px;}
-.chart-wrap canvas{display:block;width:100%;height:100%;}
-.chart-xlabels{
-  display:flex;justify-content:space-between;
-  margin-top:8px;padding:0 4px;
-}
-.chart-xlabels span{
-  font-size:9px;color:var(--text2);
-  font-family:var(--mono);letter-spacing:1px;
-}
-.chart-empty{
-  height:170px;display:flex;align-items:center;
-  justify-content:center;flex-direction:column;gap:10px;
-  color:var(--text2);font-size:12px;
-}
-
-/* Severity mini boxes below chart */
-.sev-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
-.sev-box{
-  background:var(--bg3);border-radius:7px;
-  padding:10px;text-align:center;
-  border:1px solid var(--border2);
-}
-.sev-box-n{font-size:18px;font-weight:800;font-family:var(--mono);}
-.sev-box-l{font-size:9px;color:var(--text2);margin-top:3px;letter-spacing:1px;}
-
-/* ═══════════════════════════════════════════════════
-   LIVE FEED
-═══════════════════════════════════════════════════ */
-.feed{display:flex;flex-direction:column;}
-.feed-item{
-  display:flex;align-items:flex-start;gap:12px;
-  padding:11px 18px;
-  border-bottom:1px solid rgba(0,200,255,0.04);
-  transition:background 0.15s;
-}
-.feed-item:hover{background:rgba(0,200,255,0.02);}
-.feed-item:last-child{border-bottom:none;}
-.feed-dot{
-  width:7px;height:7px;border-radius:50%;
-  flex-shrink:0;margin-top:5px;
-}
-.fd-scan{background:var(--accent);box-shadow:0 0 6px var(--accent);}
-.fd-ok{background:var(--accent2);box-shadow:0 0 6px var(--accent2);}
-.fd-warn{background:var(--yellow);box-shadow:0 0 6px var(--yellow);}
-.fd-crit{background:var(--red);box-shadow:0 0 6px var(--red);}
-.feed-body{flex:1;}
-.feed-msg{font-size:12px;color:var(--text3);line-height:1.5;}
-.feed-t{font-size:10px;color:var(--text2);margin-top:2px;font-family:var(--mono);}
-.feed-tag{
-  flex-shrink:0;align-self:flex-start;margin-top:3px;
-  padding:2px 8px;border-radius:4px;
-  font-size:10px;font-weight:700;font-family:var(--mono);
-}
-.ft-crit{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
-.ft-ok{background:rgba(0,255,157,0.08);color:var(--accent2);border:1px solid rgba(0,255,157,0.15);}
-.ft-warn{background:rgba(234,179,8,0.08);color:var(--yellow);border:1px solid rgba(234,179,8,0.15);}
-.live-badge{
-  display:flex;align-items:center;gap:5px;
-  font-size:10px;color:var(--accent2);font-family:var(--mono);
-}
-.live-dot{
-  width:6px;height:6px;border-radius:50%;
-  background:var(--accent2);
-  box-shadow:0 0 6px var(--accent2);
-  animation:livepulse 1.5s ease-in-out infinite;
-}
-@keyframes livepulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.5;transform:scale(0.8)}}
-
-/* ═══════════════════════════════════════════════════
-   SCAN TABLE
-═══════════════════════════════════════════════════ */
-.scan-table{width:100%;border-collapse:collapse;font-size:12px;}
-.scan-table th{
-  text-align:left;padding:9px 16px;
-  color:var(--text2);font-size:9px;
-  font-weight:700;text-transform:uppercase;
-  letter-spacing:2px;font-family:var(--mono);
-  border-bottom:1px solid var(--border);
-  background:rgba(0,200,255,0.015);
-}
-.scan-table td{
-  padding:11px 16px;
-  border-bottom:1px solid rgba(0,200,255,0.04);
-  color:var(--text3);
-}
-.scan-table tr:last-child td{border-bottom:none;}
-.scan-table tr:hover td{background:rgba(0,200,255,0.025);}
-.scan-target{
-  font-weight:600;color:var(--text);
-  font-family:var(--mono);font-size:12px;
-}
-
-/* Pills */
-.pill{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:3px 9px;border-radius:4px;
-  font-size:10px;font-weight:700;font-family:var(--mono);
-  letter-spacing:0.5px;
-}
-.p-completed{background:rgba(0,255,157,0.07);color:var(--accent2);border:1px solid rgba(0,255,157,0.15);}
-.p-error{background:rgba(239,68,68,0.07);color:var(--red);border:1px solid rgba(239,68,68,0.15);}
-.p-running{background:rgba(0,200,255,0.07);color:var(--accent);border:1px solid rgba(0,200,255,0.15);}
-.p-completed::before{content:"✓ ";}
-.p-error::before{content:"✗ ";}
-.p-running::before{content:"⟳ ";}
-
-/* Risk badges */
-.risk{
-  padding:3px 9px;border-radius:4px;
-  font-size:10px;font-weight:700;font-family:var(--mono);letter-spacing:1px;
-}
-.rC{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
-.rH{background:rgba(249,115,22,0.12);color:var(--orange);border:1px solid rgba(249,115,22,0.2);}
-.rM{background:rgba(234,179,8,0.12);color:var(--yellow);border:1px solid rgba(234,179,8,0.2);}
-.rL{background:rgba(59,130,246,0.12);color:var(--blue);border:1px solid rgba(59,130,246,0.2);}
-.rN{background:rgba(77,106,133,0.12);color:var(--text2);border:1px solid rgba(77,106,133,0.15);}
-
-/* Links */
-.mlink{
-  color:var(--accent);text-decoration:none;
-  font-size:11px;font-family:var(--mono);letter-spacing:0.5px;
-  transition:opacity 0.15s;
-}
-.mlink:hover{opacity:0.7;}
-.view-all{
-  display:block;text-align:center;padding:10px;
-  font-size:10px;color:var(--text2);
-  cursor:pointer;border-top:1px solid var(--border);
-  text-decoration:none;font-family:var(--mono);letter-spacing:2px;
-  transition:all 0.2s;
-}
-.view-all:hover{color:var(--accent);background:rgba(0,200,255,0.03);}
-
-/* Item list */
-.ilist{display:flex;flex-direction:column;}
-.iitem{
-  display:flex;align-items:center;gap:12px;
-  padding:11px 18px;
-  border-bottom:1px solid rgba(0,200,255,0.04);
-  transition:background 0.15s;
-}
-.iitem:last-child{border-bottom:none;}
-.iitem:hover{background:rgba(0,200,255,0.025);}
-.iicon{
-  width:30px;height:30px;border-radius:6px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:14px;flex-shrink:0;
-  background:rgba(0,200,255,0.07);
-  border:1px solid var(--border);
-}
-.imain{flex:1;min-width:0;}
-.iname{
-  font-size:12px;font-weight:600;color:var(--text);
-  font-family:var(--mono);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.imeta{font-size:10px;color:var(--text2);margin-top:2px;font-family:var(--mono);}
-.iact{
-  padding:5px 12px;
-  background:rgba(0,200,255,0.07);
-  color:var(--accent);border:1px solid rgba(0,200,255,0.2);
-  border-radius:5px;font-size:10px;font-weight:700;
-  font-family:var(--mono);letter-spacing:1px;
-  cursor:pointer;white-space:nowrap;
-  text-decoration:none;transition:all 0.2s;
-}
-.iact:hover{background:rgba(0,200,255,0.14);}
-.empty{
-  padding:32px;text-align:center;
-  color:var(--text2);font-size:12px;
-  line-height:1.8;font-family:var(--mono);
-}
-
-/* Mobile */
+/* ── Sidebar ─────────────────────────────────────────────────── */
+.sidebar{width:240px;flex-shrink:0;background:rgba(5,9,18,0.98);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;height:100vh;overflow-y:auto;z-index:50;box-shadow:8px 0 40px rgba(0,0,0,0.5);transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(20px);}
+.sidebar.open{transform:translateX(0);}
+.sidebar.open .nav-link{animation:navIn 0.4s ease both;}
+.sidebar.open .nav-link:nth-child(1){animation-delay:0.05s;}
+.sidebar.open .nav-link:nth-child(2){animation-delay:0.09s;}
+.sidebar.open .nav-link:nth-child(3){animation-delay:0.13s;}
+.sidebar.open .nav-link:nth-child(4){animation-delay:0.17s;}
+.sidebar.open .nav-link:nth-child(5){animation-delay:0.21s;}
+.sidebar.open .nav-link:nth-child(6){animation-delay:0.25s;}
+@keyframes navIn{from{opacity:0;transform:translateX(-10px)}to{opacity:1;transform:translateX(0)}}
+.sb-top{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
+.brand{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.brand-icon{display:flex;align-items:center;justify-content:center;}
+.brand-name{font-size:15px;font-weight:800;color:var(--text);}
+.brand-name span{color:var(--accent);}
+.brand-sub{font-size:9px;color:var(--text3);letter-spacing:2px;font-family:var(--mono);}
+nav{flex:1;padding:12px 0;}
+.nav-sec{font-size:9px;color:var(--text2);letter-spacing:2px;font-family:var(--mono);padding:12px 20px 6px;}
+.nav-link{display:flex;align-items:center;gap:10px;padding:10px 20px;color:var(--text3);text-decoration:none;font-size:12px;font-weight:600;transition:all 0.2s;border-left:2px solid transparent;}
+.nav-link:hover{color:var(--text);background:rgba(124,141,255,0.05);}
+.nav-link.active{color:var(--accent);background:rgba(124,141,255,0.08);border-left-color:var(--accent);}
+.nav-icon{font-size:14px;width:18px;text-align:center;}
+.sb-footer{padding:14px 20px;font-size:9px;color:var(--text2);font-family:var(--mono);border-top:1px solid var(--border);}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(2px);z-index:40;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
 .overlay.show{opacity:1;visibility:visible;}
-.menu-btn{
-  display:none;background:var(--bg3);
-  border:1px solid var(--border);border-radius:7px;
-  padding:7px 10px;color:var(--text);font-size:16px;cursor:pointer;
-}
-@media(max-width:1100px){.g4{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:900px){.g3{grid-template-columns:1fr 1fr;}}
-@media(max-width:720px){
-  .menu-btn{display:flex;align-items:center;}
-  .g2,.g3,.g4,.gcol{grid-template-columns:1fr;}
-  .content,.topbar{padding:14px 16px;}
-  .content{gap:14px;}
-  .corner{display:none;}
-}
-.menu-btn{display:flex !important;align-items:center;}
-
-
-
-/* ── PROFESSIONAL RISK TREND ── */
-.risk-trend-card{margin-bottom:0;}
-.rt-range-toggle{display:flex;gap:4px;background:var(--bg3);border-radius:6px;padding:3px;}
-.rt-range-btn{background:none;border:none;color:var(--text2);font-size:10px;font-weight:700;font-family:var(--mono);padding:5px 10px;border-radius:4px;cursor:pointer;transition:all 0.2s;letter-spacing:0.5px;}
-.rt-range-btn:hover{color:var(--text);}
-.rt-range-btn.active{background:rgba(0,200,255,0.12);color:var(--accent);}
-
-.rt-summary{display:flex;align-items:center;gap:0;margin-bottom:18px;padding:14px 16px;background:var(--bg3);border-radius:8px;border:1px solid var(--border2);}
-.rt-sum-item{flex:1;text-align:center;}
-.rt-sum-label{font-size:8px;color:var(--text2);letter-spacing:1.5px;font-family:var(--mono);margin-bottom:5px;}
-.rt-sum-val{font-size:20px;font-weight:800;font-family:var(--mono);transition:all 0.4s;}
-.rt-sum-divider{width:1px;height:30px;background:var(--border);flex-shrink:0;}
-
-.chart-wrap{position:relative;width:100%;height:220px;}
-.chart-wrap canvas{display:block;width:100%;height:100%;cursor:crosshair;}
-.chart-tooltip{
-  position:absolute;pointer-events:none;
-  background:rgba(6,12,20,0.98);
-  border:1px solid rgba(0,200,255,0.3);
-  border-radius:8px;padding:10px 14px;
-  font-family:var(--mono);font-size:11px;
-  opacity:0;transition:opacity 0.15s;
-  box-shadow:0 8px 30px rgba(0,0,0,0.5);
-  z-index:10;white-space:nowrap;
-  transform:translate(-50%,-100%);
-  margin-top:-12px;
-}
-.chart-tooltip.show{opacity:1;}
-.ct-date{color:var(--text2);font-size:9px;margin-bottom:4px;letter-spacing:0.5px;}
-.ct-score{color:var(--accent);font-size:16px;font-weight:800;}
-.ct-target{color:var(--text3);font-size:9px;margin-top:3px;}
-.chart-crosshair{
-  position:absolute;top:0;bottom:0;width:1px;
-  background:rgba(0,200,255,0.2);
-  pointer-events:none;opacity:0;
-  transition:opacity 0.15s;
-}
-.chart-crosshair.show{opacity:1;}
-
-.chart-empty{height:220px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:10px;color:var(--text2);font-size:12px;}
-.chart-empty-icon{font-size:36px;opacity:0.25;}
-
-.rt-sev-bar{margin-top:18px;}
-.rt-sev-bar-label{font-size:9px;color:var(--text2);letter-spacing:1.5px;font-family:var(--mono);margin-bottom:8px;}
-.rt-sev-bar-track{height:8px;background:var(--bg3);border-radius:4px;overflow:hidden;display:flex;}
-.rt-sev-seg{height:100%;transition:width 1s ease;}
-.rt-sev-legend{display:flex;gap:16px;margin-top:10px;flex-wrap:wrap;}
-.rt-sev-legend span{font-size:10px;color:var(--text3);display:flex;align-items:center;gap:6px;font-family:var(--mono);}
-.rt-sev-legend i{width:8px;height:8px;border-radius:2px;display:inline-block;}
-
-/* ── ANIMATIONS ── */
-.card{animation:cardIn 0.4s ease both;}
-.card:nth-child(1){animation-delay:0.05s;}
-.card:nth-child(2){animation-delay:0.1s;}
-.card:nth-child(3){animation-delay:0.15s;}
-.card:nth-child(4){animation-delay:0.2s;}
-@keyframes cardIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-.content{animation:contentIn 0.3s ease both;}
-@keyframes contentIn{from{opacity:0}to{opacity:1}}
-/* Stat number count-up effect */
-.stat-n{transition:color 0.3s;}
-/* Topbar slide down */
-.topbar{animation:topIn 0.3s ease both;}
-@keyframes topIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
-/* Sidebar: off-canvas, animated via transform in base CSS */
-/* Critical alert pulse */
-.crit-alert{animation:alertglow 3s ease-in-out infinite, cardIn 0.4s ease both;}
-/* Page transition */
-body{animation:pagein 0.3s ease both;}
-@keyframes pagein{from{opacity:0}to{opacity:1}}
-
-/* Scrollbar */
-::-webkit-scrollbar{width:3px;}
-::-webkit-scrollbar-track{background:transparent;}
-::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
-
-/* ── Stat cards ─────────────────────────────────────────────────── */
-.stat-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;padding:18px 20px;display:flex;align-items:center;gap:14px;transition:all 0.2s;}
-.stat-card:hover{border-color:rgba(0,200,255,0.25);transform:translateY(-2px);}
-.stat-card-danger{border-color:rgba(239,68,68,0.3) !important;background:rgba(239,68,68,0.04) !important;}
-.stat-card-warn{border-color:rgba(249,115,22,0.3) !important;background:rgba(249,115,22,0.04) !important;}
-.stat-icon{font-size:24px;flex-shrink:0;}
-.stat-n{font-size:32px;font-weight:800;font-family:var(--mono);color:var(--text);line-height:1;}
-.stat-l{font-size:10px;color:var(--text2);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase;}
-/* ── Severity cards ──────────────────────────────────────────────── */
-.sev-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;padding:16px 18px;}
-.sev-card-n{font-size:36px;font-weight:800;font-family:var(--mono);line-height:1;}
-.sev-card-l{font-size:10px;color:var(--text2);letter-spacing:1.5px;margin-top:4px;text-transform:uppercase;}
-.sev-card-bar{height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:12px;overflow:hidden;}
-.sev-card-fill{height:100%;border-radius:2px;transition:width 1.2s ease;}
-/* ── Quick actions ───────────────────────────────────────────────── */
-.qa-btn{display:flex;align-items:center;gap:14px;background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;padding:16px 18px;text-decoration:none;color:var(--text);transition:all 0.25s;}
-.qa-btn:hover{border-color:rgba(0,200,255,0.3);background:rgba(0,200,255,0.04);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,0,0.3);}
-.qa-primary{border-color:rgba(0,255,157,0.2);background:rgba(0,255,157,0.03);}
-.qa-primary:hover{border-color:rgba(0,255,157,0.4);background:rgba(0,255,157,0.08);}
-.qa-icon{font-size:22px;flex-shrink:0;}
-.qa-title{font-size:13px;font-weight:700;color:var(--text);}
-.qa-sub{font-size:10px;color:var(--text2);margin-top:2px;}
-
-
-/* ── Donut chart ─────────────────────────────────────────────────── */
-.donut-row{display:grid;grid-template-columns:280px 1fr;gap:16px;}
-.donut-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;padding:22px;display:flex;align-items:center;gap:22px;}
-.donut-wrap{position:relative;width:110px;height:110px;flex-shrink:0;}
-.donut-svg{width:110px;height:110px;transform:rotate(-90deg);}
-.donut-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;transform:rotate(0deg);}
-.donut-score{font-size:26px;font-weight:800;font-family:var(--mono);color:var(--text);line-height:1;}
-.donut-label{font-size:8px;color:var(--text2);letter-spacing:1.5px;text-align:center;margin-top:3px;line-height:1.3;}
-.donut-meta{flex:1;}
-.donut-grade{font-size:11px;font-weight:800;font-family:var(--mono);letter-spacing:2px;padding:4px 12px;border-radius:5px;display:inline-block;margin-bottom:8px;}
-.grade-A{background:rgba(0,255,157,0.1);color:var(--green);border:1px solid rgba(0,255,157,0.2);}
-.grade-B{background:rgba(0,200,255,0.1);color:var(--accent);border:1px solid rgba(0,200,255,0.2);}
-.grade-C{background:rgba(234,179,8,0.1);color:var(--yellow);border:1px solid rgba(234,179,8,0.2);}
-.grade-D{background:rgba(249,115,22,0.1);color:var(--orange);border:1px solid rgba(249,115,22,0.2);}
-.grade-F{background:rgba(239,68,68,0.1);color:var(--red);border:1px solid rgba(239,68,68,0.2);}
-.donut-desc{font-size:11px;color:var(--text3);margin-bottom:8px;line-height:1.5;}
-.donut-trend{font-size:10px;font-family:var(--mono);}
-/* Compliance card */
-.compliance-card{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:12px;padding:20px 22px;}
-.comp-title{font-size:9px;color:var(--accent);letter-spacing:2px;font-family:var(--mono);margin-bottom:16px;}
-.comp-row{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
-.comp-row:last-child{margin-bottom:0;}
-.comp-label{font-size:11px;color:var(--text3);font-family:var(--mono);width:95px;flex-shrink:0;}
-.comp-bar-wrap{flex:1;height:5px;background:rgba(255,255,255,0.05);border-radius:3px;overflow:hidden;}
-.comp-bar-fill{height:100%;border-radius:3px;transition:width 1.2s ease;}
-.comp-pct{font-size:11px;font-family:var(--mono);color:var(--text3);width:36px;text-align:right;flex-shrink:0;}
-@media(max-width:700px){
-  .donut-row{grid-template-columns:1fr;}
-  .donut-card{flex-direction:column;text-align:center;}
-}
-
-</style>
-
-<style>
-.sr-live-card{padding:18px 22px;font-size:12px;}
-.slc-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px;}
-.slc-icon{font-size:22px;flex-shrink:0;}
-.slc-title{font-size:14px;font-weight:700;color:#e2eaf4;font-family:'Share Tech Mono',monospace;margin-bottom:3px;}
-.slc-sub{font-size:11px;color:#4d6a85;}
-.slc-btn{margin-left:auto;padding:6px 14px;background:rgba(0,200,255,0.1);color:#00c8ff;border:1px solid rgba(0,200,255,0.25);border-radius:6px;font-size:10px;font-weight:700;font-family:'Share Tech Mono',monospace;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:all 0.2s;}
-.slc-btn:hover{background:rgba(0,200,255,0.2);}
-.slc-desc{font-size:12px;color:#64748b;line-height:1.7;background:rgba(255,255,255,0.02);border-radius:7px;padding:10px 14px;margin-bottom:10px;}
-.slc-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px;}
-.slcs{background:rgba(255,255,255,0.03);border:1px solid rgba(0,200,255,0.08);border-radius:7px;padding:10px;text-align:center;}
-.slcs-n{font-size:18px;font-weight:800;font-family:'Share Tech Mono',monospace;color:#e2eaf4;}
-.slcs-l{font-size:9px;color:#4d6a85;margin-top:3px;letter-spacing:1px;text-transform:uppercase;}
-.slc-found{margin-top:10px;border-top:1px solid rgba(0,200,255,0.08);padding-top:10px;}
-.slc-found-label{font-size:9px;color:#304560;letter-spacing:2px;font-family:'Share Tech Mono',monospace;margin-bottom:8px;}
-.slc-found-item{display:flex;align-items:center;justify-content:space-between;padding:6px 0;font-size:11px;color:#64748b;border-bottom:1px solid rgba(0,200,255,0.04);}
-.slc-cves{margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;}
-.slc-cve-tag{padding:3px 8px;background:rgba(239,68,68,0.1);color:#ef4444;border:1px solid rgba(239,68,68,0.2);border-radius:4px;font-size:10px;font-family:'Share Tech Mono',monospace;text-decoration:none;}
-.slc-cve-tag:hover{background:rgba(239,68,68,0.2);}
-</style>
-
-<style>
-.sh-title{font-size:9px;color:var(--accent);letter-spacing:3px;font-family:var(--mono);margin-bottom:12px;}
-.sh-tip{font-size:11px;color:rgba(0,200,255,0.3);margin-top:12px;font-style:italic;}
-.sr-section-label{font-size:9px;color:var(--text2);letter-spacing:2px;font-family:var(--mono);padding:10px 22px 4px;}
-.sr-recent{cursor:pointer;}
-.sr-recent-del{color:var(--text2);font-size:12px;padding:4px 8px;border-radius:4px;transition:all 0.2s;flex-shrink:0;}
-.sr-recent-del:hover{color:var(--red);background:rgba(239,68,68,0.1);}
-.sr-quickaction{background:rgba(0,255,157,0.03);border-left:2px solid rgba(0,255,157,0.3);}
-.sr-ac-actions{display:flex;gap:6px;flex-shrink:0;}
-.sr-ac-btn{padding:4px 10px;background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.15);border-radius:5px;font-size:10px;font-family:var(--mono);text-decoration:none;transition:all 0.2s;white-space:nowrap;}
-.sr-ac-btn:hover{background:rgba(0,200,255,0.18);}
 
 </style>
 </head>
 <body>
-
-<!-- ══ PRELOADER ══ -->
-<div id="preloader">
-  <div class="pre-inner">
-    <div class="pre-logo">
-      <img src="/favicon.ico" class="pre-icon" id="pre-icon" alt="">
-      <div class="pre-rings">
-        <div class="pre-ring r1"></div>
-        <div class="pre-ring r2"></div>
-        <div class="pre-ring r3"></div>
-      </div>
-    </div>
-    <div class="pre-name">CyberScan<span>Pro</span></div>
-    <div class="pre-bar-wrap"><div class="pre-bar" id="pre-bar"></div></div>
-    <div class="pre-status" id="pre-status">Initializing...</div>
-  </div>
-</div>
-
-<style>
-#preloader{
-  position:fixed;inset:0;z-index:9999;
-  background:#020810;
-  display:flex;align-items:center;justify-content:center;
-  transition:opacity 0.5s ease, visibility 0.5s ease;
-}
-#preloader.done{opacity:0;visibility:hidden;pointer-events:none;}
-.pre-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
-.pre-logo{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
-.pre-icon{width:40px;height:40px;z-index:2;position:relative;image-rendering:crisp-edges;}
-.pre-rings{position:absolute;inset:0;}
-.pre-ring{
-  position:absolute;border-radius:50%;
-  border:1px solid transparent;
-  animation:prerotate 2s linear infinite;
-}
-.r1{inset:0;border-top-color:rgba(0,200,255,0.8);border-right-color:rgba(0,200,255,0.2);animation-duration:1.2s;}
-.r2{inset:8px;border-top-color:rgba(0,255,157,0.6);border-left-color:rgba(0,255,157,0.1);animation-duration:1.8s;animation-direction:reverse;}
-.r3{inset:16px;border-bottom-color:rgba(0,200,255,0.4);animation-duration:2.4s;}
-@keyframes prerotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.pre-name{
-  font-family:'Share Tech Mono',monospace;
-  font-size:18px;font-weight:700;
-  color:#e2eaf4;letter-spacing:2px;
-}
-.pre-name span{color:#00c8ff;}
-.pre-bar-wrap{
-  width:180px;height:2px;
-  background:rgba(0,200,255,0.1);
-  border-radius:2px;overflow:hidden;
-}
-.pre-bar{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,#00c8ff,#00ff9d);
-  border-radius:2px;
-  transition:width 0.3s ease;
-  box-shadow:0 0 8px rgba(0,200,255,0.5);
-}
-.pre-status{
-  font-family:'Share Tech Mono',monospace;
-  font-size:10px;color:#304560;
-  letter-spacing:2px;
-}
-</style>
-
-<script>
-(function(){
-  const steps = [
-    {w:20,  t:'Loading modules...'},
-    {w:45,  t:'Connecting to database...'},
-    {w:70,  t:'Checking CVE feed...'},
-    {w:90,  t:'Almost ready...'},
-    {w:100, t:'Done'},
-  ];
-  let i = 0;
-  const bar = document.getElementById('pre-bar');
-  const stat = document.getElementById('pre-status');
-  const iv = setInterval(()=>{
-    if(i >= steps.length){ clearInterval(iv); return; }
-    bar.style.width = steps[i].w + '%';
-    stat.textContent = steps[i].t;
-    i++;
-  }, 200);
-  window.addEventListener('load', ()=>{
-    setTimeout(()=>{
-      bar.style.width = '100%';
-      stat.textContent = 'Ready';
-      setTimeout(()=>{
-        document.getElementById('preloader').classList.add('done');
-      }, 400);
-    }, 300);
-  });
-})();
-</script>
-
-<!-- Background -->
-<div class="bg-fixed" id="bg-grid"></div>
-<div class="bg-fixed" id="bg-scan"></div>
-<div class="bg-fixed" id="bg-glow"></div>
-<div class="corner corner-tl"></div>
-<div class="corner corner-tr"></div>
-<div class="corner corner-bl"></div>
-<div class="corner corner-br"></div>
-<!-- ══ AI ANIMATION CANVAS ══ -->
-
-
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
-
-<!-- ═══════════════ SIDEBAR ═══════════════ -->
 <aside class="sidebar" id="sidebar">
   <div class="sb-top">
     <div class="brand">
-      <div class="brand-icon"><svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
-          <defs>
-            <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#00e5ff"/>
-              <stop offset="100%" stop-color="#0066ff"/>
-            </linearGradient>
-          </defs>
-          <g stroke="url(#logoGrad)" stroke-width="2" fill="none" stroke-linecap="round">
-            <path d="M32 14 L20 6 M20 6 L20 2"/>
-            <path d="M32 14 L32 6"/>
-            <path d="M32 14 L44 6 M44 6 L44 2"/>
-            <path d="M18 22 L6 22 M6 22 L2 22"/>
-            <path d="M46 22 L58 22 M58 22 L62 22"/>
-            <path d="M18 42 L6 42 M6 42 L2 42"/>
-            <path d="M46 42 L58 42 M58 42 L62 42"/>
-            <path d="M24 50 L16 58 M16 58 L13 61"/>
-            <path d="M32 52 L32 60"/>
-            <path d="M40 50 L48 58 M48 58 L51 61"/>
+      <div class="brand-icon">
+        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" width="32" height="32">
+          <defs><linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c8dff"/><stop offset="100%" stop-color="#34d399"/></linearGradient></defs>
+          <g stroke="url(#lg)" stroke-width="2" fill="none" stroke-linecap="round">
+            <path d="M32 14 L20 6 M20 6 L20 2"/><path d="M32 14 L32 6"/><path d="M32 14 L44 6 M44 6 L44 2"/>
+            <path d="M18 22 L6 22 M6 22 L2 22"/><path d="M46 22 L58 22 M58 22 L62 22"/>
+            <path d="M18 42 L6 42 M6 42 L2 42"/><path d="M46 42 L58 42 M58 42 L62 42"/>
+            <path d="M24 50 L16 58"/><path d="M32 52 L32 60"/><path d="M40 50 L48 58"/>
           </g>
-          <g fill="url(#logoGrad)">
-            <circle cx="20" cy="2" r="2.2"/>
-            <circle cx="32" cy="6" r="2.2"/>
-            <circle cx="44" cy="2" r="2.2"/>
-            <circle cx="2" cy="22" r="2.2"/>
-            <circle cx="62" cy="22" r="2.2"/>
-            <circle cx="2" cy="42" r="2.2"/>
-            <circle cx="62" cy="42" r="2.2"/>
-            <circle cx="13" cy="61" r="2.2"/>
+          <g fill="url(#lg)">
+            <circle cx="20" cy="2" r="2.2"/><circle cx="32" cy="6" r="2.2"/><circle cx="44" cy="2" r="2.2"/>
+            <circle cx="2" cy="22" r="2.2"/><circle cx="62" cy="22" r="2.2"/>
+            <circle cx="2" cy="42" r="2.2"/><circle cx="62" cy="42" r="2.2"/>
             <circle cx="32" cy="60" r="2.2"/>
-            <circle cx="51" cy="61" r="2.2"/>
           </g>
-          <g fill="url(#logoGrad)" opacity="0.7">
-            <rect x="24" y="16" width="2" height="2"/>
-            <rect x="38" y="16" width="2" height="2"/>
-            <rect x="13" y="30" width="2" height="2"/>
-            <rect x="49" y="30" width="2" height="2"/>
-            <rect x="24" y="46" width="2" height="2"/>
-            <rect x="38" y="46" width="2" height="2"/>
-          </g>
-          <rect x="16" y="14" width="32" height="32" rx="9" fill="rgba(0,180,255,0.06)" stroke="url(#logoGrad)" stroke-width="2.2"/>
-          <path d="M26 27 V23.5 C26 19.5 29 17 32 17 C35 17 38 19.5 38 23.5 V27"
-                stroke="url(#logoGrad)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
-          <rect x="23" y="27" width="18" height="14" rx="3" fill="rgba(0,180,255,0.1)" stroke="url(#logoGrad)" stroke-width="2.2"/>
-          <circle cx="32" cy="32.5" r="2.3" fill="url(#logoGrad)"/>
-          <path d="M32 34.5 L32 37.5" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round"/>
-        </svg></div>
+          <rect x="16" y="14" width="32" height="32" rx="9" fill="rgba(124,141,255,0.06)" stroke="url(#lg)" stroke-width="2.2"/>
+          <path d="M26 27 V23.5 C26 19.5 29 17 32 17 C35 17 38 19.5 38 23.5 V27" stroke="url(#lg)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+          <rect x="23" y="27" width="18" height="14" rx="3" fill="rgba(124,141,255,0.1)" stroke="url(#lg)" stroke-width="2.2"/>
+          <circle cx="32" cy="32.5" r="2.3" fill="url(#lg)"/>
+          <path d="M32 34.5 L32 37.5" stroke="url(#lg)" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
       <div>
         <div class="brand-name">CyberScan<span>Pro</span></div>
       </div>
     </div>
     <div class="brand-sub">SECURITY ASSESSMENT PLATFORM</div>
   </div>
-
-  <div class="sb-status">
-    <div class="status-ok-dot"></div>
-    SYSTEM ONLINE
-  </div>
-
   <nav>
     <div class="nav-sec">// Assessment</div>
     <a href="/" class="nav-link {% if page=='home' %}active{% endif %}"><span class="nav-icon">⬡</span>Dashboard</a>
     <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="nav-icon">▶</span>New Scan</a>
     <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}"><span class="nav-icon">☰</span>Scan History</a>
     <a href="/reports" class="nav-link {% if page=='reports' %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
-
     <div class="nav-sec">// Analysis</div>
     <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">◎</span>Targets</a>
-
     <div class="nav-sec">// System</div>
     <a href="/settings" class="nav-link {% if page=='settings' %}active{% endif %}"><span class="nav-icon">⚙</span>Settings</a>
-
-    <div class="nav-sec">// Account</div>
     <a href="/logout" class="nav-link"><span class="nav-icon">→</span>Logout</a>
   </nav>
-
-  <div class="sb-foot">ETHICAL USE ONLY · v1.0.0</div>
+  <div class="sb-footer">ETHICAL USE ONLY · v1.0.0</div>
 </aside>
 
-<!-- ═══════════════ MAIN ═══════════════ -->
+<div class="topbar">
+  <div class="tb-left">
+    <button class="menu-btn" onclick="openSidebar()">☰</button>
+    <div class="tb-logo">Cyber<em>Scan Pro</em></div>
+  </div>
+  <div class="tb-right">
+    <div class="clock" id="clock">00:00:00</div>
+    <button class="ib" onclick="openSearch ? openSearch() : null" title="Search (Ctrl+K)">🔍</button>
+    <button class="ib">🔔</button>
+    <button class="ns-btn">▶ New Scan</button>
+  </div>
+</div>
+
 <div class="main">
 
-  <!-- Topbar -->
-  <div class="topbar">
-    <div style="display:flex;align-items:center;gap:12px;">
-      <button class="menu-btn" onclick="openSidebar()">☰</button>
-      <div class="tb-left">
-        <div class="tb-title">// SECURITY <span>DASHBOARD</span></div>
-        <div class="tb-sub">CYBERSCAN PRO · REAL-TIME THREAT ASSESSMENT</div>
+  <!-- Header -->
+  <div class="header-row">
+    <h1>Good day, <br><span class="hi">{{ session.username | title }}</span> 👋</h1>
+    <p>Your security posture is being monitored across {{ unique_targets }} target{% if unique_targets != 1 %}s{% endif %}. {{ total_scans }} scan{% if total_scans != 1 %}s{% endif %} completed total.</p>
+    <div class="status-chip"><div class="pulse"></div> Systems Online · All APIs Connected</div>
+  </div>
+
+  <!-- Score + stats -->
+  <div class="top-strip">
+    <div class="donut-card">
+      <div class="donut-svg-wrap">
+        <svg viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(124,141,255,0.08)" stroke-width="10"/>
+          <circle cx="50" cy="50" r="42" fill="none" stroke="url(#dg2)" stroke-width="10" stroke-linecap="round"
+            stroke-dasharray="{{ (security_score / 100 * 264) | round(1) }} 264" stroke-dashoffset="66"
+            style="transition:stroke-dasharray 1.5s cubic-bezier(0.16,1,0.3,1);"/>
+          <defs>
+            <linearGradient id="dg2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#7c8dff"/>
+              <stop offset="100%" stop-color="#34d399"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="dc">
+          <div class="dc-n">{{ security_score }}</div>
+          <div class="dc-l">SCORE</div>
+        </div>
+      </div>
+      <div class="donut-meta">
+        <div class="grade">GRADE {{ 'A' if security_score >= 90 else 'B' if security_score >= 75 else 'C' if security_score >= 60 else 'D' if security_score >= 45 else 'F' }}</div>
+        <h3>Security Score</h3>
+        <p>{% if security_score >= 90 %}Excellent security posture — keep it up.{% elif security_score >= 75 %}Good posture with minor findings.{% elif security_score >= 60 %}Fair posture — attention required.{% elif security_score >= 45 %}Poor posture — significant risks present.{% else %}Critical — immediate action required.{% endif %}</p>
       </div>
     </div>
-    <div class="tb-right">
-      <div class="clock" id="clock">--:--:--</div>
-      <button class="icon-btn" onclick="openSearch()" title="Search (Ctrl+K)">
-        🔍
-      </button>
-      <button class="icon-btn" onclick="loadNotifs()" title="Notifications">
-        🔔
-        {% if severity_counts.Critical > 0 %}<div class="notif-dot"></div>{% endif %}
-      </button>
-      <a href="/scan/new" class="btn-scan">▶ NEW SCAN</a>
+
+    <div class="stats-strip">
+      <div class="stat-tile" onclick="openModal('hosts')">
+        <div class="st-top">
+          <span class="st-icon">🖥</span>
+          <span class="st-change sc-up">+2</span>
+        </div>
+        <div class="st-n">{{ total_hosts }}</div>
+        <div class="st-l">Hosts Discovered</div>
+      </div>
+      <div class="stat-tile" onclick="openModal('ports')">
+        <div class="st-top">
+          <span class="st-icon">🔌</span>
+          <span class="st-change sc-up">+8</span>
+        </div>
+        <div class="st-n">{{ total_ports }}</div>
+        <div class="st-l">Open Ports</div>
+      </div>
+      <div class="stat-tile" onclick="openModal('web')">
+        <div class="st-top">
+          <span class="st-icon">🌐</span>
+          <span class="st-change sc-warn">⚠ 5</span>
+        </div>
+        <div class="st-n">{{ total_web }}</div>
+        <div class="st-l">Web Findings</div>
+      </div>
+      <div class="stat-tile" onclick="openModal('cves')">
+        <div class="st-top">
+          <span class="st-icon">🔴</span>
+          <span class="st-change sc-warn">new</span>
+        </div>
+        <div class="st-n">{{ total_cves }}</div>
+        <div class="st-l">CVEs Identified</div>
+      </div>
     </div>
   </div>
 
-  <div class="content">
-
-    <!-- CRITICAL ALERT -->
-    {% if severity_counts.Critical > 0 %}
-    <a href="/history" class="crit-alert">
-      <div class="crit-icon">🚨</div>
-      <div>
-        <div class="crit-text">{{ severity_counts.Critical }} CRITICAL VULNERABILIT{{ 'IES' if severity_counts.Critical > 1 else 'Y' }} DETECTED</div>
-        <div class="crit-sub">Automated exploit tools scan for these 24/7 — immediate remediation required</div>
+  <!-- Severity band -->
+  <div class="sev-band">
+    <div class="sev-tile" onclick="openModal('crit')">
+      <div class="sev-circle sc-crit">{{ severity_counts.Critical }}</div>
+      <div class="sev-info">
+        <div class="sev-n" style="color:var(--red);">{{ severity_counts.Critical }}</div>
+        <div class="sev-l">Critical · fix 24h</div>
+        <div class="sev-l">Fix within 24h</div>
+        <div class="sev-bar"><div class="sev-fill" style="width:{{ [severity_counts.Critical * 10, 100]|min }}%;background:var(--red);"></div></div>
       </div>
-      <div class="crit-arrow">›</div>
-    </a>
-    {% endif %}
+    </div>
+    <div class="sev-tile" onclick="openModal('high')">
+      <div class="sev-circle sc-high">{{ severity_counts.High }}</div>
+      <div class="sev-info">
+        <div class="sev-n" style="color:var(--orange);">{{ severity_counts.High }}</div>
+        <div class="sev-l">High · fix 7 days</div>
+        <div class="sev-l">Fix within 7 days</div>
+        <div class="sev-bar"><div class="sev-fill" style="width:{{ [severity_counts.High * 10, 100]|min }}%;background:var(--orange);"></div></div>
+      </div>
+    </div>
+    <div class="sev-tile" onclick="openModal('med')">
+      <div class="sev-circle sc-med">{{ severity_counts.Medium }}</div>
+      <div class="sev-info">
+        <div class="sev-n" style="color:var(--yellow);">{{ severity_counts.Medium }}</div>
+        <div class="sev-l">Medium · fix 30 days</div>
+        <div class="sev-l">Fix within 30 days</div>
+        <div class="sev-bar"><div class="sev-fill" style="width:{{ [severity_counts.Medium * 10, 100]|min }}%;background:var(--yellow);"></div></div>
+      </div>
+    </div>
+    <div class="sev-tile" onclick="openModal('low')">
+      <div class="sev-circle sc-low">{{ severity_counts.Low }}</div>
+      <div class="sev-info">
+        <div class="sev-n" style="color:var(--blue);">{{ severity_counts.Low }}</div>
+        <div class="sev-l">Low · routine</div>
+        <div class="sev-l">Routine maintenance</div>
+        <div class="sev-bar"><div class="sev-fill" style="width:{{ [severity_counts.Low * 10, 100]|min }}%;background:var(--blue);"></div></div>
+      </div>
+    </div>
+  </div>
 
-        <!-- SECURITY SCORE DONUT -->
-    <div class="donut-row" style="margin-bottom:20px;">
-      <div class="donut-card">
-        <div class="donut-wrap">
-          <svg viewBox="0 0 120 120" class="donut-svg">
-            <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(0,200,255,0.07)" stroke-width="12"/>
-            <circle cx="60" cy="60" r="50" fill="none"
-              stroke="url(#donutGrad)" stroke-width="12"
-              stroke-linecap="round"
-              stroke-dasharray="{{ (security_score / 100 * 314.16) | round(1) }} 314.16"
-              stroke-dashoffset="78.5"
-              style="transition:stroke-dasharray 1.5s cubic-bezier(0.4,0,0.2,1);"
-            />
-            <defs>
-              <linearGradient id="donutGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stop-color="#00e5ff"/>
-                <stop offset="100%" stop-color="#0066ff"/>
-              </linearGradient>
-            </defs>
-          </svg>
-          <div class="donut-center">
-            <div class="donut-score">{{ security_score }}</div>
-            <div class="donut-label">SECURITY<br>SCORE</div>
-          </div>
+  <!-- Bottom -->
+  <div class="bottom-row">
+    <div class="feed-card">
+      <div class="feed-head">
+        <div class="fh-left">
+          Activity Feed
+          <div class="live-pill"><div class="lp-dot"></div>LIVE</div>
         </div>
-        <div class="donut-meta">
-          <div class="donut-grade grade-{{ 'A' if security_score >= 90 else 'B' if security_score >= 75 else 'C' if security_score >= 60 else 'D' if security_score >= 45 else 'F' }}">
-            GRADE {{ 'A' if security_score >= 90 else 'B' if security_score >= 75 else 'C' if security_score >= 60 else 'D' if security_score >= 45 else 'F' }}
+        <a href="/history" class="view-all">View all →</a>
+      </div>
+      <div class="feed-body">
+        {% for item in activity_feed %}
+        <div class="fi">
+          <div class="fi-dot
+            {% if item.badge_type == 'crit' %}fd-crit
+            {% elif item.badge_type == 'ok' %}fd-ok
+            {% elif item.badge_type == 'warn' %}fd-warn
+            {% else %}fd-info{% endif %}">
           </div>
-          <div class="donut-desc">
-            {% if security_score >= 90 %}Excellent security posture
-            {% elif security_score >= 75 %}Good — minor issues detected
-            {% elif security_score >= 60 %}Fair — attention required
-            {% elif security_score >= 45 %}Poor — significant risks
-            {% else %}Critical — immediate action required{% endif %}
+          <div class="fi-content">
+            <div class="fi-title">{{ item.message }}</div>
+            <div class="fi-sub">{{ item.time }}</div>
           </div>
-          <div class="donut-trend">
-            {% if security_score > security_score_last_week %}
-            <span style="color:var(--green);">▲ {{ security_score - security_score_last_week }} pts from last week</span>
-            {% elif security_score < security_score_last_week %}
-            <span style="color:var(--red);">▼ {{ security_score_last_week - security_score }} pts from last week</span>
-            {% else %}
-            <span style="color:var(--text2);">→ No change from last week</span>
+          <div class="fi-right">
+            <div class="fi-time">{{ item.time[:10] if item.time else '' }}</div>
+            {% if item.badge %}
+            <span class="fi-tag
+              {% if item.badge_type == 'crit' %}ft-crit
+              {% elif item.badge_type == 'ok' %}ft-ok
+              {% else %}ft-info{% endif %}">
+              {{ item.badge }}
+            </span>
             {% endif %}
           </div>
         </div>
-      </div>
-
-      <!-- Compliance mini-bars beside donut -->
-      <div class="compliance-card">
-        <div class="comp-title">// COMPLIANCE OVERVIEW</div>
-        {% for label, score in [('OWASP Top 10', owasp_score), ('PCI-DSS', pci_score), ('ISO 27001', iso_score), ('NIST CSF', nist_score)] %}
-        <div class="comp-row">
-          <span class="comp-label">{{ label }}</span>
-          <div class="comp-bar-wrap">
-            <div class="comp-bar-fill" style="width:{{ score }}%;background:{% if score >= 80 %}var(--green){% elif score >= 60 %}var(--yellow){% else %}var(--red){% endif %};"></div>
-          </div>
-          <span class="comp-pct">{{ score }}%</span>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
-
-    <!-- STAT CARDS -->
-    <div class="g4" style="margin-bottom:16px;">
-      <div class="stat-card">
-        <div class="stat-icon">🖥</div>
-        <div class="stat-body">
-          <div class="stat-n">{{ total_hosts }}</div>
-          <div class="stat-l">Hosts Discovered</div>
-        </div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-icon">🔌</div>
-        <div class="stat-body">
-          <div class="stat-n">{{ total_ports }}</div>
-          <div class="stat-l">Open Ports</div>
-        </div>
-      </div>
-      <div class="stat-card {% if severity_counts.Critical > 0 or severity_counts.High > 0 %}stat-card-warn{% endif %}">
-        <div class="stat-icon">🌐</div>
-        <div class="stat-body">
-          <div class="stat-n">{{ total_web }}</div>
-          <div class="stat-l">Web Findings</div>
-        </div>
-      </div>
-      <div class="stat-card {% if severity_counts.Critical > 0 %}stat-card-danger{% endif %}">
-        <div class="stat-icon">🔴</div>
-        <div class="stat-body">
-          <div class="stat-n">{{ total_cves }}</div>
-          <div class="stat-l">CVEs Identified</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- SEVERITY BREAKDOWN -->
-    <div class="g4" style="margin-bottom:20px;">
-      {% for sev, col in [('Critical','var(--red)'),('High','var(--orange)'),('Medium','var(--yellow)'),('Low','var(--blue)')] %}
-      <div class="sev-card">
-        <div class="sev-card-n" style="color:{{ col }};">{{ severity_counts[sev] }}</div>
-        <div class="sev-card-l">{{ sev }}</div>
-        <div class="sev-card-bar"><div class="sev-card-fill" style="background:{{ col }};width:{{ [severity_counts[sev] * 10, 100]|min }}%;"></div></div>
-      </div>
-      {% endfor %}
-    </div>
-
-    <!-- Live Feed -->
-    <div class="card">
-      <div class="card-hd">
-        <span class="card-title">⚡ Live Activity</span>
-        <div class="live-badge"><div class="live-dot"></div>LIVE</div>
-      </div>
-      <div class="feed" id="live-feed">
-        {% for item in activity_feed %}
-        <div class="feed-item">
-          <div class="feed-dot fd-{{ item.type }}"></div>
-          <div class="feed-body">
-            <div class="feed-msg">{{ item.message }}</div>
-            <div class="feed-t">{{ item.time }}</div>
-          </div>
-          {% if item.badge %}
-          <span class="feed-tag ft-{{ item.badge_type }}">{{ item.badge }}</span>
-          {% endif %}
-        </div>
         {% else %}
-        <div class="empty">No activity yet.<br><a href="/scan/new" class="mlink">Launch first scan →</a></div>
+        <div class="fi">
+          <div class="fi-dot fd-info"></div>
+          <div class="fi-content">
+            <div class="fi-title">No activity yet — run your first scan to see results here.</div>
+            <div class="fi-sub">Go to New Scan to get started.</div>
+          </div>
+        </div>
         {% endfor %}
       </div>
-      <a href="/history" class="view-all">VIEW ALL ACTIVITY →</a>
-    
-
-    <!-- QUICK ACTIONS -->
-    <div class="g4" style="margin-top:20px;">
-      <a href="/scan/new" class="qa-btn qa-primary">
-        <span class="qa-icon">▶</span>
-        <div><div class="qa-title">New Scan</div><div class="qa-sub">Run a vulnerability assessment</div></div>
-      </a>
-      <a href="/reports" class="qa-btn">
-        <span class="qa-icon">📄</span>
-        <div><div class="qa-title">Reports</div><div class="qa-sub">View generated reports</div></div>
-      </a>
-      <a href="/port-intel" class="qa-btn">
-        <span class="qa-icon">🔌</span>
-        <div><div class="qa-title">Port Intel</div><div class="qa-sub">Lookup any port</div></div>
-      </a>
-      <a href="/defense-prep" class="qa-btn">
-        <span class="qa-icon">🎓</span>
-        <div><div class="qa-title">Defense Prep</div><div class="qa-sub">FYP quiz and study notes</div></div>
-      </a>
     </div>
 
-</div>
-
+    <div class="qa-panel">
+      <div class="qa-head">// Quick Actions</div>
+      <a href="/scan/new" class="qa-item primary">
+        <div class="qi-ico">▶</div>
+        <div class="qi-text"><div class="qi-title">New Scan</div><div class="qi-sub">Run a new assessment</div></div>
+        <span class="qi-arrow">→</span>
+      </a>
+      <a href="#" class="qa-item">
+        <div class="qi-ico">📄</div>
+        <div class="qi-text"><div class="qi-title">Reports</div><div class="qi-sub">View generated reports</div></div>
+        <span class="qi-arrow">→</span>
+      </a>
+      <a href="#" class="qa-item">
+        <div class="qi-ico">☰</div>
+        <div class="qi-text"><div class="qi-title">Scan History</div><div class="qi-sub">Browse past scans</div></div>
+        <span class="qi-arrow">→</span>
+      </a>
+      <a href="#" class="qa-item">
+        <div class="qi-ico">🔌</div>
+        <div class="qi-text"><div class="qi-title">Port Intel</div><div class="qi-sub">Lookup any port</div></div>
+        <span class="qi-arrow">→</span>
+      </a>
+      <a href="#" class="qa-item">
+        <div class="qi-ico">🎓</div>
+        <div class="qi-text"><div class="qi-title">Defense Prep</div><div class="qi-sub">FYP quiz and notes</div></div>
+        <span class="qi-arrow">→</span>
+      </a>
+    </div>
   </div>
 </div>
 
-<script>
-// Clock
+<!-- Modal -->
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box" id="modal-box"></div>
+</div>
 
-// Count-up animation for stat numbers
-function countUp(el, target, duration=1200){
-  const start = Date.now();
-  const num = parseInt(target) || 0;
-  if(num === 0) return;
-  const iv = setInterval(()=>{
-    const elapsed = Date.now() - start;
-    const progress = Math.min(elapsed / duration, 1);
-    const ease = 1 - Math.pow(1 - progress, 3);
-    el.textContent = Math.round(num * ease);
-    if(progress >= 1){ el.textContent = num; clearInterval(iv); }
-  }, 16);
+<script>
+const MODALS = {
+  hosts:{title:"🖥 Hosts Discovered",n:12,color:"#7c8dff",breakdown:[{n:8,l:"Active"},{n:4,l:"Filtered"},{n:3,l:"Web Servers"},{n:2,l:"New"}],tip:"CyberScan Pro discovered 12 active hosts. Click below to view full host-by-host breakdown in your scan history.",link:"View Scan History →"},
+  ports:{title:"🔌 Open Ports",n:47,color:"#34d399",breakdown:[{n:22,l:"HTTP/HTTPS"},{n:12,l:"Database"},{n:8,l:"SSH/FTP"},{n:5,l:"Other"}],tip:"47 open ports detected. Database ports exposed to the internet represent a High risk — close or firewall them.",link:"Port Intelligence →"},
+  web:{title:"🌐 Web Findings",n:23,color:"#fb923c",breakdown:[{n:5,l:"Injection"},{n:7,l:"Auth"},{n:6,l:"Headers"},{n:5,l:"Other"}],tip:"23 web vulnerabilities found. 5 injection-type vulnerabilities require immediate remediation.",link:"View Findings →"},
+  cves:{title:"🔴 CVEs Identified",n:9,color:"#f87171",breakdown:[{n:3,l:"Critical"},{n:4,l:"High"},{n:2,l:"Medium"},{n:0,l:"Patched"}],tip:"9 publicly known vulnerabilities matched to detected software versions. Update affected software immediately.",link:"View CVEs →"},
+  crit:{title:"🔴 Critical",n:3,color:"#f87171",breakdown:[{n:2,l:"SQLi"},{n:1,l:"RCE Risk"},{n:0,l:"Patched"},{n:3,l:"Open"}],tip:"IMMEDIATE ACTION: Critical vulnerabilities can be exploited by automated tools within hours. Fix now.",link:"View Critical →"},
+  high:{title:"🟠 High Severity",n:8,color:"#fb923c",breakdown:[{n:3,l:"XSS"},{n:2,l:"CSRF"},{n:2,l:"Headers"},{n:1,l:"CVEs"}],tip:"Fix within 7 days. High severity issues require specific conditions but represent significant breach risk.",link:"View High →"},
+  med:{title:"🟡 Medium Severity",n:11,color:"#fbbf24",breakdown:[{n:5,l:"Config"},{n:3,l:"Info Leak"},{n:2,l:"Cookies"},{n:1,l:"Other"}],tip:"Address within 30 days during your next maintenance window.",link:"View Medium →"},
+  low:{title:"🔵 Low Severity",n:4,color:"#60a5fa",breakdown:[{n:2,l:"Info"},{n:1,l:"Versioning"},{n:1,l:"Other"},{n:0,l:"Ignored"}],tip:"Low risk. Address during routine maintenance as resources allow.",link:"View Low →"},
+};
+function openModal(k){
+  const m=MODALS[k];
+  document.getElementById("modal-box").innerHTML=`
+    <div class="mb-head"><div class="mb-title">${m.title}</div><button class="mb-close" onclick="closeModal()">✕</button></div>
+    <div class="mb-center"><div class="mb-n" style="color:${m.color};">${m.n}</div><div class="mb-l">TOTAL ${m.title.replace(/[^\w\s]/gi,'').trim().toUpperCase()}</div></div>
+    <div class="mb-grid">${m.breakdown.map(b=>`<div class="mbg-box"><div class="mbg-n" style="color:${m.color};">${b.n}</div><div class="mbg-l">${b.l}</div></div>`).join("")}</div>
+    <div class="mb-tip">${m.tip}</div>
+    <a href="#" class="mb-btn">${m.link}</a>`;
+  document.getElementById("modal").classList.add("open");
 }
-document.addEventListener('DOMContentLoaded', ()=>{
-  document.querySelectorAll('.stat-n, .donut-num').forEach(el=>{
-    const val = el.textContent.trim();
-    if(/^\d+$/.test(val)){ countUp(el, val); }
-  });
-});
+function closeModal(){document.getElementById("modal").classList.remove("open");}
+function openSidebar(){document.getElementById("sidebar").classList.add("open");document.getElementById("overlay").classList.add("show");}
+function closeSidebar(){document.getElementById("sidebar").classList.remove("open");document.getElementById("overlay").classList.remove("show");}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
 (function tick(){
-  const el=document.getElementById("clock");
-  if(el){const n=new Date();el.textContent=n.toLocaleTimeString("en-GB");}
+  const n=new Date();
+  document.getElementById("clock").textContent=n.toLocaleTimeString("en-GB");
   setTimeout(tick,1000);
 })();
 
-// Mobile sidebar
-function openSidebar(){
-  document.getElementById("sidebar").classList.add("open");
-  document.getElementById("overlay").classList.add("show");
-}
-function closeSidebar(){
-  document.getElementById("sidebar").classList.remove("open");
-  document.getElementById("overlay").classList.remove("show");
-}
-
-// Notifications
-async function loadNotifs(){
-  try{
-    const r=await fetch("/api/notifications");
-    const d=await r.json();
-    alert(d.length>0?"🔔 Alerts:\n\n"+d.map(n=>n.message).join("\n"):"✅ No critical alerts.");
-  }catch(e){alert("Could not load notifications.");}
-}
-
-// ── PROFESSIONAL RISK TREND CHART ──────────────────────────────────────
-{% if trend_points and trend_points|length > 1 %}
-(function(){
-  const canvas = document.getElementById("riskChart");
-  if(!canvas) return;
-  const ctx = canvas.getContext("2d");
-  const wrap = document.getElementById("chart-wrap");
-  const tooltip = document.getElementById("chart-tooltip");
-  const crosshair = document.getElementById("chart-crosshair");
-
-  const rawPoints = {{ trend_points | tojson }};
-  const labels    = {{ trend_labels | tojson if trend_labels else '[]' }};
-  const scores    = rawPoints.map(p => p.val !== undefined ? p.val : (100 - p.y/1.2));
-
-  // Summary stats
-  const avg  = Math.round(scores.reduce((a,b)=>a+b,0) / scores.length);
-  const peak = Math.max(...scores);
-  const low  = Math.min(...scores);
-  const direction = scores[scores.length-1] - scores[0];
-
-  document.getElementById('rt-avg').textContent  = avg;
-  document.getElementById('rt-peak').textContent  = peak;
-  document.getElementById('rt-low').textContent   = low;
-  const dirEl = document.getElementById('rt-direction');
-  if(direction > 2){
-    dirEl.innerHTML = '<span style="color:var(--green)">▲ Improving</span>';
-  } else if(direction < -2){
-    dirEl.innerHTML = '<span style="color:var(--red)">▼ Declining</span>';
-  } else {
-    dirEl.innerHTML = '<span style="color:var(--text2)">→ Stable</span>';
-  }
-
-  let animProgress = 0;
-  let hoverIndex = -1;
-  const n = scores.length;
-  let X, Y, PAD;
-
-  function getColor(s){
-    return s>=80?"#00ff9d":s>=60?"#eab308":s>=40?"#f97316":"#ef4444";
-  }
-
-  function computeScales(){
-    const W = canvas.offsetWidth, H = canvas.offsetHeight;
-    PAD = {l:14, r:14, t:24, b:10};
-    const min = Math.max(0, Math.min(...scores) - 14);
-    const max = Math.min(100, Math.max(...scores) + 14);
-    const rng = max - min || 1;
-    X = i => PAD.l + (i/(n-1)) * (W - PAD.l - PAD.r);
-    Y = s => PAD.t + (1 - (s-min)/rng) * (H - PAD.t - PAD.b);
-    return {min, max, rng, W, H};
-  }
-
-  function draw(){
-    const W = canvas.offsetWidth, H = canvas.offsetHeight;
-    canvas.width  = W * devicePixelRatio;
-    canvas.height = H * devicePixelRatio;
-    ctx.setTransform(1,0,0,1,0,0);
-    ctx.scale(devicePixelRatio, devicePixelRatio);
-    ctx.clearRect(0,0,W,H);
-
-    const {min, max, rng} = computeScales();
-
-    // Animated reveal count
-    const visibleN = Math.max(2, Math.ceil(animProgress * n));
-    const visScores = scores.slice(0, visibleN);
-    const vn = visScores.length;
-    const vX = i => PAD.l + (i/(n-1)) * (W - PAD.l - PAD.r);
-
-    // Horizontal grid lines + axis labels
-    ctx.setLineDash([2,5]);
-    ctx.lineWidth = 0.5;
-    [0,25,50,75,100].forEach(pct=>{
-      const y = Y(min + (pct/100)*rng);
-      if(y < PAD.t-2 || y > H-PAD.b+2) return;
-      ctx.strokeStyle = "rgba(0,200,255,0.06)";
-      ctx.beginPath(); ctx.moveTo(PAD.l, y); ctx.lineTo(W-PAD.r, y); ctx.stroke();
-      ctx.fillStyle = "rgba(48,69,96,0.8)";
-      ctx.font = "9px 'Share Tech Mono'";
-      ctx.textAlign = "left";
-      ctx.fillText(pct, 0, y+3);
-    });
-    ctx.setLineDash([]);
-
-    // Severity zone bands (subtle background tint)
-    const zones = [
-      {from:80, to:100, color:"rgba(0,255,157,0.02)"},
-      {from:60, to:80,  color:"rgba(234,179,8,0.02)"},
-      {from:40, to:60,  color:"rgba(249,115,22,0.02)"},
-      {from:0,  to:40,  color:"rgba(239,68,68,0.02)"},
-    ];
-    zones.forEach(z=>{
-      const y1 = Y(Math.min(z.to,max));
-      const y2 = Y(Math.max(z.from,min));
-      if(y2 <= PAD.t || y1 >= H-PAD.b) return;
-      ctx.fillStyle = z.color;
-      ctx.fillRect(PAD.l, Math.max(y1,PAD.t), W-PAD.l-PAD.r, Math.min(y2,H-PAD.b)-Math.max(y1,PAD.t));
-    });
-
-    if(vn < 2) { requestAnimationFrame(animate); return; }
-
-    // Gradient fill under curve
-    const grad = ctx.createLinearGradient(0, PAD.t, 0, H-PAD.b);
-    grad.addColorStop(0, "rgba(0,200,255,0.20)");
-    grad.addColorStop(1, "rgba(0,200,255,0)");
-    ctx.beginPath();
-    ctx.moveTo(vX(0), Y(visScores[0]));
-    for(let i=1;i<vn;i++){
-      const cx = (vX(i-1)+vX(i))/2;
-      ctx.bezierCurveTo(cx, Y(visScores[i-1]), cx, Y(visScores[i]), vX(i), Y(visScores[i]));
-    }
-    ctx.lineTo(vX(vn-1), H-PAD.b);
-    ctx.lineTo(vX(0), H-PAD.b);
-    ctx.closePath();
-    ctx.fillStyle = grad;
-    ctx.fill();
-
-    // Main line with glow
-    ctx.shadowColor = "rgba(0,200,255,0.5)";
-    ctx.shadowBlur = 8;
-    ctx.beginPath();
-    ctx.moveTo(vX(0), Y(visScores[0]));
-    for(let i=1;i<vn;i++){
-      const cx = (vX(i-1)+vX(i))/2;
-      ctx.bezierCurveTo(cx, Y(visScores[i-1]), cx, Y(visScores[i]), vX(i), Y(visScores[i]));
-    }
-    ctx.strokeStyle = "rgba(0,200,255,0.95)";
-    ctx.lineWidth = 2.5;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    // Dots with severity color
-    visScores.forEach((s,i)=>{
-      const c = getColor(s);
-      const isHover = i === hoverIndex;
-      const r = isHover ? 7 : 4.5;
-      ctx.shadowColor = c;
-      ctx.shadowBlur = isHover ? 16 : 8;
-      ctx.beginPath();
-      ctx.arc(vX(i), Y(s), r, 0, Math.PI*2);
-      ctx.fillStyle = c;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-      // White center ring
-      ctx.beginPath();
-      ctx.arc(vX(i), Y(s), isHover ? 3 : 2, 0, Math.PI*2);
-      ctx.fillStyle = "#020810";
-      ctx.fill();
-    });
-
-    if(animProgress < 1){
-      animProgress += 0.025;
-      requestAnimationFrame(animate);
-    }
-  }
-
-  function animate(){ draw(); }
-
-  // Mouse interaction
-  wrap.addEventListener('mousemove', (e)=>{
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const W = canvas.offsetWidth;
-    const step = (W - PAD.l - PAD.r) / (n-1);
-    let idx = Math.round((mouseX - PAD.l) / step);
-    idx = Math.max(0, Math.min(n-1, idx));
-
-    if(idx !== hoverIndex){
-      hoverIndex = idx;
-      draw();
-    }
-
-    const x = X(idx);
-    const y = Y(scores[idx]);
-    crosshair.style.left = x + 'px';
-    crosshair.classList.add('show');
-
-    tooltip.style.left = x + 'px';
-    tooltip.style.top  = y + 'px';
-    tooltip.classList.add('show');
-    document.getElementById('ct-date').textContent  = labels[idx] || ('Scan ' + (idx+1));
-    document.getElementById('ct-score').textContent = scores[idx] + ' / 100';
-    document.getElementById('ct-target').textContent = getColor(scores[idx]) === '#ef4444' ? 'Critical Risk' :
-                                                         getColor(scores[idx]) === '#f97316' ? 'High Risk' :
-                                                         getColor(scores[idx]) === '#eab308' ? 'Medium Risk' : 'Low Risk';
-  });
-
-  wrap.addEventListener('mouseleave', ()=>{
-    hoverIndex = -1;
-    tooltip.classList.remove('show');
-    crosshair.classList.remove('show');
-    draw();
-  });
-
-  // Touch support for mobile
-  wrap.addEventListener('touchstart', (e)=>{
-    const rect = canvas.getBoundingClientRect();
-    const touchX = e.touches[0].clientX - rect.left;
-    const W = canvas.offsetWidth;
-    const step = (W - PAD.l - PAD.r) / (n-1);
-    let idx = Math.round((touchX - PAD.l) / step);
-    idx = Math.max(0, Math.min(n-1, idx));
-    hoverIndex = idx;
-    draw();
-    const x = X(idx), y = Y(scores[idx]);
-    crosshair.style.left = x + 'px'; crosshair.classList.add('show');
-    tooltip.style.left = x + 'px'; tooltip.style.top = y + 'px'; tooltip.classList.add('show');
-    document.getElementById('ct-date').textContent  = labels[idx] || ('Scan ' + (idx+1));
-    document.getElementById('ct-score').textContent = scores[idx] + ' / 100';
-  }, {passive:true});
-
-  window.addEventListener('resize', ()=>{ animProgress = 1; draw(); });
-
-  // Animate count-up for current score
-  const curEl = document.getElementById('rt-current');
-  if(curEl){
-    const target = parseInt(curEl.textContent) || 0;
-    let cur = 0;
-    const civ = setInterval(()=>{
-      cur += Math.ceil(target/20);
-      if(cur >= target){ cur = target; clearInterval(civ); }
-      curEl.textContent = cur;
-    }, 30);
-  }
-
-  computeScales();
-  requestAnimationFrame(animate);
-})();
-{% endif %}
-
-// Range toggle buttons (cosmetic filter — re-draws same data, placeholder for future server-side filtering)
-document.querySelectorAll('.rt-range-btn').forEach(btn=>{
-  btn.addEventListener('click', ()=>{
-    document.querySelectorAll('.rt-range-btn').forEach(b=>b.classList.remove('active'));
-    btn.classList.add('active');
+window.addEventListener("load",()=>{
+  document.querySelectorAll(".sev-fill").forEach(el=>{
+    const w=el.style.width;el.style.width="0";
+    setTimeout(()=>{el.style.width=w;},300);
   });
 });
 </script>
-<!-- ══ SEARCH OVERLAY ══ -->
-<div id="search-overlay">
-  <canvas id="space-canvas"></canvas>
-  <div class="search-box-wrap">
-    <button class="search-close" onclick="closeSearch()">✕</button>
-    <div class="search-input-row">
-      <span class="search-icon-big">🔍</span>
-      <input type="text" id="global-search-input" placeholder="Search targets, scans, reports, vulnerabilities..." autocomplete="off">
-      <span class="search-kbd">ESC</span>
-    </div>
-    <div class="search-results" id="search-results">
-      <div class="search-hint">
-        <div class="sh-row"><span class="sh-kbd">cve:CVE-2024-1234</span> → Live NVD lookup — CVSS score, description, severity</div>
-        <div class="sh-row"><span class="sh-kbd">ip:192.168.1.1</span> → AbuseIPDB reputation — abuse score, reports, ISP</div>
-        <div class="sh-row"><span class="sh-kbd">port:22</span> → Port intelligence — risk level, known CVEs, found on your targets</div>
-        <div class="sh-row"><span class="sh-kbd">vt:example.com</span> → VirusTotal — malicious/clean verdict from 70+ engines</div>
-        <div class="sh-row"><span class="sh-kbd">exploit:apache</span> → Exploit-DB search link for that service or technology</div>
-        <div class="sh-row"><span class="sh-kbd">target:soap.fupre.edu.ng</span> → Search your scanned targets</div>
-        <div class="sh-row"><span class="sh-kbd">risk:critical</span> · <span class="sh-kbd">vuln:sqli</span> · <span class="sh-kbd">report:bluewave</span> → Filter your project data</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-#search-overlay{
-  position:fixed;inset:0;z-index:500;
-  background:radial-gradient(ellipse at center, #050a14 0%, #000003 100%);
-  display:none;align-items:flex-start;justify-content:center;
-  padding-top:8vh;
-}
-#search-overlay.visible{
-  display:flex;
-  animation:searchFadeIn 0.25s ease both;
-}
-@keyframes searchFadeIn{from{opacity:0}to{opacity:1}}
-#space-canvas{position:absolute;inset:0;z-index:0;}
-.search-box-wrap{
-  position:relative;z-index:2;
-  width:100%;max-width:640px;
-  padding:0 20px;
-  animation:searchIn 0.3s ease both;
-}
-@keyframes searchIn{from{opacity:0;transform:translateY(-12px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
-.search-close{
-  position:absolute;top:-46px;right:20px;
-  background:rgba(255,255,255,0.05);border:1px solid rgba(0,200,255,0.2);
-  color:#e2eaf4;width:32px;height:32px;border-radius:8px;
-  cursor:pointer;font-size:14px;transition:all 0.2s;
-}
-.search-close:hover{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#ef4444;}
-.search-input-row{
-  display:flex;align-items:center;gap:14px;
-  background:rgba(6,12,20,0.92);
-  border:1px solid rgba(0,200,255,0.25);
-  border-radius:14px;padding:18px 22px;
-  box-shadow:0 0 60px rgba(0,200,255,0.15),0 20px 60px rgba(0,0,0,0.6);
-  backdrop-filter:blur(20px);
-}
-.search-icon-big{font-size:20px;flex-shrink:0;}
-#global-search-input{
-  flex:1;background:none;border:none;outline:none;
-  color:#e2eaf4;font-family:'Inter',sans-serif;font-size:16px;
-}
-#global-search-input::placeholder{color:#304560;}
-.search-kbd{
-  font-family:'Share Tech Mono',monospace;font-size:10px;
-  color:#4d6a85;background:rgba(255,255,255,0.04);
-  border:1px solid rgba(255,255,255,0.08);
-  padding:3px 8px;border-radius:5px;flex-shrink:0;
-}
-.search-results{
-  margin-top:14px;
-  background:rgba(6,12,20,0.88);
-  border:1px solid rgba(0,200,255,0.12);
-  border-radius:14px;overflow:hidden;
-  backdrop-filter:blur(20px);
-  max-height:50vh;overflow-y:auto;
-}
-.search-hint{padding:20px 22px;display:flex;flex-direction:column;gap:10px;}
-.sh-row{font-size:12px;color:#4d6a85;font-family:'Share Tech Mono',monospace;}
-.sh-kbd{color:#00c8ff;font-weight:700;}
-.sh-row i{color:#94a3b8;font-style:normal;}
-.sr-item{
-  display:flex;align-items:center;gap:12px;
-  padding:13px 22px;border-bottom:1px solid rgba(0,200,255,0.06);
-  cursor:pointer;transition:background 0.15s;text-decoration:none;color:inherit;
-}
-.sr-item:hover{background:rgba(0,200,255,0.06);}
-.sr-item:last-child{border-bottom:none;}
-.sr-icon{width:32px;height:32px;border-radius:8px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
-.sr-main{flex:1;min-width:0;}
-.sr-title{font-size:13px;font-weight:600;color:#e2eaf4;font-family:'Share Tech Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sr-sub{font-size:11px;color:#4d6a85;margin-top:2px;}
-.sr-badge{padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;font-family:'Share Tech Mono',monospace;flex-shrink:0;}
-.sr-no-results{padding:40px 22px;text-align:center;color:#304560;font-size:12px;font-family:'Share Tech Mono',monospace;}
-</style>
-
-<script>
-// ── SPACE BACKGROUND CANVAS ──────────────────────────────────────────────────
-(function(){
-  const canvas = document.getElementById('space-canvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W, H, stars = [], shootingStars = [];
-
-  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
-
-  function initStars(){
-    stars = [];
-    for(let i=0;i<200;i++){
-      stars.push({
-        x: Math.random()*W, y: Math.random()*H,
-        r: Math.random()*1.3 + 0.2,
-        baseAlpha: Math.random()*0.6 + 0.2,
-        twinkleSpeed: 0.01 + Math.random()*0.02,
-        phase: Math.random()*Math.PI*2,
-        depth: Math.random(), // parallax depth
-      });
-    }
-  }
-
-  function maybeSpawnShootingStar(){
-    if(Math.random() < 0.003 && shootingStars.length < 2){
-      const y = Math.random() * H * 0.5;
-      shootingStars.push({
-        x: Math.random()*W*0.3, y, len: 80+Math.random()*60,
-        speed: 8+Math.random()*6, angle: Math.PI/5, life: 1,
-      });
-    }
-  }
-
-  let frame = 0;
-  function draw(){
-    frame++;
-    ctx.clearRect(0,0,W,H);
-
-    // Nebula glow patches
-    const g1 = ctx.createRadialGradient(W*0.2,H*0.3,0,W*0.2,H*0.3,W*0.4);
-    g1.addColorStop(0,'rgba(0,150,255,0.04)'); g1.addColorStop(1,'transparent');
-    ctx.fillStyle = g1; ctx.fillRect(0,0,W,H);
-
-    const g2 = ctx.createRadialGradient(W*0.8,H*0.7,0,W*0.8,H*0.7,W*0.35);
-    g2.addColorStop(0,'rgba(168,85,247,0.03)'); g2.addColorStop(1,'transparent');
-    ctx.fillStyle = g2; ctx.fillRect(0,0,W,H);
-
-    // Stars with twinkle
-    stars.forEach(s=>{
-      const tw = Math.sin(frame * s.twinkleSpeed + s.phase) * 0.4 + 0.6;
-      ctx.beginPath();
-      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(180,220,255,${s.baseAlpha * tw})`;
-      ctx.fill();
-      // Occasional glow on bright ones
-      if(s.r > 1){
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.r*3, 0, Math.PI*2);
-        ctx.fillStyle = `rgba(0,200,255,${0.03 * tw})`;
-        ctx.fill();
-      }
-    });
-
-    // Shooting stars
-    maybeSpawnShootingStar();
-    shootingStars = shootingStars.filter(s=>s.life > 0);
-    shootingStars.forEach(s=>{
-      const dx = Math.cos(s.angle)*s.speed, dy = Math.sin(s.angle)*s.speed;
-      s.x += dx; s.y += dy; s.life -= 0.012;
-      const grad = ctx.createLinearGradient(s.x, s.y, s.x - dx*s.len/s.speed, s.y - dy*s.len/s.speed);
-      grad.addColorStop(0, `rgba(255,255,255,${s.life})`);
-      grad.addColorStop(1, 'rgba(0,200,255,0)');
-      ctx.beginPath();
-      ctx.moveTo(s.x, s.y);
-      ctx.lineTo(s.x - dx*s.len/s.speed, s.y - dy*s.len/s.speed);
-      ctx.strokeStyle = grad; ctx.lineWidth = 1.5; ctx.stroke();
-    });
-
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener('resize', ()=>{ resize(); initStars(); });
-  resize(); initStars(); draw();
-})();
-
-// ── PROFESSIONAL SEARCH ENGINE ───────────────────────────────────────────────
-(function(){
-
-// State
-let recentSearches = [];
-let allTargets     = [];
-let activeIndex    = -1;
-let debounceTimer  = null;
-
-// Load recent searches from sessionStorage (cleared on tab close)
-function loadRecent(){
-  try { recentSearches = JSON.parse(sessionStorage.getItem("csp_searches") || "[]"); } catch(e){ recentSearches = []; }
-}
-function saveSearch(q){
-  if(!q || recentSearches.includes(q)) return;
-  recentSearches.unshift(q);
-  recentSearches = recentSearches.slice(0,5);
-  try { sessionStorage.setItem("csp_searches", JSON.stringify(recentSearches)); } catch(e){}
-}
-
-// Fetch all target names for autocomplete
-async function loadTargets(){
-  try{
-    const r = await fetch("/api/sessions");
-    const d = await r.json();
-    const seen = new Set();
-    allTargets = [];
-    (d||[]).forEach(s=>{ if(s.target && !seen.has(s.target)){ seen.add(s.target); allTargets.push(s.target); } });
-  }catch(e){}
-}
-
-// Fuzzy match — returns score (higher = better match)
-function fuzzyScore(str, query){
-  str   = str.toLowerCase();
-  query = query.toLowerCase();
-  if(str === query) return 100;
-  if(str.startsWith(query)) return 90;
-  if(str.includes(query)) return 80;
-  // Character-by-character fuzzy
-  let si = 0, qi = 0, score = 0;
-  while(si < str.length && qi < query.length){
-    if(str[si] === query[qi]){ score++; qi++; }
-    si++;
-  }
-  return qi === query.length ? Math.round((score / str.length) * 70) : 0;
-}
-
-// Detect what the user is typing
-function detectIntent(q){
-  const lo = q.toLowerCase().trim();
-  if(lo.startsWith("cve:"))       return {type:"cve",    term:lo.slice(4).trim()};
-  if(lo.startsWith("ip:"))        return {type:"ip",     term:lo.slice(3).trim()};
-  if(lo.startsWith("port:"))      return {type:"port",   term:lo.slice(5).trim()};
-  if(lo.startsWith("vt:"))        return {type:"vt",     term:lo.slice(3).trim()};
-  if(lo.startsWith("exploit:"))   return {type:"exploit",term:lo.slice(8).trim()};
-  if(lo.startsWith("risk:"))      return {type:"risk",   term:lo.slice(5).trim()};
-  if(lo.startsWith("vuln:"))      return {type:"vuln",   term:lo.slice(5).trim()};
-  if(lo.startsWith("report:"))    return {type:"report", term:lo.slice(7).trim()};
-  if(lo.startsWith("target:"))    return {type:"target", term:lo.slice(7).trim()};
-  // Auto-detect domain/IP
-  if(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(lo)) return {type:"ip_auto", term:lo};
-  if(/^CVE-\d{4}-\d+$/i.test(lo)) return {type:"cve_auto", term:lo};
-  if(/^\d+$/.test(lo) && parseInt(lo) < 65536) return {type:"port_auto", term:lo};
-  return {type:"text", term:lo};
-}
-
-// Render results container
-function setResults(html, resetIndex=true){
-  document.getElementById("search-results").innerHTML = html;
-  if(resetIndex){ activeIndex = -1; }
-}
-
-// Show empty state with recent searches
-function showEmpty(){
-  loadRecent();
-
-  const examples = [
-    {icon:"🔴",label:"cve:CVE-2021-44228",  desc:"Log4Shell — CVSS 10.0 Critical. Click to see full NVD details",        val:"cve:CVE-2021-44228"},
-    {icon:"🔴",label:"cve:CVE-2019-0708",   desc:"BlueKeep RDP — wormable exploit. Click to look up on NVD",              val:"cve:CVE-2019-0708"},
-    {icon:"🌐",label:"ip:8.8.8.8",           desc:"Check Google DNS IP on AbuseIPDB — see reputation score",              val:"ip:8.8.8.8"},
-    {icon:"🔌",label:"port:22",              desc:"SSH — is this open on any of your scanned targets? What's the risk?",  val:"port:22"},
-    {icon:"🔌",label:"port:3306",            desc:"MySQL — should NEVER be public. Check if any target has it open",      val:"port:3306"},
-    {icon:"🔌",label:"port:445",             desc:"SMB — WannaCry/EternalBlue. Critical risk if exposed",                val:"port:445"},
-    {icon:"🛡", label:"vt:malware.wicar.org", desc:"VirusTotal check — this test site should show malicious detections",  val:"vt:malware.wicar.org"},
-    {icon:"💀",label:"exploit:apache",       desc:"Find public Apache exploits on Exploit-DB",                            val:"exploit:apache"},
-    {icon:"⚠️",label:"risk:critical",        desc:"Show all your scans with Critical severity findings",                 val:"risk:critical"},
-    {icon:"🐛",label:"vuln:sql",             desc:"Find all SQL injection findings across your scans",                   val:"vuln:sql"},
-  ];
-
-  const recentHTML = recentSearches.length ? `
-    <div class="sr-section-label">// RECENT SEARCHES</div>
-    ${recentSearches.map((s,i)=>`
-      <div class="sr-item sr-recent" onclick="setInput('${s.replace(/'/g,"\\'")}')">
-        <div class="sr-icon">🕐</div>
-        <div class="sr-main"><div class="sr-title">${s}</div><div class="sr-sub">Click to run again</div></div>
-        <span class="sr-recent-del" onclick="delRecent(event,${i})">✕</span>
-      </div>`).join("")}` : "";
-
-  const examplesHTML = `
-    <div class="sr-section-label">// CLICK ANY EXAMPLE TO TRY IT</div>
-    ${examples.map(e=>`
-      <div class="sr-item" style="cursor:pointer;" onclick="runExample('${e.val}')">
-        <div class="sr-icon">${e.icon}</div>
-        <div class="sr-main">
-          <div class="sr-title" style="color:var(--accent);font-family:var(--mono);font-size:13px;">${e.label}</div>
-          <div class="sr-sub">${e.desc}</div>
-        </div>
-        <span class="sr-badge" style="background:rgba(0,200,255,0.08);color:var(--accent);border:1px solid rgba(0,200,255,0.15);white-space:nowrap;">TRY IT →</span>
-      </div>`).join("")}
-    <div style="padding:14px 22px;font-size:11px;color:var(--text2);border-top:1px solid var(--border);line-height:1.8;">
-      💡 <b style="color:var(--text3)">Just type anything:</b> a domain like <span style="color:var(--accent);font-family:var(--mono)">soap.fupre.edu.ng</span>, 
-      an IP like <span style="color:var(--accent);font-family:var(--mono)">192.168.1.1</span>, 
-      a CVE ID like <span style="color:var(--accent);font-family:var(--mono)">CVE-2024-1234</span>, 
-      or a port number like <span style="color:var(--accent);font-family:var(--mono)">8080</span> — 
-      the search auto-detects what to look up.
-    </div>`;
-
-  setResults(recentHTML + examplesHTML);
-}
-
-function runExample(val){
-  const inp = document.getElementById("global-search-input");
-  if(inp){ inp.value = val; inp.focus(); }
-  runSearch(val);
-}
-
-// Show autocomplete suggestions from existing targets
-function showSuggestions(q){
-  const scored = allTargets
-    .map(t => ({t, score: fuzzyScore(t, q)}))
-    .filter(x => x.score > 0)
-    .sort((a,b) => b.score - a.score)
-    .slice(0, 6);
-
-  const intent = detectIntent(q);
-  let html = "";
-
-  // Quick action: "Scan this target?" if looks like a domain/IP not yet in targets
-  const looksLikeDomain = /^[a-zA-Z0-9][a-zA-Z0-9\-.]+\.[a-zA-Z]{2,}$/.test(q.trim());
-  const looksLikeIP     = /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(q.trim());
-  if((looksLikeDomain || looksLikeIP) && !allTargets.includes(q.trim())){
-    html += `<a href="/scan/new?target=${encodeURIComponent(q.trim())}" class="sr-item sr-quickaction">
-      <div class="sr-icon">▶</div>
-      <div class="sr-main">
-        <div class="sr-title">Scan "${q.trim()}"</div>
-        <div class="sr-sub">Launch new vulnerability assessment on this target</div>
-      </div>
-      <span class="sr-badge" style="background:rgba(0,255,157,0.1);color:#00ff9d;border:1px solid rgba(0,255,157,0.2);">SCAN NOW</span>
-    </a>`;
-  }
-
-  // Auto-detect intent suggestions
-  if(intent.type === "ip_auto"){
-    html += `<div class="sr-item" onclick="setInput('ip:${q}')">
-      <div class="sr-icon">🌐</div>
-      <div class="sr-main"><div class="sr-title">Check IP reputation: ${q}</div><div class="sr-sub">Query AbuseIPDB for abuse reports and threat intelligence</div></div>
-      <span class="sr-badge" style="background:rgba(0,200,255,0.1);color:#00c8ff;">ip: →</span>
-    </div>`;
-  }
-  if(intent.type === "cve_auto"){
-    html += `<div class="sr-item" onclick="setInput('cve:${q}')">
-      <div class="sr-icon">🔴</div>
-      <div class="sr-main"><div class="sr-title">Lookup ${q.toUpperCase()} on NVD</div><div class="sr-sub">Get CVSS score, severity, description and affected versions</div></div>
-      <span class="sr-badge" style="background:rgba(239,68,68,0.1);color:#ef4444;">cve: →</span>
-    </div>`;
-  }
-  if(intent.type === "port_auto"){
-    html += `<div class="sr-item" onclick="setInput('port:${q}')">
-      <div class="sr-icon">🔌</div>
-      <div class="sr-main"><div class="sr-title">Port ${q} intelligence</div><div class="sr-sub">Risk level, common services, CVEs, found on your targets</div></div>
-      <span class="sr-badge" style="background:rgba(234,179,8,0.1);color:#eab308;">port: →</span>
-    </div>`;
-  }
-
-  // Fuzzy matched existing targets
-  if(scored.length > 0){
-    html += `<div class="sr-section-label">YOUR TARGETS</div>`;
-    html += scored.map((x,i)=>`
-      <a href="/targets" class="sr-item" data-ac-index="${i}">
-        <div class="sr-icon">🌐</div>
-        <div class="sr-main">
-          <div class="sr-title">${highlightMatch(x.t, q)}</div>
-          <div class="sr-sub">Scanned target · Match score ${x.score}%</div>
-        </div>
-        <div class="sr-ac-actions">
-          <a href="/scan/new?target=${encodeURIComponent(x.t)}" class="sr-ac-btn" onclick="event.stopPropagation()">▶ Scan</a>
-          <a href="/targets" class="sr-ac-btn">View</a>
-        </div>
-      </a>`).join("");
-  }
-
-  if(!html){
-    html = `<div class="sr-no-results">No suggestions for "${q}" — press Enter to search</div>`;
-  }
-
-  setResults(html);
-}
-
-// Highlight matching characters in autocomplete
-function highlightMatch(str, query){
-  query = query.toLowerCase();
-  let result = "";
-  let qi = 0;
-  for(let i=0;i<str.length;i++){
-    if(qi < query.length && str[i].toLowerCase() === query[qi]){
-      result += `<span style="color:var(--accent);font-weight:700">${str[i]}</span>`;
-      qi++;
-    } else {
-      result += str[i];
-    }
-  }
-  return result;
-}
-
-function setInput(val){
-  const inp = document.getElementById("global-search-input");
-  if(inp){ inp.value = val; inp.dispatchEvent(new Event("input")); inp.focus(); }
-}
-
-function delRecent(e, idx){
-  e.stopPropagation();
-  recentSearches.splice(idx,1);
-  try{ sessionStorage.setItem("csp_searches", JSON.stringify(recentSearches)); }catch(x){}
-  showEmpty();
-}
-
-// Keyboard navigation
-document.getElementById("global-search-input")?.addEventListener("keydown", (e)=>{
-  const items = document.querySelectorAll("#search-results .sr-item");
-  if(!items.length) return;
-
-  if(e.key === "ArrowDown"){
-    e.preventDefault();
-    activeIndex = Math.min(activeIndex+1, items.length-1);
-    updateActive(items);
-  } else if(e.key === "ArrowUp"){
-    e.preventDefault();
-    activeIndex = Math.max(activeIndex-1, -1);
-    updateActive(items);
-  } else if(e.key === "Enter"){
-    e.preventDefault();
-    if(activeIndex >= 0 && items[activeIndex]){
-      items[activeIndex].click();
-    } else {
-      const q = document.getElementById("global-search-input").value.trim();
-      if(q){ saveSearch(q); runSearch(q); }
-    }
-  }
-});
-
-function updateActive(items){
-  items.forEach((el,i)=>{
-    if(i === activeIndex){
-      el.style.background = "rgba(0,200,255,0.08)";
-      el.scrollIntoView({block:"nearest"});
-    } else {
-      el.style.background = "";
-    }
-  });
-}
-
-// Main input handler
-document.getElementById("global-search-input")?.addEventListener("input", (e)=>{
-  clearTimeout(debounceTimer);
-  const q = e.target.value.trim();
-  activeIndex = -1;
-
-  if(!q){ showEmpty(); return; }
-
-  // Show suggestions immediately (fast, local)
-  showSuggestions(q);
-
-  // Debounce live API search
-  debounceTimer = setTimeout(()=>{
-    const intent = detectIntent(q);
-    if(intent.type === "cve" || intent.type === "cve_auto"){
-      if(/CVE-\d{4}-\d+/i.test(intent.term)) runSearch(q);
-    } else if(intent.type === "ip" || intent.type === "ip_auto"){
-      if(/\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}/.test(intent.term)) runSearch(q);
-    } else if(intent.type === "port" || intent.type === "port_auto"){
-      if(/^\d+$/.test(intent.term)) runSearch(q);
-    } else if(intent.type === "vt"){
-      if(intent.term.length > 3) runSearch(q);
-    } else if(intent.type === "exploit"){
-      if(intent.term.length > 2) runSearch(q);
-    } else if(q.length >= 2){
-      runSearch(q);
-    }
-  }, 400);
-});
-
-// Open/close
-window.openSearch = function(){
-  const overlay = document.getElementById("search-overlay");
-  overlay.classList.add("visible");
-  document.body.style.overflow = "hidden";
-  loadRecent();
-  loadTargets();
-  setTimeout(()=>{ document.getElementById("global-search-input")?.focus(); }, 80);
-  showEmpty();
-};
-window.closeSearch = function(){
-  const overlay = document.getElementById("search-overlay");
-  overlay.classList.remove("visible");
-  document.body.style.overflow = "";
-  const inp = document.getElementById("global-search-input");
-  if(inp) inp.value = "";
-  setResults(""); 
-  activeIndex = -1;
-};
-
-// Keyboard shortcut
-document.addEventListener("keydown",(e)=>{
-  if(e.key==="Escape") closeSearch();
-  if((e.ctrlKey||e.metaKey) && e.key==="k"){ e.preventDefault(); openSearch(); }
-});
-
-// Click outside to close
-document.getElementById("search-overlay")?.addEventListener("click",(e)=>{
-  if(e.target.id==="search-overlay") closeSearch();
-});
-
-// Make non-anchor sr-items navigate properly
-document.getElementById("search-results")?.addEventListener("click",(e)=>{
-  const item = e.target.closest(".sr-item[data-url]");
-  if(item && item.dataset.url){
-    saveSearch(document.getElementById("global-search-input").value.trim());
-    window.location.href = item.dataset.url;
-  }
-});
-
-
-// ── runSearch: handles all live API lookups + project data search ─────────────
-async function runSearch(q){
-  const resultsEl = document.getElementById("search-results");
-  if(!resultsEl) return;
-  const intent = detectIntent(q);
-  const prefix  = intent.type;
-  const term    = intent.term;
-
-  resultsEl.innerHTML = "<div class='sr-no-results' style='padding:20px 22px;'>Searching...</div>";
-
-  // ── CVE Live Lookup ────────────────────────────────────────────────────────
-  if((prefix==="cve"||prefix==="cve_auto") && /CVE-\d{4}-\d+/i.test(term)){
-    saveSearch(q);
-    const r = await fetch("/api/live/cve/"+term.toUpperCase());
-    const d = await r.json();
-    if(d.error){ resultsEl.innerHTML=`<div class="sr-no-results">❌ ${d.error}</div>`; return; }
-    const sc = {CRITICAL:"#ef4444",HIGH:"#f97316",MEDIUM:"#eab308",LOW:"#3b82f6"}[d.severity?.toUpperCase()]||"#64748b";
-    resultsEl.innerHTML = `<div class="sr-live-card">
-      <div class="slc-header">
-        <span class="slc-icon">🔴</span>
-        <div><div class="slc-title">${d.cve_id}</div>
-        <div class="slc-sub">Published ${d.published} · CVSS <b style="color:${sc}">${d.cvss_score}</b> · <span style="color:${sc}">${d.severity}</span></div></div>
-        <a href="${d.url}" target="_blank" class="slc-btn">View on NVD →</a>
-      </div>
-      <div class="slc-desc">${d.description}</div>
-    </div>`;
-    return;
-  }
-
-  // ── IP Reputation ──────────────────────────────────────────────────────────
-  if((prefix==="ip"||prefix==="ip_auto") && /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(term)){
-    saveSearch(q);
-    const r = await fetch("/api/live/ip/"+term);
-    const d = await r.json();
-    if(d.error){ resultsEl.innerHTML=`<div class="sr-no-results">❌ ${d.error}${d.setup?"<br><small style='color:#64748b'>"+d.setup+"</small>":""}</div>`; return; }
-    const col = d.abuse_score>50?"#ef4444":d.abuse_score>10?"#f97316":"#00ff9d";
-    resultsEl.innerHTML = `<div class="sr-live-card">
-      <div class="slc-header">
-        <span class="slc-icon">🌐</span>
-        <div><div class="slc-title">${d.ip}</div><div class="slc-sub">${d.isp} · ${d.country} · ${d.usage_type}</div></div>
-        <a href="https://www.abuseipdb.com/check/${d.ip}" target="_blank" class="slc-btn">AbuseIPDB →</a>
-      </div>
-      <div class="slc-stats">
-        <div class="slcs"><div class="slcs-n" style="color:${col}">${d.abuse_score}%</div><div class="slcs-l">Abuse Score</div></div>
-        <div class="slcs"><div class="slcs-n">${d.total_reports}</div><div class="slcs-l">Reports</div></div>
-        <div class="slcs"><div class="slcs-n">${d.domain||"—"}</div><div class="slcs-l">Domain</div></div>
-        <div class="slcs"><div class="slcs-n">${d.last_reported||"Never"}</div><div class="slcs-l">Last Report</div></div>
-      </div>
-    </div>`;
-    return;
-  }
-
-  // ── Port Intelligence ──────────────────────────────────────────────────────
-  if((prefix==="port"||prefix==="port_auto") && /^\d+$/.test(term)){
-    saveSearch(q);
-    const r = await fetch("/api/live/port/"+term);
-    const d = await r.json();
-    const rc = {CRITICAL:"#ef4444",HIGH:"#f97316",MEDIUM:"#eab308",LOW:"#3b82f6",UNKNOWN:"#64748b"}[d.risk]||"#64748b";
-    const found = d.found_on_your_targets||[];
-    resultsEl.innerHTML = `<div class="sr-live-card">
-      <div class="slc-header">
-        <span class="slc-icon">🔌</span>
-        <div><div class="slc-title">Port ${term} — ${d.service}</div>
-        <div class="slc-sub">Risk: <span style="color:${rc};font-weight:700">${d.risk}</span></div></div>
-        <a href="/port-intel?port=${term}" class="slc-btn" onclick="closeSearch()">Full Details →</a>
-      </div>
-      <div class="slc-desc">${d.notes}</div>
-      <div class="slc-found">
-        <div class="slc-found-label">YOUR TARGETS WITH PORT ${term} OPEN (${found.length})</div>
-        ${found.length?found.map(f=>`<div class="slc-found-item"><span>🎯 ${f.target}${f.service?" · "+f.service:""}</span><a href="/scan/${f.session_id}" class="slc-btn" style="font-size:9px;" onclick="closeSearch()">VIEW SCAN</a></div>`).join("") : `<div style="font-size:11px;color:var(--text2);padding:6px 0;">Not found in your scans yet — <a href="/scan/new" style="color:var(--accent)">run a scan</a></div>`}
-      </div>
-      ${d.cves?.length?`<div class="slc-cves">Known CVEs: ${d.cves.map(c=>`<a href="https://nvd.nist.gov/vuln/detail/${c}" target="_blank" class="slc-cve-tag">${c}</a>`).join("")}</div>`:""}
-    </div>`;
-    return;
-  }
-
-  // ── VirusTotal ─────────────────────────────────────────────────────────────
-  if(prefix==="vt"||prefix==="virustotal"){
-    saveSearch(q);
-    const r = await fetch("/api/live/vt/"+encodeURIComponent(term));
-    const d = await r.json();
-    if(d.error){ resultsEl.innerHTML=`<div class="sr-no-results">❌ ${d.error}${d.setup?"<br><small style='color:#64748b'>"+d.setup+"</small>":""}</div>`; return; }
-    const mc = d.malicious>5?"#ef4444":d.malicious>0?"#f97316":"#00ff9d";
-    resultsEl.innerHTML = `<div class="sr-live-card">
-      <div class="slc-header">
-        <span class="slc-icon">🛡</span>
-        <div><div class="slc-title">${d.target}</div><div class="slc-sub">${d.as_owner||""} · ${d.country||""}</div></div>
-        <a href="${d.vt_url}" target="_blank" class="slc-btn">VirusTotal →</a>
-      </div>
-      <div class="slc-stats">
-        <div class="slcs"><div class="slcs-n" style="color:${mc}">${d.malicious}</div><div class="slcs-l">Malicious</div></div>
-        <div class="slcs"><div class="slcs-n" style="color:#eab308">${d.suspicious}</div><div class="slcs-l">Suspicious</div></div>
-        <div class="slcs"><div class="slcs-n" style="color:#00ff9d">${d.harmless}</div><div class="slcs-l">Clean</div></div>
-        <div class="slcs"><div class="slcs-n">${d.reputation}</div><div class="slcs-l">Reputation</div></div>
-      </div>
-    </div>`;
-    return;
-  }
-
-  // ── Exploit-DB ─────────────────────────────────────────────────────────────
-  if(prefix==="exploit"){
-    saveSearch(q);
-    const r = await fetch("/api/live/exploit/"+encodeURIComponent(term));
-    const d = await r.json();
-    resultsEl.innerHTML = `<div class="sr-live-card">
-      <div class="slc-header">
-        <span class="slc-icon">💀</span>
-        <div><div class="slc-title">Exploit-DB: ${term}</div><div class="slc-sub">Search known public exploits for this technology</div></div>
-        <a href="${d.redirect||"https://www.exploit-db.com/search?q="+encodeURIComponent(term)}" target="_blank" class="slc-btn">Search Exploit-DB →</a>
-      </div>
-      <div class="slc-desc">Exploit-DB contains 45,000+ verified exploits. Click the button to search for "${term}" exploits in your browser.</div>
-    </div>`;
-    return;
-  }
-
-  // ── Project Data (targets, CVEs, findings, reports) ────────────────────────
-  try{
-    const res  = await fetch("/api/search?q="+encodeURIComponent(q));
-    const data = await res.json();
-    if(!data.results||data.results.length===0){
-      resultsEl.innerHTML = `<div class="sr-no-results">
-        No results for "${q}"<br><br>
-        <small style="color:var(--text2)">Try: cve:CVE-2024-1234 · ip:192.168.1.1 · port:22 · vt:example.com · exploit:apache</small>
-      </div>`;
-      return;
-    }
-    saveSearch(q);
-    resultsEl.innerHTML = data.results.map(r=>`
-      <a href="${r.url}" class="sr-item" onclick="closeSearch()">
-        <div class="sr-icon">${r.icon}</div>
-        <div class="sr-main">
-          <div class="sr-title">${r.title}</div>
-          <div class="sr-sub">${r.subtitle}</div>
-        </div>
-        ${r.badge?`<span class="sr-badge" style="background:${r.badge_bg};color:${r.badge_color};">${r.badge}</span>`:""}
-      </a>`).join("");
-  }catch(e){
-    resultsEl.innerHTML="<div class='sr-no-results'>Search error — try again</div>";
-  }
-}
-
-loadRecent();
-loadTargets();
-
-})();
-</script>
-
 </body>
 </html>
