@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>CyberScan Pro — Dashboard</title>
+<title>Assets — CyberScan Pro</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -171,7 +171,7 @@ body::before{content:'';position:fixed;inset:0;
 .mbg-n{font-size:24px;font-weight:800;font-family:var(--mono);}
 .mbg-l{font-size:9px;color:var(--text3);margin-top:3px;letter-spacing:0.5px;}
 .mb-tip{font-size:11px;color:var(--text3);line-height:1.7;background:rgba(124,141,255,0.04);border:1px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:16px;}
-.mb-btn{display:block;width:{{ [severity_counts.Medium * 10, 100]|min }}%;padding:13px;background:rgba(124,141,255,0.1);border:1px solid rgba(124,141,255,0.25);border-radius:12px;color:var(--accent);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;transition:all 0.2s;letter-spacing:0.3px;}
+.mb-btn{display:block;width:100%;padding:13px;background:rgba(124,141,255,0.1);border:1px solid rgba(124,141,255,0.25);border-radius:12px;color:var(--accent);font-family:var(--sans);font-size:12px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;transition:all 0.2s;letter-spacing:0.3px;}
 .mb-btn:hover{background:rgba(124,141,255,0.18);}
 
 @media(max-width:900px){
@@ -223,8 +223,7 @@ nav{flex:1;padding:12px 0;}
 
 </style>
 </head>
-<body>
-<div id="bg-grid"></div>
+<body><div id="bg-grid"></div>
 <div id="bg-scan"></div>
 <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 <aside class="sidebar" id="sidebar">
@@ -276,259 +275,115 @@ nav{flex:1;padding:12px 0;}
 
   <!-- Header -->
   <div class="header-row">
-    <h1 id="greeting-text">Good day, <br><span class="hi">{{ session.username | title }}</span> 👋</h1>
-    <p>Your security posture is being monitored across {{ unique_targets }} target{% if unique_targets != 1 %}s{% endif %}. {{ total_scans }} scan{% if total_scans != 1 %}s{% endif %} completed total.</p>
-    <div class="status-chip"><div class="pulse"></div> Systems Online · All APIs Connected</div>
+    <h1>Assets<br><span class="hi">{{ session.org_name or "Your Organization" }}</span></h1>
+    <p>Register the systems your organization is authorized to assess. Every scan you run is tied to one of these assets.</p>
+    <div class="status-chip"><div class="pulse"></div> {{ assets|length }} asset{{ "s" if assets|length != 1 else "" }} registered</div>
   </div>
 
-  <!-- Score + stats -->
-  <div class="top-strip">
-    <div class="donut-card">
-      <div class="donut-svg-wrap">
-        <svg viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="42" fill="none" stroke="rgba(124,141,255,0.08)" stroke-width="10"/>
-          <circle cx="50" cy="50" r="42" fill="none" stroke="url(#dg2)" stroke-width="10" stroke-linecap="round"
-            stroke-dasharray="{{ (security_score / 100 * 264) | round(1) }} 264" stroke-dashoffset="66"
-            style="transition:stroke-dasharray 1.5s cubic-bezier(0.16,1,0.3,1);"/>
-          <defs>
-            <linearGradient id="dg2" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#00c8ff"/>
-              <stop offset="100%" stop-color="#00ff9d"/>
-            </linearGradient>
-          </defs>
-        </svg>
-        <div class="dc">
-          <div class="dc-n">{{ security_score }}</div>
-          <div class="dc-l">SCORE</div>
-        </div>
-      </div>
-      <div class="donut-meta">
-        <div class="grade">GRADE {{ 'A' if security_score >= 90 else 'B' if security_score >= 75 else 'C' if security_score >= 60 else 'D' if security_score >= 45 else 'F' }}</div>
-        <h3>Security Score</h3>
-        <p>{% if security_score >= 90 %}Excellent security posture — keep it up.{% elif security_score >= 75 %}Good posture with minor findings.{% elif security_score >= 60 %}Fair posture — attention required.{% elif security_score >= 45 %}Poor posture — significant risks present.{% else %}Critical — immediate action required.{% endif %}</p>
-      </div>
-    </div>
-
-    <div class="stats-strip">
-      <div class="stat-tile" onclick="openModal('hosts')">
-        <div class="st-top">
-          <span class="st-icon">🖥</span>
-          <span class="st-change sc-up">+2</span>
-        </div>
-        <div class="st-n">{{ total_hosts }}</div>
-        <div class="st-l">Hosts Discovered</div>
-      </div>
-      <div class="stat-tile" onclick="openModal('ports')">
-        <div class="st-top">
-          <span class="st-icon">🔌</span>
-          <span class="st-change sc-up">+8</span>
-        </div>
-        <div class="st-n">{{ total_ports }}</div>
-        <div class="st-l">Open Ports</div>
-      </div>
-      <div class="stat-tile" onclick="openModal('web')">
-        <div class="st-top">
-          <span class="st-icon">🌐</span>
-          <span class="st-change sc-warn">⚠ 5</span>
-        </div>
-        <div class="st-n">{{ total_web }}</div>
-        <div class="st-l">Web Findings</div>
-      </div>
-      <div class="stat-tile" onclick="openModal('cves')">
-        <div class="st-top">
-          <span class="st-icon">🔴</span>
-          <span class="st-change sc-warn">new</span>
-        </div>
-        <div class="st-n">{{ total_cves }}</div>
-        <div class="st-l">CVEs Identified</div>
-      </div>
-    </div>
+  <!-- Add asset -->
+  <div class="asset-add-card">
+    <div class="aac-title">+ Register a new asset</div>
+    <form class="aac-form" method="POST" action="/assets/new">
+      <input type="text" name="name" placeholder="Asset name (e.g. Main Website)" required>
+      <select name="asset_type">
+        <option value="web">Web</option>
+        <option value="server">Server</option>
+        <option value="database">Database</option>
+        <option value="mail">Mail Server</option>
+        <option value="network">Network / Subnet</option>
+        <option value="other">Other</option>
+      </select>
+      <input type="text" name="address" placeholder="IP, hostname, or CIDR (e.g. 10.0.0.10 or example.com)" required>
+      <button type="submit" class="aac-btn">Add Asset</button>
+    </form>
   </div>
 
-  <!-- Severity band -->
-  <div class="sev-band">
-    <div class="sev-tile" onclick="openModal('crit')">
-      <div class="sev-circle sc-crit">{{ severity_counts.Critical }}</div>
-      <div class="sev-info">
-        <div class="sev-n" style="color:var(--red);">{{ severity_counts.Critical }}</div>
-        <div class="sev-l">Critical · fix 24h</div>
-        <div class="sev-l">Fix within 24h</div>
-        <div class="sev-bar"><div class="sev-fill" style="width:{{ [severity_counts.Critical * 10, 100]|min }}%;background:var(--red);"></div></div>
-      </div>
-    </div>
-    <div class="sev-tile" onclick="openModal('high')">
-      <div class="sev-circle sc-high">{{ severity_counts.High }}</div>
-      <div class="sev-info">
-        <div class="sev-n" style="color:var(--orange);">{{ severity_counts.High }}</div>
-        <div class="sev-l">High · fix 7 days</div>
-        <div class="sev-l">Fix within 7 days</div>
-        <div class="sev-bar"><div class="sev-fill" style="width:{{ [severity_counts.High * 10, 100]|min }}%;background:var(--orange);"></div></div>
-      </div>
-    </div>
-    <div class="sev-tile" onclick="openModal('med')">
-      <div class="sev-circle sc-med">{{ severity_counts.Medium }}</div>
-      <div class="sev-info">
-        <div class="sev-n" style="color:var(--yellow);">{{ severity_counts.Medium }}</div>
-        <div class="sev-l">Medium · fix 30 days</div>
-        <div class="sev-l">Fix within 30 days</div>
-        <div class="sev-bar"><div class="sev-fill" style="width:{{ [severity_counts.Medium * 10, 100]|min }}%;background:var(--yellow);"></div></div>
-      </div>
-    </div>
-    <div class="sev-tile" onclick="openModal('low')">
-      <div class="sev-circle sc-low">{{ severity_counts.Low }}</div>
-      <div class="sev-info">
-        <div class="sev-n" style="color:var(--blue);">{{ severity_counts.Low }}</div>
-        <div class="sev-l">Low · routine</div>
-        <div class="sev-l">Routine maintenance</div>
-        <div class="sev-bar"><div class="sev-fill" style="width:{{ [severity_counts.Low * 10, 100]|min }}%;background:var(--blue);"></div></div>
-      </div>
-    </div>
-  </div>
+  {% if error %}
+  <div class="aac-error">⚠ {{ error }}</div>
+  {% endif %}
 
-  <!-- Bottom -->
-  <div class="bottom-row">
-    <div class="feed-card">
-      <div class="feed-head">
-        <div class="fh-left">
-          Activity Feed
-          <div class="live-pill"><div class="lp-dot"></div>LIVE</div>
+  <!-- Asset grid -->
+  {% if assets %}
+  <div class="asset-grid">
+    {% for a in assets %}
+    <div class="asset-card">
+      <div class="ac-top">
+        <div class="ac-type-icon">
+          {% if a.asset_type == 'web' %}🌐{% elif a.asset_type == 'database' %}🗄{% elif a.asset_type == 'mail' %}✉️{% elif a.asset_type == 'network' %}🕸{% elif a.asset_type == 'server' %}🖥{% else %}◎{% endif %}
         </div>
-        <a href="/history" class="view-all">View all →</a>
+        <div class="ac-status ac-status-{{ a.status }}">{{ a.status | upper }}</div>
       </div>
-      <div class="feed-body">
-        {% for item in activity_feed %}
-        <div class="fi">
-          <div class="fi-dot
-            {% if item.badge_type == 'crit' %}fd-crit
-            {% elif item.badge_type == 'ok' %}fd-ok
-            {% elif item.badge_type == 'warn' %}fd-warn
-            {% else %}fd-info{% endif %}">
-          </div>
-          <div class="fi-content">
-            <div class="fi-title">{{ item.message }}</div>
-            <div class="fi-sub">{{ item.time }}</div>
-          </div>
-          <div class="fi-right">
-            <div class="fi-time">{{ item.time[:10] if item.time else '' }}</div>
-            {% if item.badge %}
-            <span class="fi-tag
-              {% if item.badge_type == 'crit' %}ft-crit
-              {% elif item.badge_type == 'ok' %}ft-ok
-              {% else %}ft-info{% endif %}">
-              {{ item.badge }}
-            </span>
-            {% endif %}
-          </div>
-        </div>
-        {% else %}
-        <div class="fi">
-          <div class="fi-dot fd-info"></div>
-          <div class="fi-content">
-            <div class="fi-title">No activity yet — run your first scan to see results here.</div>
-            <div class="fi-sub">Go to New Scan to get started.</div>
-          </div>
-        </div>
-        {% endfor %}
+      <div class="ac-name">{{ a.name }}</div>
+      <div class="ac-address">{{ a.address }}</div>
+      <div class="ac-type">{{ a.asset_type | upper }}</div>
+      <div class="ac-actions">
+        <a href="/scan/new?target={{ a.address }}&asset_id={{ a.id }}" class="ac-btn ac-btn-scan">▶ Scan Now</a>
+        <form method="POST" action="/assets/{{ a.id }}/delete" onsubmit="return confirm('Remove this asset? Past scan history is kept.');" style="margin:0;">
+          <button type="submit" class="ac-btn ac-btn-del">✕</button>
+        </form>
       </div>
     </div>
-
-    <div class="qa-panel">
-      <div class="qa-head">// Quick Actions</div>
-      <a href="/scan/new" class="qa-item primary">
-        <div class="qi-ico">▶</div>
-        <div class="qi-text"><div class="qi-title">New Scan</div><div class="qi-sub">Run a new assessment</div></div>
-        <span class="qi-arrow">→</span>
-      </a>
-      <a href="#" class="qa-item">
-        <div class="qi-ico">📄</div>
-        <div class="qi-text"><div class="qi-title">Reports</div><div class="qi-sub">View generated reports</div></div>
-        <span class="qi-arrow">→</span>
-      </a>
-      <a href="#" class="qa-item">
-        <div class="qi-ico">☰</div>
-        <div class="qi-text"><div class="qi-title">Scan History</div><div class="qi-sub">Browse past scans</div></div>
-        <span class="qi-arrow">→</span>
-      </a>
-      <a href="#" class="qa-item">
-        <div class="qi-ico">🔌</div>
-        <div class="qi-text"><div class="qi-title">Port Intel</div><div class="qi-sub">Lookup any port</div></div>
-        <span class="qi-arrow">→</span>
-      </a>
-      <a href="#" class="qa-item">
-        <div class="qi-ico">🎓</div>
-        <div class="qi-text"><div class="qi-title">Defense Prep</div><div class="qi-sub">FYP quiz and notes</div></div>
-        <span class="qi-arrow">→</span>
-      </a>
-    </div>
+    {% endfor %}
   </div>
+  {% else %}
+  <div class="asset-empty">
+    <div class="ae-icon">◎</div>
+    <div class="ae-title">No assets registered yet</div>
+    <div class="ae-sub">Add your first web server, database, or network range above to start assessing it.</div>
+  </div>
+  {% endif %}
+
 </div>
 
-<!-- Modal -->
-<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal-box" id="modal-box"></div>
-</div>
+<style>
+.asset-add-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:20px 22px;margin-bottom:24px;}
+.aac-title{font-size:13px;font-weight:800;margin-bottom:14px;color:var(--text);}
+.aac-form{display:flex;gap:10px;flex-wrap:wrap;}
+.aac-form input,.aac-form select{
+  background:var(--bg3);border:1px solid var(--border);color:var(--text);
+  padding:10px 12px;border-radius:8px;font-family:var(--sans);font-size:12px;
+}
+.aac-form input[name="name"]{flex:1;min-width:180px;}
+.aac-form input[name="address"]{flex:1;min-width:220px;}
+.aac-form select{min-width:140px;}
+.aac-btn{background:var(--accent);color:#001018;border:none;border-radius:8px;padding:10px 20px;font-weight:800;font-size:12px;cursor:pointer;font-family:var(--sans);}
+.aac-btn:hover{opacity:0.85;}
+.aac-error{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);color:var(--red);padding:12px 16px;border-radius:8px;font-size:12px;margin-bottom:20px;}
+
+.asset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px;}
+.asset-card{background:var(--bg2);border:1px solid var(--border);border-radius:14px;padding:18px;transition:border-color .2s;}
+.asset-card:hover{border-color:var(--accent);}
+.ac-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.ac-type-icon{font-size:20px;}
+.ac-status{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3);}
+.ac-status-healthy{color:var(--green);background:rgba(0,255,157,0.1);}
+.ac-status-high{color:var(--orange);background:rgba(251,146,60,0.1);}
+.ac-status-critical{color:var(--red);background:rgba(239,68,68,0.1);}
+.ac-name{font-size:15px;font-weight:800;margin-bottom:4px;}
+.ac-address{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:6px;word-break:break-all;}
+.ac-type{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:1px;margin-bottom:16px;}
+.ac-actions{display:flex;gap:8px;}
+.ac-btn{flex:1;text-align:center;padding:9px;border-radius:7px;font-size:11px;font-weight:700;font-family:var(--mono);text-decoration:none;cursor:pointer;border:1px solid;}
+.ac-btn-scan{background:rgba(0,255,157,0.08);color:var(--green);border-color:rgba(0,255,157,0.2);}
+.ac-btn-scan:hover{background:rgba(0,255,157,0.16);}
+.ac-btn-del{background:rgba(239,68,68,0.08);color:var(--red);border-color:rgba(239,68,68,0.2);flex:0 0 40px;}
+.ac-btn-del:hover{background:rgba(239,68,68,0.16);}
+
+.asset-empty{text-align:center;padding:60px 20px;background:var(--bg2);border:1px dashed var(--border);border-radius:14px;}
+.ae-icon{font-size:36px;color:var(--text2);margin-bottom:12px;}
+.ae-title{font-size:15px;font-weight:800;margin-bottom:6px;}
+.ae-sub{font-size:12px;color:var(--text3);}
+</style>
 
 <script>
-// ── Rotating welcome greeting (different every login) ──
-(function(){
-  const name = {{ (session.username | title) | tojson }};
-  const hour = new Date().getHours();
-  const timeGreetings = hour < 5  ? ["Burning the midnight oil"] :
-                         hour < 12 ? ["Good morning","Rise and shine"] :
-                         hour < 17 ? ["Good afternoon"] :
-                         hour < 21 ? ["Good evening"] : ["Working late"];
-  const anyTimeGreetings = [
-    "Welcome back", "Good to see you", "Systems ready for", "Standing by",
-    "All clear,", "Mission control ready,", "Perimeter secure,", "Back on watch,",
-    "Ready when you are,", "Let's keep things secure,"
-  ];
-  const pool = timeGreetings.concat(anyTimeGreetings);
-  const pick = pool[Math.floor(Math.random() * pool.length)];
-  const emojis = ["👋","🛡️","⚡","🔒","🖥️"];
-  const emoji = emojis[Math.floor(Math.random() * emojis.length)];
-  const el = document.getElementById('greeting-text');
-  if(el){
-    el.innerHTML = pick + ', <br><span class="hi">' + name + '</span> ' + emoji;
-  }
-})();
-
-const MODALS = {
-  hosts:{title:"🖥 Hosts Discovered",n:12,color:"#00c8ff",breakdown:[{n:8,l:"Active"},{n:4,l:"Filtered"},{n:3,l:"Web Servers"},{n:2,l:"New"}],tip:"CyberScan Pro discovered 12 active hosts. Click below to view full host-by-host breakdown in your scan history.",link:"View Scan History →"},
-  ports:{title:"🔌 Open Ports",n:47,color:"#00ff9d",breakdown:[{n:22,l:"HTTP/HTTPS"},{n:12,l:"Database"},{n:8,l:"SSH/FTP"},{n:5,l:"Other"}],tip:"47 open ports detected. Database ports exposed to the internet represent a High risk — close or firewall them.",link:"Port Intelligence →"},
-  web:{title:"🌐 Web Findings",n:23,color:"#fb923c",breakdown:[{n:5,l:"Injection"},{n:7,l:"Auth"},{n:6,l:"Headers"},{n:5,l:"Other"}],tip:"23 web vulnerabilities found. 5 injection-type vulnerabilities require immediate remediation.",link:"View Findings →"},
-  cves:{title:"🔴 CVEs Identified",n:9,color:"#ef4444",breakdown:[{n:3,l:"Critical"},{n:4,l:"High"},{n:2,l:"Medium"},{n:0,l:"Patched"}],tip:"9 publicly known vulnerabilities matched to detected software versions. Update affected software immediately.",link:"View CVEs →"},
-  crit:{title:"🔴 Critical",n:3,color:"#ef4444",breakdown:[{n:2,l:"SQLi"},{n:1,l:"RCE Risk"},{n:0,l:"Patched"},{n:3,l:"Open"}],tip:"IMMEDIATE ACTION: Critical vulnerabilities can be exploited by automated tools within hours. Fix now.",link:"View Critical →"},
-  high:{title:"🟠 High Severity",n:8,color:"#fb923c",breakdown:[{n:3,l:"XSS"},{n:2,l:"CSRF"},{n:2,l:"Headers"},{n:1,l:"CVEs"}],tip:"Fix within 7 days. High severity issues require specific conditions but represent significant breach risk.",link:"View High →"},
-  med:{title:"🟡 Medium Severity",n:11,color:"#fbbf24",breakdown:[{n:5,l:"Config"},{n:3,l:"Info Leak"},{n:2,l:"Cookies"},{n:1,l:"Other"}],tip:"Address within 30 days during your next maintenance window.",link:"View Medium →"},
-  low:{title:"🔵 Low Severity",n:4,color:"#3b82f6",breakdown:[{n:2,l:"Info"},{n:1,l:"Versioning"},{n:1,l:"Other"},{n:0,l:"Ignored"}],tip:"Low risk. Address during routine maintenance as resources allow.",link:"View Low →"},
-};
-function openModal(k){
-  const m=MODALS[k];
-  document.getElementById("modal-box").innerHTML=`
-    <div class="mb-head"><div class="mb-title">${m.title}</div><button class="mb-close" onclick="closeModal()">✕</button></div>
-    <div class="mb-center"><div class="mb-n" style="color:${m.color};">${m.n}</div><div class="mb-l">TOTAL ${m.title.replace(/[^\w\s]/gi,'').trim().toUpperCase()}</div></div>
-    <div class="mb-grid">${m.breakdown.map(b=>`<div class="mbg-box"><div class="mbg-n" style="color:${m.color};">${b.n}</div><div class="mbg-l">${b.l}</div></div>`).join("")}</div>
-    <div class="mb-tip">${m.tip}</div>
-    <a href="#" class="mb-btn">${m.link}</a>`;
-  document.getElementById("modal").classList.add("open");
-}
-function closeModal(){document.getElementById("modal").classList.remove("open");}
 function openSidebar(){document.getElementById("sidebar").classList.add("open");document.getElementById("overlay").classList.add("show");}
 function closeSidebar(){document.getElementById("sidebar").classList.remove("open");document.getElementById("overlay").classList.remove("show");}
-document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
-
 (function tick(){
   const n=new Date();
-  document.getElementById("clock").textContent=n.toLocaleTimeString("en-GB");
+  const el = document.getElementById("clock");
+  if(el) el.textContent=n.toLocaleTimeString("en-GB");
   setTimeout(tick,1000);
 })();
-
-window.addEventListener("load",()=>{
-  document.querySelectorAll(".sev-fill").forEach(el=>{
-    const w=el.style.width;el.style.width="0";
-    setTimeout(()=>{el.style.width=w;},300);
-  });
-});
 </script>
 </body>
 </html>

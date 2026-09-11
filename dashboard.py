@@ -53,7 +53,7 @@ def check_session_timeout():
     """Auto-logout after SESSION_TIMEOUT_MINUTES of inactivity."""
     from flask import request as req, session as sess
     # Skip login page and static assets
-    if req.endpoint in ("auth.login", "favicon", "static"):
+    if req.endpoint in ("auth.login", "auth.register", "favicon", "static"):
         return
     if "username" in sess:
         last_active = sess.get("last_active", 0)
@@ -80,7 +80,7 @@ active_scans = {}
 def index():
     db = Database()
     db.fix_stale_sessions()
-    sessions      = db.get_all_sessions()
+    sessions      = db.get_all_sessions(session.get("org_id"))
     sev_counts    = db.get_severity_counts()
     total_findings = db.get_total_findings()
 
@@ -279,6 +279,7 @@ def new_scan():
 def run_scan():
     data = request.get_json()
     target = data.get("target", "").strip()
+    asset_id = data.get("asset_id")
     if not target:
         return jsonify({"error": "Target IP or CIDR is required."}), 400
 
@@ -298,7 +299,7 @@ def run_scan():
     from modules.report_generator import ReportGenerator  # v4 with API enrichment
 
     db = Database()
-    session_id = db.create_session(target)
+    session_id = db.create_session(target, org_id=session.get("org_id"), asset_id=asset_id)
     db.close()
 
     active_scans[session_id] = {
@@ -362,6 +363,11 @@ def run_scan():
             # ── API Enrichment (Shodan, VirusTotal, AbuseIPDB, URLScan) ──────
             try:
                 from modules.api_enrichment import enrich_target, get_shodan_cves
+                import socket as _socket
+                try:
+                    resolved_ip = _socket.gethostbyname(target.split("/")[0])
+                except Exception:
+                    resolved_ip = target.split("/")[0]
                 target_ip = hosts[0]["ip"] if hosts else resolved_ip
                 hostname  = target
 
@@ -777,7 +783,7 @@ def test_email():
 @login_required
 def compare_page():
     db = Database()
-    sessions = db.get_all_sessions()
+    sessions = db.get_all_sessions(session.get("org_id"))
     db.close()
     return render_template("history.html",
         sessions=sessions,
@@ -975,7 +981,7 @@ def live_port_intel(port):
     })
     # Also check which of your scans found this port open
     db = Database()
-    sessions = db.get_all_sessions()
+    sessions = db.get_all_sessions(session.get("org_id"))
     found_on = []
     for s in sessions:
         hosts = db.get_hosts(s["id"])
@@ -1039,7 +1045,7 @@ def live_virustotal(target):
 @login_required
 def history_page():
     db = Database()
-    sessions = db.get_all_sessions()
+    sessions = db.get_all_sessions(session.get("org_id"))
     enriched = []
     for s in sessions:
         sc = db.get_severity_counts(s["id"])
@@ -1081,7 +1087,7 @@ def settings_page():
 @login_required
 def reports_page():
     db = Database()
-    sessions = db.get_all_sessions()
+    sessions = db.get_all_sessions(session.get("org_id"))
     session_risks = {}
     for s in sessions:
         counts = db.get_severity_counts(s["id"])
@@ -1141,7 +1147,7 @@ def api_notifications():
 @login_required
 def api_activity_feed():
     db       = Database()
-    sessions = db.get_all_sessions()
+    sessions = db.get_all_sessions(session.get("org_id"))
     feed     = []
     for s in sessions[:10]:
         sc     = db.get_severity_counts(s["id"])
@@ -1177,7 +1183,7 @@ def api_severity_counts():
 @login_required
 def api_sessions():
     db       = Database()
-    sessions = db.get_all_sessions()
+    sessions = db.get_all_sessions(session.get("org_id"))
     result   = []
     for s in sessions[:10]:
         sc = db.get_severity_counts(s["id"])
@@ -1197,11 +1203,59 @@ def api_sessions():
 
 
 
+@app.route("/assets")
+@login_required
+def assets_page():
+    db = Database()
+    org_id = session.get("org_id")
+    assets = db.get_assets(org_id) if org_id else []
+    db.close()
+    return render_template("assets.html", assets=assets, page="assets", title="Assets", error=None)
+
+
+@app.route("/assets/new", methods=["POST"])
+@login_required
+def assets_new():
+    org_id = session.get("org_id")
+    name = request.form.get("name", "").strip()
+    asset_type = request.form.get("asset_type", "server").strip()
+    address = request.form.get("address", "").strip()
+
+    db = Database()
+    error = None
+    if not org_id:
+        error = "No organization found for your account."
+    elif not name or not address:
+        error = "Asset name and address are required."
+    else:
+        db.create_asset(org_id, name, asset_type, address, added_by=session.get("user_id"))
+
+    if error:
+        assets = db.get_assets(org_id) if org_id else []
+        db.close()
+        return render_template("assets.html", assets=assets, page="assets", title="Assets", error=error)
+
+    db.close()
+    return redirect(url_for("assets_page"))
+
+
+@app.route("/assets/<int:asset_id>/delete", methods=["POST"])
+@login_required
+def assets_delete(asset_id):
+    db = Database()
+    asset = db.get_asset(asset_id)
+    # Only allow deleting assets that belong to the caller's own organization
+    if asset and asset.get("org_id") == session.get("org_id"):
+        db.delete_asset(asset_id)
+    db.close()
+    return redirect(url_for("assets_page"))
+
+
 @app.route("/targets")
 @login_required
 def targets_page():
     db = Database()
-    sessions = db.get_all_sessions()
+    sessions = db.get_all_sessions(session.get("org_id"))
     target_map = {}
     for s in sessions:
         name = s["target"]
@@ -1297,7 +1351,7 @@ def port_intel():
         })
         # Cross-reference with actual scan data
         db = Database()
-        sessions = db.get_all_sessions()
+        sessions = db.get_all_sessions(session.get("org_id"))
         for s in sessions:
             hosts = db.get_hosts(s["id"])
             for h in hosts:
@@ -1331,10 +1385,7 @@ def defense_prep():
 
 
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    return redirect(url_for("login"))@app.route("/api/search")
+@app.route("/api/search")
 @login_required
 def api_search():
     q = request.args.get("q","").strip()
@@ -1343,7 +1394,7 @@ def api_search():
 
     results = []
     db = Database()
-    sessions = db.get_all_sessions()
+    sessions = db.get_all_sessions(session.get("org_id"))
 
     filter_type = None
     query = q

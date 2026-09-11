@@ -61,6 +61,11 @@ Examples:
                         help="Port for the web dashboard (default: 5000)")
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Enable verbose output")
+    parser.add_argument("--sync", metavar="URL",
+                        help="Sync the most recent completed scan session to a remote "
+                             "CyberScan Pro dashboard (e.g. --sync https://myhost.com)")
+    parser.add_argument("--sync-key", metavar="KEY",
+                        help="API key to authenticate the --sync request (sent as X-API-Key)")
 
     return parser.parse_args()
 

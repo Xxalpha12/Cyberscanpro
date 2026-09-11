@@ -280,6 +280,55 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .tdone-pdf{background:rgba(249,115,22,0.1);color:var(--orange);border:1px solid rgba(249,115,22,0.2);}
 .tdone-html{background:rgba(0,255,157,0.08);color:var(--green);border:1px solid rgba(0,255,157,0.15);}
 
+/* ── FULLSCREEN CONSOLE (pop-out live scan log) ── */
+#console-overlay{
+  position:fixed;inset:0;z-index:999;background:#000;
+  display:none;flex-direction:column;font-family:var(--mono);
+  opacity:0;transition:opacity .25s ease;
+}
+#console-overlay.active{display:flex;opacity:1;}
+#console-overlay::before{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,255,157,0.025) 2px,rgba(0,255,157,0.025) 3px);
+  animation:consolescan 12s linear infinite;
+}
+@keyframes consolescan{from{background-position:0 0}to{background-position:0 100%}}
+#console-overlay::after{
+  content:'';position:absolute;inset:0;pointer-events:none;z-index:1;
+  background:radial-gradient(ellipse at 50% 0%,rgba(0,200,255,0.06),transparent 60%);
+}
+.console-bar{
+  flex-shrink:0;background:#060606;padding:12px 20px;
+  display:flex;align-items:center;gap:10px;
+  border-bottom:1px solid rgba(0,255,157,0.15);position:relative;z-index:2;
+}
+.console-bar .tdot{width:11px;height:11px;}
+.console-title{font-size:11px;color:var(--green);letter-spacing:3px;margin-left:6px;font-weight:700;}
+.console-live{display:flex;align-items:center;gap:6px;margin-left:auto;font-size:11px;color:var(--green);}
+.console-min-btn{
+  background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.25);color:var(--accent);
+  font-family:var(--mono);font-size:10px;letter-spacing:1px;padding:6px 14px;border-radius:6px;
+  cursor:pointer;margin-left:14px;transition:all .2s;
+}
+.console-min-btn:hover{background:rgba(0,200,255,0.15);}
+.console-body{
+  flex:1;overflow-y:auto;padding:26px 32px 40px;position:relative;z-index:2;
+}
+.console-body::-webkit-scrollbar{width:4px;}
+.console-body::-webkit-scrollbar-thumb{background:rgba(0,255,157,0.2);}
+.console-banner{
+  color:var(--green);font-size:11px;line-height:1.35;white-space:pre;
+  text-shadow:0 0 8px rgba(0,255,157,0.35);margin-bottom:18px;
+  overflow-x:auto;
+}
+.console-log .tline{font-size:12.5px;line-height:2.1;}
+.console-log .tline .pr{color:var(--green);}
+@media(max-width:720px){
+  .console-banner{font-size:6.2px;}
+  .console-body{padding:18px 14px 30px;}
+  .console-title{letter-spacing:1.5px;}
+}
+
 /* ── RECENT TARGETS ── */
 .recent-section{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
 .recent-hd{padding:12px 18px;border-bottom:1px solid var(--border);background:rgba(0,200,255,0.015);display:flex;align-items:center;justify-content:space-between;}
@@ -326,6 +375,21 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 </style>
 </head>
 <body>
+
+<!-- Fullscreen pop-out console: live scan log -->
+<div id="console-overlay">
+  <div class="console-bar">
+    <div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div>
+    <span class="console-title">// CYBERSCAN PRO — LIVE ASSESSMENT CONSOLE</span>
+    <div class="console-live" id="console-live"><div class="term-live-dot"></div>LIVE</div>
+    <button class="console-min-btn" onclick="minimizeConsole()">— MINIMIZE</button>
+  </div>
+  <div class="console-body">
+    <pre class="console-banner" id="console-banner"></pre>
+    <div class="console-log" id="console-log"></div>
+    <div class="term-done" id="console-done" style="display:none;margin-top:18px;background:transparent;border:none;padding:0;"></div>
+  </div>
+</div>
 
 <!-- Preloader -->
 <div id="preloader">
@@ -574,6 +638,21 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 
 <script>
 let SESSION_ID = null;
+let ASSET_ID = null;
+
+// Prefill target from ?target=&asset_id= (e.g. launched from the Assets page)
+(function(){
+  const params = new URLSearchParams(window.location.search);
+  const t = params.get('target');
+  const aid = params.get('asset_id');
+  if(aid) ASSET_ID = aid;
+  if(t){
+    window.addEventListener('DOMContentLoaded', ()=>{
+      const el = document.getElementById('target');
+      if(el) el.value = t;
+    });
+  }
+})();
 let POLL = null;
 let SELECTED_TYPE = 'full';
 let LOG_COUNT = 0;
@@ -671,18 +750,60 @@ function prefill(name){
   document.getElementById('target').focus();
 }
 
-// Add terminal line
+// ── Fullscreen console (pop-out live scan log) ──
+const CONSOLE_BANNER = `  _   _      _   ____                      ____
+ | \\ | | ___| |_/ ___|  ___ __ _ _ __    |  _ \\ _ __ ___
+ |  \\| |/ _ \\ __\\___ \\ / __/ _\` | '_ \\   | |_) | '__/ _ \\
+ | |\\  |  __/ |_ ___) | (_| (_| | | | |  |  __/| | | (_) |
+ |_| \\_|\\___|\\__|____/ \\___\\__,_|_| |_|  |_|   |_|  \\___/
+
+  CyberScan Pro — Automated Vulnerability Assessment Engine
+  Author: Obeh Emmanuel Onoriode | Matric: Cos/9581/2022
+  Use responsibly & ethically only.
+`;
+
+function openConsole(){
+  const ov = document.getElementById('console-overlay');
+  ov.classList.add('active');
+  document.getElementById('console-log').innerHTML = '';
+  document.getElementById('console-done').style.display = 'none';
+  document.getElementById('console-done').innerHTML = '';
+  document.getElementById('console-live').innerHTML = '<div class="term-live-dot"></div>LIVE';
+  typeBanner();
+}
+function minimizeConsole(){
+  document.getElementById('console-overlay').classList.remove('active');
+}
+function typeBanner(){
+  const el = document.getElementById('console-banner');
+  el.textContent = '';
+  let i = 0;
+  const speed = 2; // ms per char — fast typewriter, not a slog
+  (function tick(){
+    el.textContent = CONSOLE_BANNER.slice(0, i);
+    i += 3;
+    if(i <= CONSOLE_BANNER.length){ setTimeout(tick, speed); }
+    else { el.textContent = CONSOLE_BANNER; }
+  })();
+}
+
+// Add terminal line (mirrors into the inline card terminal AND the fullscreen console)
 function addLine(cls, msg){
-  const body = document.getElementById('term-body');
-  // Remove cursor from prev
-  const prev = body.querySelector('.cursor');
-  if(prev) prev.remove();
-  const line = document.createElement('div');
-  line.className = 'tline ' + cls;
   const isLast = true;
-  line.innerHTML = `<span class="pr">></span><span class="msg">${msg}</span>${isLast?'<span class="cursor"></span>':''}`;
-  body.appendChild(line);
-  body.scrollTop = body.scrollHeight;
+  const html = `<span class="pr">></span><span class="msg">${msg}</span>${isLast?'<span class="cursor"></span>':''}`;
+
+  [document.getElementById('term-body'), document.getElementById('console-log')].forEach(body=>{
+    if(!body) return;
+    const prev = body.querySelector('.cursor');
+    if(prev) prev.remove();
+    const line = document.createElement('div');
+    line.className = 'tline ' + cls;
+    line.innerHTML = html;
+    body.appendChild(line);
+    body.scrollTop = body.scrollHeight;
+    // fullscreen console: keep the page itself scrolled to the newest line
+    if(body.id === 'console-log') body.closest('.console-body').scrollTop = body.closest('.console-body').scrollHeight;
+  });
   LOG_COUNT++;
 }
 
@@ -727,6 +848,9 @@ async function launchScan(){
   prog.classList.add('show');
   LOG_COUNT = 0;
 
+  // Pop out the fullscreen live console
+  openConsole();
+
   // Init terminal
   const body = document.getElementById('term-body');
   body.innerHTML = '';
@@ -741,7 +865,7 @@ async function launchScan(){
     const res = await fetch('/scan/start',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({target, scan_type:SELECTED_TYPE, email, port_range:portRange})
+      body: JSON.stringify({target, scan_type:SELECTED_TYPE, email, port_range:portRange, asset_id: ASSET_ID})
     });
     const ct = res.headers.get('content-type')||'';
     if(!ct.includes('application/json')){
@@ -787,7 +911,7 @@ function pollStatus(){
       if(data.cve_count   !== undefined) document.getElementById('ls-cve').textContent   = data.cve_count   || 0;
 
       // Parse log for phase detection
-      const logs = data.logs || [];
+      const logs = data.log || [];
       const allLogs = logs.join(' ').toLowerCase();
 
       // Phase progression based on log content
@@ -825,6 +949,7 @@ function pollStatus(){
         document.getElementById('prog-spinner').style.animation='none';
         document.getElementById('prog-spinner').style.borderTopColor='var(--green)';
         document.getElementById('term-live').innerHTML='<span style="color:var(--green)">● DONE</span>';
+        document.getElementById('console-live').innerHTML='<span style="color:var(--green)">● DONE</span>';
 
         const btn = document.getElementById('launch-btn');
         btn.disabled=false;
@@ -837,12 +962,16 @@ function pollStatus(){
           addLine('ok',`Findings: ${(data.web_count||0)} web · ${(data.cve_count||0)} CVE`);
           addLine('ok','Reports generated — open below');
           addLine('ok','════════════════════════════════');
-          const done = document.getElementById('term-done');
-          done.style.display = 'flex';
-          done.innerHTML =
+          const doneHtml =
             `<a href="/scan/${SESSION_ID}" class="tdone-btn tdone-view">VIEW RESULTS</a>`+
             `<a href="/report/pdf/${SESSION_ID}" target="_blank" class="tdone-btn tdone-pdf">📄 PDF REPORT</a>`+
-            `<a href="/report/html/${SESSION_ID}" target="_blank" class="tdone-btn tdone-html">🌐 HTML REPORT</a>`;
+            `<a href="/report/html/${SESSION_ID}" target="_blank" class="tdone-btn tdone-html">🌐 HTML REPORT</a>`+
+            `<button type="button" class="tdone-btn" style="background:rgba(255,255,255,0.05);color:var(--text2);border:1px solid var(--border);" onclick="minimizeConsole()">MINIMIZE ✕</button>`;
+          ['term-done','console-done'].forEach(id=>{
+            const done = document.getElementById(id);
+            done.style.display = 'flex';
+            done.innerHTML = doneHtml;
+          });
         } else {
           addLine('err','SCAN FAILED — check target and try again');
         }

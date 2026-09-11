@@ -262,15 +262,273 @@ class Database:
                 )
             """)
         self.conn.commit()
+        self._init_org_schema()
+
+    # ── ORGANIZATIONS / ASSETS / USERS SCHEMA ───────────────────────────────────
+
+    def _init_org_schema(self):
+        """Users, Organizations, Org Membership (roles) and Assets.
+        Added as a separate step (rather than inline above) so it layers
+        cleanly on top of existing installs without touching the original
+        scan tables. sessions.org_id / sessions.asset_id are added via
+        best-effort ALTER TABLE so existing databases upgrade in place."""
+        c = self.conn.cursor()
+        if self._pg:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id BIGSERIAL PRIMARY KEY,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS organizations (
+                    id BIGSERIAL PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    owner_user_id BIGINT,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS org_members (
+                    org_id BIGINT NOT NULL,
+                    user_id BIGINT NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'analyst',
+                    joined_at TEXT NOT NULL,
+                    PRIMARY KEY (org_id, user_id)
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS assets (
+                    id BIGSERIAL PRIMARY KEY,
+                    org_id BIGINT NOT NULL,
+                    name TEXT NOT NULL,
+                    asset_type TEXT DEFAULT 'server',
+                    address TEXT NOT NULL,
+                    status TEXT DEFAULT 'unknown',
+                    added_by BIGINT,
+                    created_at TEXT NOT NULL
+                )
+            """)
+        else:
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS users (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    username TEXT UNIQUE NOT NULL,
+                    password_hash TEXT NOT NULL,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS organizations (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    owner_user_id INTEGER,
+                    created_at TEXT NOT NULL
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS org_members (
+                    org_id INTEGER NOT NULL,
+                    user_id INTEGER NOT NULL,
+                    role TEXT NOT NULL DEFAULT 'analyst',
+                    joined_at TEXT NOT NULL,
+                    PRIMARY KEY (org_id, user_id)
+                )
+            """)
+            c.execute("""
+                CREATE TABLE IF NOT EXISTS assets (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    org_id INTEGER NOT NULL,
+                    name TEXT NOT NULL,
+                    asset_type TEXT DEFAULT 'server',
+                    address TEXT NOT NULL,
+                    status TEXT DEFAULT 'unknown',
+                    added_by INTEGER,
+                    created_at TEXT NOT NULL
+                )
+            """)
+        self.conn.commit()
+
+        # Best-effort column additions to the existing `sessions` table so
+        # scans can optionally be tied to an organization/asset. Safe to
+        # run repeatedly — errors (column already exists) are swallowed.
+        for stmt in (
+            "ALTER TABLE sessions ADD COLUMN org_id INTEGER",
+            "ALTER TABLE sessions ADD COLUMN asset_id INTEGER",
+        ):
+            try:
+                c.execute(stmt)
+                self.conn.commit()
+            except Exception:
+                self.conn.rollback()
+
+    def ensure_default_user_and_org(self, username: str, password_hash: str) -> None:
+        """First-run bootstrap: if no users exist yet, create the admin
+        account (credentials come from NETSCAN_USER/NETSCAN_PASS) plus a
+        default organization they own, so existing installs keep working
+        with zero extra setup."""
+        c = self.conn.cursor()
+        c.execute("SELECT COUNT(*) AS n FROM users")
+        row = c.fetchone()
+        count = row["n"] if isinstance(row, dict) else row[0]
+        if count and count > 0:
+            return
+        user_id = self.create_user(username, password_hash)
+        self.create_organization("Default Organization", user_id)
+
+    # ── USERS ────────────────────────────────────────────────────────────────
+
+    def create_user(self, username: str, password_hash: str) -> int:
+        c = self.conn.cursor()
+        now = datetime.now().isoformat()
+        if self._pg:
+            c.execute(
+                "INSERT INTO users (username,password_hash,created_at) VALUES (%s,%s,%s) RETURNING id",
+                (username, password_hash, now)
+            )
+            self.conn.commit()
+            return c.fetchone()["id"]
+        else:
+            c.execute(
+                "INSERT INTO users (username,password_hash,created_at) VALUES (?,?,?)",
+                (username, password_hash, now)
+            )
+            self.conn.commit()
+            return c.lastrowid
+
+    def get_user_by_username(self, username: str):
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT * FROM users WHERE username=?"), (username,))
+        row = c.fetchone()
+        return dict(row) if row else None
+
+    def get_user_by_id(self, user_id: int):
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT * FROM users WHERE id=?"), (user_id,))
+        row = c.fetchone()
+        return dict(row) if row else None
+
+    # ── ORGANIZATIONS ────────────────────────────────────────────────────────
+
+    def create_organization(self, name: str, owner_user_id: int) -> int:
+        c = self.conn.cursor()
+        now = datetime.now().isoformat()
+        if self._pg:
+            c.execute(
+                "INSERT INTO organizations (name,owner_user_id,created_at) VALUES (%s,%s,%s) RETURNING id",
+                (name, owner_user_id, now)
+            )
+            org_id = c.fetchone()["id"]
+        else:
+            c.execute(
+                "INSERT INTO organizations (name,owner_user_id,created_at) VALUES (?,?,?)",
+                (name, owner_user_id, now)
+            )
+            org_id = c.lastrowid
+        self.conn.commit()
+        self.add_org_member(org_id, owner_user_id, "owner")
+        return org_id
+
+    def add_org_member(self, org_id: int, user_id: int, role: str = "analyst") -> None:
+        c = self.conn.cursor()
+        now = datetime.now().isoformat()
+        if self._pg:
+            c.execute(
+                "INSERT INTO org_members (org_id,user_id,role,joined_at) VALUES (%s,%s,%s,%s) "
+                "ON CONFLICT (org_id,user_id) DO UPDATE SET role=EXCLUDED.role",
+                (org_id, user_id, role, now)
+            )
+        else:
+            c.execute(
+                "INSERT OR REPLACE INTO org_members (org_id,user_id,role,joined_at) VALUES (?,?,?,?)",
+                (org_id, user_id, role, now)
+            )
+        self.conn.commit()
+
+    def get_user_organizations(self, user_id: int) -> list:
+        c = self.conn.cursor()
+        c.execute(self._q("""
+            SELECT o.*, m.role AS my_role FROM organizations o
+            JOIN org_members m ON m.org_id = o.id
+            WHERE m.user_id = ? ORDER BY o.created_at ASC
+        """), (user_id,))
+        return [dict(r) for r in c.fetchall()]
+
+    def get_organization(self, org_id: int):
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT * FROM organizations WHERE id=?"), (org_id,))
+        row = c.fetchone()
+        return dict(row) if row else None
+
+    def get_org_role(self, org_id: int, user_id: int):
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT role FROM org_members WHERE org_id=? AND user_id=?"), (org_id, user_id))
+        row = c.fetchone()
+        return row["role"] if row else None
+
+    def get_org_members(self, org_id: int) -> list:
+        c = self.conn.cursor()
+        c.execute(self._q("""
+            SELECT u.id, u.username, m.role, m.joined_at FROM org_members m
+            JOIN users u ON u.id = m.user_id
+            WHERE m.org_id = ? ORDER BY m.joined_at ASC
+        """), (org_id,))
+        return [dict(r) for r in c.fetchall()]
+
+    # ── ASSETS ───────────────────────────────────────────────────────────────
+
+    def create_asset(self, org_id: int, name: str, asset_type: str, address: str, added_by: int = None) -> int:
+        c = self.conn.cursor()
+        now = datetime.now().isoformat()
+        if self._pg:
+            c.execute(
+                "INSERT INTO assets (org_id,name,asset_type,address,status,added_by,created_at) "
+                "VALUES (%s,%s,%s,%s,'unknown',%s,%s) RETURNING id",
+                (org_id, name, asset_type, address, added_by, now)
+            )
+            asset_id = c.fetchone()["id"]
+        else:
+            c.execute(
+                "INSERT INTO assets (org_id,name,asset_type,address,status,added_by,created_at) "
+                "VALUES (?,?,?,?,'unknown',?,?)",
+                (org_id, name, asset_type, address, added_by, now)
+            )
+            asset_id = c.lastrowid
+        self.conn.commit()
+        return asset_id
+
+    def get_assets(self, org_id: int) -> list:
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT * FROM assets WHERE org_id=? ORDER BY created_at DESC"), (org_id,))
+        return [dict(r) for r in c.fetchall()]
+
+    def get_asset(self, asset_id: int):
+        c = self.conn.cursor()
+        c.execute(self._q("SELECT * FROM assets WHERE id=?"), (asset_id,))
+        row = c.fetchone()
+        return dict(row) if row else None
+
+    def update_asset_status(self, asset_id: int, status: str) -> None:
+        c = self.conn.cursor()
+        c.execute(self._q("UPDATE assets SET status=? WHERE id=?"), (status, asset_id))
+        self.conn.commit()
+
+    def delete_asset(self, asset_id: int) -> None:
+        c = self.conn.cursor()
+        c.execute(self._q("DELETE FROM assets WHERE id=?"), (asset_id,))
+        self.conn.commit()
 
     # ── SESSION METHODS ───────────────────────────────────────────────────────
 
-    def create_session(self, target: str) -> str:
+    def create_session(self, target: str, org_id: int = None, asset_id: int = None) -> str:
         session_id = uuid.uuid4().hex[:8]
         c = self.conn.cursor()
         c.execute(self._q(
-            "INSERT INTO sessions (id, target, started_at, status) VALUES (?, ?, ?, 'running')"
-        ), (session_id, target, datetime.now().isoformat()))
+            "INSERT INTO sessions (id, target, started_at, status, org_id, asset_id) "
+            "VALUES (?, ?, ?, 'running', ?, ?)"
+        ), (session_id, target, datetime.now().isoformat(), org_id, asset_id))
         self.conn.commit()
         return session_id
 
@@ -294,11 +552,18 @@ class Database:
         row = c.fetchone()
         return dict(row) if row else None
 
-    def get_all_sessions(self) -> list:
+    def get_all_sessions(self, org_id: int = None) -> list:
         c = self.conn.cursor()
         # Exclude permanently deleted sessions
         deleted = self._get_deleted_ids()
-        c.execute("SELECT * FROM sessions ORDER BY started_at DESC")
+        if org_id is None:
+            c.execute("SELECT * FROM sessions ORDER BY started_at DESC")
+        else:
+            # Include legacy scans (org_id IS NULL, pre-dating this feature)
+            # so upgraded installs don't lose visibility into old history.
+            c.execute(self._q(
+                "SELECT * FROM sessions WHERE org_id=? OR org_id IS NULL ORDER BY started_at DESC"
+            ), (org_id,))
         rows = c.fetchall()
         return [dict(r) for r in rows if r["id"] not in deleted]
 

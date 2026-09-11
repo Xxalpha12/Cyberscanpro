@@ -1,6 +1,7 @@
 """
 CyberScan Pro — Authentication Module
-Handles login, logout, and login_required decorator.
+Handles login, registration, logout, and login_required decorator.
+Backed by real user + organization records (see modules/database.py).
 Includes rate limiting: max 5 failed attempts per 15 minutes per IP.
 """
 
@@ -12,6 +13,9 @@ from flask import (
     Blueprint, render_template, request, session,
     redirect, url_for, jsonify, flash
 )
+from werkzeug.security import generate_password_hash, check_password_hash
+
+from modules.database import Database
 
 auth = Blueprint("auth", __name__)
 
@@ -50,6 +54,38 @@ def _clear_failures(ip: str) -> None:
     _attempts.pop(ip, None)
 
 
+def _bootstrap_default_account() -> None:
+    """First-run only: create the admin user (from env vars) + their
+    default organization, so existing installs keep working with zero
+    extra setup after upgrading to the organizations/assets model."""
+    db = Database()
+    try:
+        valid_user = os.environ.get("NETSCAN_USER", "admin")
+        valid_pass = os.environ.get("NETSCAN_PASS", "admin123")
+        db.ensure_default_user_and_org(valid_user, generate_password_hash(valid_pass))
+    finally:
+        db.close()
+
+
+def _establish_session(user: dict) -> None:
+    """Populate the Flask session for a logged-in user: identity + their
+    organization context (first org they belong to, for now)."""
+    db = Database()
+    try:
+        orgs = db.get_user_organizations(user["id"])
+    finally:
+        db.close()
+    session.clear()
+    session["user_id"]  = user["id"]
+    session["username"] = user["username"]
+    session["last_active"] = time.time()
+    session.permanent = True
+    if orgs:
+        session["org_id"]   = orgs[0]["id"]
+        session["org_name"] = orgs[0]["name"]
+        session["org_role"] = orgs[0]["my_role"]
+
+
 # ── login_required decorator ───────────────────────────────────────────────────
 
 def login_required(f):
@@ -61,10 +97,25 @@ def login_required(f):
     return decorated
 
 
+def org_role_required(*roles):
+    """Restrict a route to specific organization roles (e.g. 'owner').
+    Must be used underneath @login_required."""
+    def wrapper(f):
+        @wraps(f)
+        def decorated(*args, **kwargs):
+            if session.get("org_role") not in roles:
+                return jsonify({"error": "You don't have permission to do that."}), 403
+            return f(*args, **kwargs)
+        return decorated
+    return wrapper
+
+
 # ── Login route ────────────────────────────────────────────────────────────────
 
 @auth.route("/login", methods=["GET", "POST"])
 def login():
+    _bootstrap_default_account()
+
     error    = None
     locked   = False
     wait_sec = 0
@@ -84,15 +135,15 @@ def login():
             username = request.form.get("username", "").strip()
             password = request.form.get("password", "")
 
-            valid_user = os.environ.get("NETSCAN_USER", "admin")
-            valid_pass = os.environ.get("NETSCAN_PASS", "admin123")
+            db = Database()
+            try:
+                user = db.get_user_by_username(username)
+            finally:
+                db.close()
 
-            if username == valid_user and password == valid_pass:
+            if user and check_password_hash(user["password_hash"], password):
                 _clear_failures(ip)
-                session.clear()
-                session["username"]    = username
-                session["last_active"] = time.time()
-                session.permanent      = True
+                _establish_session(user)
 
                 next_url = request.args.get("next", "")
                 # Safety: only allow relative redirects
@@ -117,6 +168,43 @@ def login():
         locked=locked,
         wait_sec=wait_sec,
     )
+
+
+# ── Register route ────────────────────────────────────────────────────────────
+# Real-world flow: a security team signs up, gets their own Organization,
+# then registers assets under it. Every scan they run is scoped to that org.
+
+@auth.route("/register", methods=["GET", "POST"])
+def register():
+    error = None
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        org_name = request.form.get("org_name", "").strip()
+
+        if len(username) < 3:
+            error = "Username must be at least 3 characters."
+        elif len(password) < 6:
+            error = "Password must be at least 6 characters."
+        elif not org_name:
+            error = "Organization name is required."
+        else:
+            db = Database()
+            try:
+                if db.get_user_by_username(username):
+                    error = "That username is already taken."
+                else:
+                    user_id = db.create_user(username, generate_password_hash(password))
+                    db.create_organization(org_name, user_id)
+                    user = db.get_user_by_id(user_id)
+                    _establish_session(user)
+                    db.close()
+                    return redirect(url_for("index"))
+            finally:
+                db.close()
+
+    return render_template("register.html", error=error)
 
 
 # ── Logout route ───────────────────────────────────────────────────────────────

@@ -5,7 +5,7 @@
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#020810">
-<title>CyberScan Pro — Login</title>
+<title>CyberScan Pro — Create Account</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -577,30 +577,40 @@ body{
   <!-- RIGHT PANEL -->
   <div class="right">
     <div class="right-header">
-      <div class="right-eyebrow">// Secure Access</div>
-      <div class="right-title">Welcome back</div>
-      <div class="right-sub">Sign in to access your security dashboard</div>
+      <div class="right-eyebrow">// New Organization</div>
+      <div class="right-title">Create your account</div>
+      <div class="right-sub">Set up your organization and start assessing your assets</div>
     </div>
 
     {% if error %}
     <div class="error">
       <span>⚠</span>
-      <span>{{ error }} — please try again</span>
+      <span>{{ error }}</span>
     </div>
     {% endif %}
 
     <form class="form" method="POST" autocomplete="off">
       <div class="field">
+        <label>Organization Name</label>
+        <div class="input-wrap">
+          <span class="input-icon">🏢</span>
+          <input type="text" name="org_name"
+            placeholder="e.g. Acme Corporation"
+            autocomplete="organization"
+            autofocus>
+        </div>
+      </div>
+
+      <div class="field">
         <label>Username</label>
         <div class="input-wrap">
           <span class="input-icon">👤</span>
           <input type="text" name="username"
-            placeholder="Enter your username"
+            placeholder="Choose a username"
             autocomplete="username"
             autocorrect="off"
             autocapitalize="none"
-            spellcheck="false"
-            autofocus>
+            spellcheck="false">
         </div>
       </div>
 
@@ -610,19 +620,19 @@ body{
           <span class="input-icon">🔒</span>
           <input type="password" name="password"
             id="pass"
-            placeholder="Enter your password"
-            autocomplete="current-password">
+            placeholder="At least 6 characters"
+            autocomplete="new-password">
           <button type="button" class="eye-btn" onclick="togglePass()">👁</button>
         </div>
       </div>
 
       <button type="submit" class="btn-login">
-        Sign In <span>→</span>
+        Create Account <span>→</span>
       </button>
     </form>
 
     <div class="right-sub" style="margin-top:16px;text-align:center;">
-      New organization? <a href="/register" style="color:var(--accent);text-decoration:none;">Create an account</a>
+      Already have an account? <a href="/login" style="color:var(--accent);text-decoration:none;">Sign in</a>
     </div>
 
     <div class="right-foot">
