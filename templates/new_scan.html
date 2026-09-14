@@ -234,6 +234,24 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .ls-n{font-size:24px;font-weight:800;color:var(--text);font-family:var(--mono);line-height:1;transition:all 0.3s;}
 .ls-l{font-size:9px;color:var(--text2);margin-top:3px;text-transform:uppercase;letter-spacing:1px;}
 
+.reopen-console-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:10px;
+  background:#000;border:1px solid var(--green);color:var(--green);
+  font-family:var(--mono);font-size:11px;letter-spacing:1.5px;font-weight:700;
+  padding:14px;border-radius:10px;cursor:pointer;margin-bottom:14px;
+  transition:all 0.2s;
+}
+.reopen-console-btn:hover{background:rgba(0,255,157,0.08);box-shadow:0 0 20px rgba(0,255,157,0.15);}
+
+.asset-context-banner{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(0,200,255,0.06);border:1px solid rgba(0,200,255,0.2);
+  border-radius:10px;padding:12px 16px;margin-bottom:16px;
+  font-size:12px;color:var(--text);
+}
+.asset-context-banner .acb-icon{font-size:16px;}
+.asset-context-banner b{color:var(--accent);}
+
 /* ── TERMINAL ── */
 .terminal{
   background:#000;border:1px solid rgba(0,200,255,0.15);
@@ -333,6 +351,19 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .recent-section{background:rgba(6,12,20,0.96);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
 .recent-hd{padding:12px 18px;border-bottom:1px solid var(--border);background:rgba(0,200,255,0.015);display:flex;align-items:center;justify-content:space-between;}
 .recent-title{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:2px;font-family:var(--mono);}
+
+.getting-started{margin-top:8px;}
+.gs-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:14px;}
+.gs-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:12px;
+  padding:18px;position:relative;overflow:hidden;
+}
+.gs-num{font-family:var(--mono);font-size:22px;font-weight:800;color:var(--accent);opacity:0.25;margin-bottom:6px;}
+.gs-title{font-size:13px;font-weight:700;margin-bottom:7px;}
+.gs-body{font-size:11.5px;color:var(--text2);line-height:1.6;}
+.gs-body code{background:var(--bg3);padding:1px 5px;border-radius:4px;font-family:var(--mono);color:var(--green);font-size:10.5px;}
+@media(max-width:900px){.gs-grid{grid-template-columns:1fr 1fr;}}
+@media(max-width:560px){.gs-grid{grid-template-columns:1fr;}}
 .rt-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;padding:14px;}
 .rt-item{
   background:var(--bg3);border:1px solid var(--border);
@@ -372,9 +403,28 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 .content>*:nth-child(3){animation-delay:0.15s;}
 .content>*:nth-child(4){animation-delay:0.2s;}
 @keyframes cardIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* desktop-persistent-sidebar-fix */
+@media(min-width:901px){
+  .main{transition:margin-left 0.35s cubic-bezier(0.16,1,0.3,1);}
+  .sidebar.open ~ .main{margin-left:260px;}
+  .overlay{display:none !important;}
+}
 </style>
 </head>
 <body>
+
+<!-- Floating restore button, shown after minimizing an active scan console -->
+<button id="console-restore-btn" onclick="maximizeConsole()" style="
+  display:none;position:fixed;bottom:24px;right:24px;z-index:998;
+  background:#000;border:1px solid var(--green);color:var(--green);
+  font-family:'Share Tech Mono',monospace;font-size:11px;letter-spacing:1px;
+  padding:12px 18px;border-radius:30px;cursor:pointer;
+  box-shadow:0 0 20px rgba(0,255,157,0.25);align-items:center;gap:8px;
+">
+  <span class="term-live-dot" style="display:inline-block;"></span>
+  ▢ RESTORE LIVE CONSOLE
+</button>
 
 <!-- Fullscreen pop-out console: live scan log -->
 <div id="console-overlay">
@@ -442,8 +492,11 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
     <a href="/scan/new" class="nav-link active"><span class="nav-icon">▶</span>New Scan</a>
     <a href="/history" class="nav-link"><span class="nav-icon">☰</span>Scan History</a>
     <a href="/reports" class="nav-link"><span class="nav-icon">📄</span>Reports</a>
-    <div class="nav-sec">// Analysis</div>
-    <a href="/targets" class="nav-link"><span class="nav-icon">◎</span>Targets</a>
+        <div class="nav-sec">// Analysis</div>
+    <a href="/assets" class="nav-link {% if page=='assets' %}active{% endif %}"><span class="nav-icon">◎</span>Assets</a>
+    <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">📈</span>Target History</a>
+    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}"><span class="nav-icon">⇄</span>Compare Scans</a>
+    <a href="/port-intel" class="nav-link {% if page=='port_intel' %}active{% endif %}"><span class="nav-icon">🔌</span>Port Lookup</a>
     <div class="nav-sec">// System</div>
     <a href="/settings" class="nav-link"><span class="nav-icon">⚙</span>Settings</a>
     <div class="nav-sec">// Account</div>
@@ -455,7 +508,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 <div class="main">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:12px;">
-      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
       <div>
         <div class="tb-title">// NEW <span>SCAN</span></div>
         <div class="tb-sub">CONFIGURE AND LAUNCH VULNERABILITY ASSESSMENT</div>
@@ -468,6 +521,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
   </div>
 
   <div class="content">
+
+    <!-- Asset context (shown only when launched from the Assets page) -->
+    <div class="asset-context-banner" id="asset-context-banner" style="display:none;">
+      <span class="acb-icon">◎</span>
+      <span>Scanning registered asset: <b id="asset-context-name"></b></span>
+    </div>
 
     <!-- Target input hero -->
     <div class="target-hero">
@@ -598,18 +657,14 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         </div>
       </div>
 
-      <!-- Terminal log -->
-      <div class="terminal">
-        <div class="term-bar">
-          <div class="tdot r"></div><div class="tdot y"></div><div class="tdot g"></div>
-          <span class="term-title">// SCAN LOG</span>
-          <div class="term-live" id="term-live">
-            <div class="term-live-dot"></div>LIVE
-          </div>
-        </div>
-        <div class="term-body" id="term-body"></div>
-        <div class="term-done" id="term-done" style="display:none;"></div>
-      </div>
+      <!-- Reopen the fullscreen live console — that's the real-time log now -->
+      <button type="button" class="reopen-console-btn" onclick="maximizeConsole()">
+        <span class="term-live-dot" style="display:inline-block;"></span>
+        ▢ VIEW LIVE CONSOLE
+      </button>
+
+      <!-- Terminal-style completion summary (shown once the scan finishes, log lives in the console) -->
+      <div class="term-done" id="term-done" style="display:none;"></div>
 
     </div>
 
@@ -631,6 +686,34 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
         {% endfor %}
       </div>
     </div>
+    {% else %}
+    <div class="getting-started">
+      <div class="recent-hd">
+        <span class="recent-title">// Getting Started</span>
+      </div>
+      <div class="gs-grid">
+        <div class="gs-card">
+          <div class="gs-num">01</div>
+          <div class="gs-title">Enter a target</div>
+          <div class="gs-body">A domain, IP address, or CIDR range you're authorized to test — e.g. an asset you registered, or a legal test target like <code>scanme.nmap.org</code>.</div>
+        </div>
+        <div class="gs-card">
+          <div class="gs-num">02</div>
+          <div class="gs-title">Pick a scan type</div>
+          <div class="gs-body"><b>Full Assessment</b> for the complete picture, or a faster, narrower scan if you already know what you're looking for.</div>
+        </div>
+        <div class="gs-card">
+          <div class="gs-num">03</div>
+          <div class="gs-title">Watch it run live</div>
+          <div class="gs-body">The console pops out and streams every step in real time — host discovery, port scans, CVE matching — as it happens.</div>
+        </div>
+        <div class="gs-card">
+          <div class="gs-num">04</div>
+          <div class="gs-title">Get your report</div>
+          <div class="gs-body">A full PDF/HTML report is generated automatically, with a risk score, findings, and a screenshot of the target — saved to <a href="/reports" style="color:var(--accent);">Reports</a>.</div>
+        </div>
+      </div>
+    </div>
     {% endif %}
 
   </div>
@@ -639,17 +722,27 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 <script>
 let SESSION_ID = null;
 let ASSET_ID = null;
+let SCAN_RUNNING = false;
 
 // Prefill target from ?target=&asset_id= (e.g. launched from the Assets page)
 (function(){
   const params = new URLSearchParams(window.location.search);
   const t = params.get('target');
   const aid = params.get('asset_id');
+  const aname = params.get('asset_name');
   if(aid) ASSET_ID = aid;
   if(t){
     window.addEventListener('DOMContentLoaded', ()=>{
       const el = document.getElementById('target');
       if(el) el.value = t;
+      if(aid && aname){
+        const banner = document.getElementById('asset-context-banner');
+        const nameEl = document.getElementById('asset-context-name');
+        if(banner && nameEl){
+          nameEl.textContent = aname;
+          banner.style.display = 'flex';
+        }
+      }
     });
   }
 })();
@@ -717,6 +810,8 @@ let LOG_COUNT = 0;
 
 // Sidebar
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function toggleSidebar(){const sb=document.getElementById('sidebar');if(sb.classList.contains('open')){closeSidebar();}else{openSidebar();}}
+(function(){if(window.innerWidth>900){document.getElementById('sidebar').classList.add('open');}})();
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
 
 // Target validation
@@ -751,11 +846,17 @@ function prefill(name){
 }
 
 // ── Fullscreen console (pop-out live scan log) ──
-const CONSOLE_BANNER = `  _   _      _   ____                      ____
- | \\ | | ___| |_/ ___|  ___ __ _ _ __    |  _ \\ _ __ ___
- |  \\| |/ _ \\ __\\___ \\ / __/ _\` | '_ \\   | |_) | '__/ _ \\
- | |\\  |  __/ |_ ___) | (_| (_| | | | |  |  __/| | | (_) |
- |_| \\_|\\___|\\__|____/ \\___\\__,_|_| |_|  |_|   |_|  \\___/
+const CONSOLE_BANNER = ` ████ █   █ ████  █████ ████   ████  ████   █   █   █
+█      █ █  █   █ █     █   █ █     █     █ █ █ ██  █
+█       █   ████  ████  ████   ███  █     █████ █ █ █
+█       █   █   █ █     █  █      █ █     █   █ █  ██
+ ████   █   ████  █████ █   █ ████   ████ █   █ █   █
+
+████  ████   ███
+█   █ █   █ █   █
+████  ████  █   █
+█     █  █  █   █
+█     █   █  ███
 
   CyberScan Pro — Automated Vulnerability Assessment Engine
   Author: Obeh Emmanuel Onoriode | Matric: Cos/9581/2022
@@ -765,6 +866,7 @@ const CONSOLE_BANNER = `  _   _      _   ____                      ____
 function openConsole(){
   const ov = document.getElementById('console-overlay');
   ov.classList.add('active');
+  document.getElementById('console-restore-btn').style.display = 'none';
   document.getElementById('console-log').innerHTML = '';
   document.getElementById('console-done').style.display = 'none';
   document.getElementById('console-done').innerHTML = '';
@@ -773,6 +875,15 @@ function openConsole(){
 }
 function minimizeConsole(){
   document.getElementById('console-overlay').classList.remove('active');
+  // Only offer a restore button while a scan is actually still running
+  if(SCAN_RUNNING){
+    const btn = document.getElementById('console-restore-btn');
+    btn.style.display = 'flex';
+  }
+}
+function maximizeConsole(){
+  document.getElementById('console-overlay').classList.add('active');
+  document.getElementById('console-restore-btn').style.display = 'none';
 }
 function typeBanner(){
   const el = document.getElementById('console-banner');
@@ -792,7 +903,7 @@ function addLine(cls, msg){
   const isLast = true;
   const html = `<span class="pr">></span><span class="msg">${msg}</span>${isLast?'<span class="cursor"></span>':''}`;
 
-  [document.getElementById('term-body'), document.getElementById('console-log')].forEach(body=>{
+  [document.getElementById('console-log')].forEach(body=>{
     if(!body) return;
     const prev = body.querySelector('.cursor');
     if(prev) prev.remove();
@@ -849,11 +960,12 @@ async function launchScan(){
   LOG_COUNT = 0;
 
   // Pop out the fullscreen live console
+  SCAN_RUNNING = true;
   openConsole();
 
-  // Init terminal
-  const body = document.getElementById('term-body');
-  body.innerHTML = '';
+  // Init terminal (console-log is now the only live view; clear it fresh)
+  const clog = document.getElementById('console-log');
+  if(clog) clog.innerHTML = '';
   addLine('info','CyberScan Pro v1.0.0 — Assessment Engine');
   addLine('dim', `Target: ${target}`);
   addLine('dim', `Type: ${SELECTED_TYPE.toUpperCase()}`);
@@ -948,7 +1060,6 @@ function pollStatus(){
         setProgress(100,'Assessment complete','All findings recorded');
         document.getElementById('prog-spinner').style.animation='none';
         document.getElementById('prog-spinner').style.borderTopColor='var(--green)';
-        document.getElementById('term-live').innerHTML='<span style="color:var(--green)">● DONE</span>';
         document.getElementById('console-live').innerHTML='<span style="color:var(--green)">● DONE</span>';
 
         const btn = document.getElementById('launch-btn');

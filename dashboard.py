@@ -732,12 +732,18 @@ def delete_report(filename):
     import re
     if not re.match(r"^[\w\-\.]+$", filename):
         return jsonify({"error": "Invalid filename"}), 400
+
+    db = Database()
+    db.delete_report_file(filename)
+    db.close()
+
+    # Also remove the on-disk copy if one exists (older, pre-DB-persistence installs)
     output_dir = os.path.join(os.path.dirname(__file__), "output")
     filepath   = os.path.join(output_dir, filename)
     if os.path.exists(filepath):
         os.remove(filepath)
-        return jsonify({"success": True})
-    return jsonify({"error": "File not found"}), 404
+
+    return jsonify({"success": True})
 
 
 # ── TARGETS PAGE ──────────────────────────────────────────────────────────────
@@ -785,7 +791,7 @@ def compare_page():
     db = Database()
     sessions = db.get_all_sessions(session.get("org_id"))
     db.close()
-    return render_template("history.html",
+    return render_template("compare.html",
         sessions=sessions,
         page="compare", title="Compare Scans"
     )
@@ -802,17 +808,14 @@ def capture_screenshot(session_id):
     if not sess:
         return jsonify({"success": False, "error": "Session not found"})
     target = sess["target"]
-    api_key = os.environ.get("SCREENSHOT_API_KEY","")
-    if not api_key:
-        return jsonify({"success": False, "error": "Screenshot API key not configured"})
     try:
-        import urllib.request
-        url = f"https://api.screenshotone.com/take?access_key={api_key}&url=https://{target}&format=jpg&viewport_width=1280&viewport_height=800"
-        screenshot_dir = os.path.join(os.path.dirname(__file__), "static", "screenshots")
-        os.makedirs(screenshot_dir, exist_ok=True)
-        save_path = os.path.join(screenshot_dir, f"{session_id}.jpg")
-        urllib.request.urlretrieve(url, save_path)
-        return jsonify({"success": True, "url": f"/screenshots/{session_id}"})
+        from modules.screenshot import ScreenshotCapture
+        sc = ScreenshotCapture()
+        url = target if target.startswith("http") else f"http://{target}"
+        path = sc.capture(url, session_id)
+        if path:
+            return jsonify({"success": True, "url": f"/screenshots/{session_id}"})
+        return jsonify({"success": False, "error": "Screenshot capture failed"})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
@@ -823,11 +826,11 @@ def serve_screenshot(session_id):
     import re
     if not re.match(r'^[\w\-]+$', session_id):
         abort(400)
-    screenshot_dir = os.path.join(os.path.dirname(__file__), "static", "screenshots")
-    path = os.path.join(screenshot_dir, f"{session_id}.jpg")
+    screenshot_dir = os.path.join(os.path.dirname(__file__), "output", "screenshots")
+    path = os.path.join(screenshot_dir, f"screenshot_{session_id}.png")
     if not os.path.exists(path):
         abort(404)
-    return send_file(path, mimetype="image/jpeg")
+    return send_file(path, mimetype="image/png")
 
 
 # ── NOTES API ─────────────────────────────────────────────────────────────────
@@ -1077,8 +1080,41 @@ def settings_page():
         smtp_user       = os.environ.get("SMTP_USER",""),
         login_user      = os.environ.get("NETSCAN_USER","admin"),
         login_pass      = os.environ.get("NETSCAN_PASS","admin123"),
+        live_url        = request.host_url.rstrip("/"),
         page="settings", title="Settings"
     )
+
+
+# ── CSV EXPORT ─────────────────────────────────────────────────────────────────
+
+@app.route("/export/csv")
+@login_required
+def export_csv():
+    import csv, io
+    db = Database()
+    sessions = db.get_all_sessions(session.get("org_id"))
+    rows = []
+    for s in sessions:
+        hosts = db.get_hosts(s["id"]) if hasattr(db, "get_hosts") else []
+        rows.append({
+            "session_id": s["id"],
+            "target": s["target"],
+            "status": s["status"],
+            "started_at": s.get("started_at", ""),
+            "completed_at": s.get("completed_at", ""),
+            "hosts_found": len(hosts) if hosts else "",
+        })
+    db.close()
+
+    buf = io.StringIO()
+    writer = csv.DictWriter(buf, fieldnames=["session_id","target","status","started_at","completed_at","hosts_found"])
+    writer.writeheader()
+    writer.writerows(rows)
+
+    output = make_response(buf.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=cyberscanpro_history.csv"
+    output.headers["Content-Type"] = "text/csv"
+    return output
 
 
 # ── REPORTS PAGE ──────────────────────────────────────────────────────────────
@@ -1098,9 +1134,11 @@ def reports_page():
     db.close()
 
     reports = []
+    screenshot_dir = os.path.join(os.path.dirname(__file__), "output", "screenshots")
     for r in db_reports:
         size_kb = (r.get("file_size") or 0) // 1024
         date = (r.get("created_at","") or "")[:16].replace("T"," ")
+        has_shot = os.path.exists(os.path.join(screenshot_dir, f"screenshot_{r['session_id']}.png"))
         reports.append({
             "filename":   r["filename"],
             "type":       r["file_type"],
@@ -1109,7 +1147,19 @@ def reports_page():
             "risk":       session_risks.get(r["session_id"], "NONE"),
             "date":       date,
             "size":       f"{size_kb} KB",
+            "screenshot": f"/screenshots/{r['session_id']}" if has_shot else None,
         })
+
+    # Group by scan session — one card per scan, with both PDF/HTML download
+    # links attached, instead of duplicate rows for each file type.
+    grouped = {}
+    for r in reports:
+        g = grouped.setdefault(r["session_id"], {
+            "session_id": r["session_id"], "target": r["target"], "risk": r["risk"],
+            "date": r["date"], "screenshot": r["screenshot"], "pdf": None, "html": None,
+        })
+        g[r["type"]] = {"filename": r["filename"], "size": r["size"]}
+    grouped_reports = sorted(grouped.values(), key=lambda g: g["date"], reverse=True)
 
     pdf_count  = sum(1 for r in reports if r["type"] == "pdf")
     html_count = sum(1 for r in reports if r["type"] == "html")
@@ -1117,6 +1167,7 @@ def reports_page():
 
     return render_template("reports.html",
         reports=reports,
+        grouped_reports=grouped_reports,
         total_reports=len(reports),
         pdf_count=pdf_count,
         html_count=html_count,
@@ -1374,6 +1425,52 @@ def port_intel():
         title="Port Intelligence"
     )
 
+
+
+@app.route("/api/compare")
+@login_required
+def api_compare():
+    s1_id = request.args.get("s1", "").strip()
+    s2_id = request.args.get("s2", "").strip()
+    if not s1_id or not s2_id:
+        return jsonify({"error": "Select two scans to compare."}), 400
+
+    db = Database()
+
+    def build(sid):
+        sess = db.get_session(sid)
+        if not sess:
+            return None
+        # Enforce org isolation — can't compare a scan from another org
+        org_id = session.get("org_id")
+        if org_id is not None and sess.get("org_id") not in (org_id, None):
+            return None
+        hosts = db.get_hosts(sid)
+        web = db.get_web_findings(sid)
+        cve = db.get_cve_findings(sid)
+        counts = db.get_severity_counts(sid)
+        total = sum(counts.get(k, 0) for k in ("Critical", "High", "Medium", "Low"))
+        return {
+            "session": {
+                "id": sess["id"], "target": sess["target"],
+                "started_at": sess.get("started_at", ""),
+                "status": sess.get("status", "unknown"),
+            },
+            "host_count": len(hosts),
+            "web_count": len(web),
+            "cve_count": len(cve),
+            "total_findings": total,
+            "severity_counts": counts,
+        }
+
+    d1 = build(s1_id)
+    d2 = build(s2_id)
+    db.close()
+
+    if not d1 or not d2:
+        return jsonify({"error": "One or both scans could not be found."}), 404
+
+    return jsonify({"session1": d1, "session2": d2})
 
 
 @app.route("/defense-prep")

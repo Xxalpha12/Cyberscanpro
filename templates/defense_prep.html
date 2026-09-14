@@ -143,15 +143,76 @@ body{font-family:var(--sans);background:var(--bg);color:var(--text);min-height:1
 @media(max-width:600px){.page{padding:14px 14px;}.result-grid{grid-template-columns:1fr;}.tabs{flex-direction:column;}}
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
+
+/* ── Sidebar (shared design system) ── */
+.menu-btn{display:none;background:var(--bg3);border:1px solid var(--border);border-radius:7px;padding:7px 10px;color:var(--text);font-size:16px;cursor:pointer;}
+@media(max-width:720px){.menu-btn{display:flex;align-items:center;}}
+.sidebar{width:260px;flex-shrink:0;background:rgba(6,12,20,0.98);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;height:100vh;overflow-y:auto;z-index:50;box-shadow:8px 0 40px rgba(0,0,0,0.5);transform:translateX(-100%);transition:transform 0.35s cubic-bezier(0.16,1,0.3,1);backdrop-filter:blur(20px);}
+.sidebar.open{transform:translateX(0);}
+.sb-top{padding:22px 20px 18px;border-bottom:1px solid var(--border);}
+.brand{display:flex;align-items:center;gap:12px;}
+.brand-icon img{width:36px;height:36px;border-radius:9px;}
+.brand-name{font-family:var(--mono);font-size:16px;font-weight:700;color:var(--text);letter-spacing:0.5px;}
+.brand-name span{color:var(--accent);}
+.brand-sub{font-family:var(--mono);font-size:9px;color:var(--text2);margin-top:6px;letter-spacing:2px;}
+.sb-status{padding:10px 20px;border-bottom:1px solid var(--border2);display:flex;align-items:center;gap:8px;font-size:10px;color:var(--text2);font-family:var(--mono);}
+.status-ok-dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);animation:pulsegreen 2s infinite;}
+@keyframes pulsegreen{0%,100%{opacity:1}50%{opacity:0.4}}
+nav{flex:1;overflow-y:auto;padding:8px 0;}
+.nav-sec{font-size:9px;letter-spacing:3px;color:var(--text2);padding:12px 20px 5px;text-transform:uppercase;font-family:var(--mono);}
+.nav-link{display:flex;align-items:center;gap:10px;padding:9px 20px;color:var(--text3);text-decoration:none;font-size:12px;font-weight:500;transition:all 0.15s;border-left:2px solid transparent;letter-spacing:0.2px;}
+.nav-link:hover{color:var(--text);background:rgba(0,200,255,0.04);}
+.nav-link.active{color:var(--accent);background:rgba(0,200,255,0.07);border-left-color:var(--accent);}
+.nav-icon{font-size:13px;width:16px;text-align:center;flex-shrink:0;}
+.sb-foot{padding:14px 20px;border-top:1px solid var(--border);font-size:9px;color:var(--text2);font-family:var(--mono);letter-spacing:1px;}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(2px);z-index:40;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
+.overlay.show{opacity:1;visibility:visible;}
+.main{width:100%;}
+@media(min-width:901px){
+  .menu-btn{display:flex !important;align-items:center;}
+  .main{transition:margin-left 0.35s cubic-bezier(0.16,1,0.3,1);}
+  .sidebar.open ~ .main{margin-left:260px;}
+  .overlay{display:none !important;}
+}
 </style>
 </head>
 <body>
 <div id="bg-grid"></div>
 <div id="bg-scan"></div>
 
+<div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sb-top">
+    <div class="brand">
+      <div class="brand-icon"><img src="/static/logo.jpeg" alt="CyberScan Pro"></div>
+      <div><div class="brand-name">CyberScan<span>Pro</span></div></div>
+    </div>
+    <div class="brand-sub">SECURITY ASSESSMENT PLATFORM</div>
+  </div>
+  <div class="sb-status"><div class="status-ok-dot"></div>SYSTEM ONLINE</div>
+  <nav>
+    <div class="nav-sec">// Assessment</div>
+    <a href="/" class="nav-link"><span class="nav-icon">⬡</span>Dashboard</a>
+    <a href="/scan/new" class="nav-link"><span class="nav-icon">▶</span>New Scan</a>
+    <a href="/history" class="nav-link"><span class="nav-icon">☰</span>Scan History</a>
+    <a href="/reports" class="nav-link"><span class="nav-icon">📄</span>Reports</a>
+    <div class="nav-sec">// Analysis</div>
+    <a href="/assets" class="nav-link"><span class="nav-icon">◎</span>Assets</a>
+    <a href="/targets" class="nav-link"><span class="nav-icon">📈</span>Target History</a>
+    <a href="/compare" class="nav-link"><span class="nav-icon">⇄</span>Compare Scans</a>
+    <a href="/port-intel" class="nav-link"><span class="nav-icon">🔌</span>Port Lookup</a>
+    <div class="nav-sec">// System</div>
+    <a href="/settings" class="nav-link active"><span class="nav-icon">⚙</span>Settings</a>
+    <div class="nav-sec">// Account</div>
+    <a href="/logout" class="nav-link"><span class="nav-icon">→</span>Logout</a>
+  </nav>
+  <div class="sb-foot">ETHICAL USE ONLY · v1.0.0</div>
+</aside>
+
+<div class="main">
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:14px;">
-    <a href="/settings" class="back-btn">← Settings</a>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
     <div class="tb-title">// DEFENSE <span>PREP</span></div>
   </div>
   <div style="font-family:var(--mono);font-size:11px;color:var(--text2);" id="clock"></div>
@@ -653,8 +714,13 @@ function toggleNote(hdr){
 }
 
 (function tick(){const el=document.getElementById("clock");if(el){const n=new Date();el.textContent=n.toLocaleTimeString("en-GB");}setTimeout(tick,1000);})();
+function openSidebar(){document.getElementById("sidebar").classList.add("open");document.getElementById("overlay").classList.add("show");}
+function toggleSidebar(){const sb=document.getElementById('sidebar');if(sb.classList.contains('open')){closeSidebar();}else{openSidebar();}}
+(function(){if(window.innerWidth>900){document.getElementById('sidebar').classList.add('open');}})();
+function closeSidebar(){document.getElementById("sidebar").classList.remove("open");document.getElementById("overlay").classList.remove("show");}
 
 init();
 </script>
+</div>
 </body>
 </html>

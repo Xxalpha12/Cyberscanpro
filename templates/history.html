@@ -171,7 +171,14 @@ body{animation:pagein 0.3s ease both;}
 ::-webkit-scrollbar{width:3px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
-  </style>
+  
+/* desktop-persistent-sidebar-fix */
+@media(min-width:901px){
+  .main{transition:margin-left 0.35s cubic-bezier(0.16,1,0.3,1);}
+  .sidebar.open ~ .main{margin-left:260px;}
+  .overlay{display:none !important;}
+}
+</style>
 <style>
 .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:4px;}
 .fi{background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:8px 12px;color:var(--text);font-family:var(--sans);font-size:12px;outline:none;transition:border-color 0.2s;}
@@ -491,8 +498,11 @@ select.fi{cursor:pointer;}
     <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="nav-icon">▶</span>New Scan</a>
     <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}"><span class="nav-icon">☰</span>Scan History</a>
     <a href="/reports" class="nav-link {% if page=='reports' %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
-    <div class="nav-sec">// Analysis</div>
-    <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">◎</span>Targets</a>
+        <div class="nav-sec">// Analysis</div>
+    <a href="/assets" class="nav-link {% if page=='assets' %}active{% endif %}"><span class="nav-icon">◎</span>Assets</a>
+    <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">📈</span>Target History</a>
+    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}"><span class="nav-icon">⇄</span>Compare Scans</a>
+    <a href="/port-intel" class="nav-link {% if page=='port_intel' %}active{% endif %}"><span class="nav-icon">🔌</span>Port Lookup</a>
     <div class="nav-sec">// System</div>
     <a href="/settings" class="nav-link {% if page=='settings' %}active{% endif %}"><span class="nav-icon">⚙</span>Settings</a>
     <div class="nav-sec">// Account</div>
@@ -504,7 +514,7 @@ select.fi{cursor:pointer;}
 <div class="main">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:12px;">
-      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
       <div>
         <div class="tb-title">// SCAN <span>HISTORY</span></div>
         <div class="tb-sub">COMPLETE AUDIT LOG OF ALL ASSESSMENTS</div>
@@ -609,6 +619,8 @@ function filterRows(){
   });
 }
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function toggleSidebar(){const sb=document.getElementById('sidebar');if(sb.classList.contains('open')){closeSidebar();}else{openSidebar();}}
+(function(){if(window.innerWidth>900){document.getElementById('sidebar').classList.add('open');}})();
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
 (function tick(){const el=document.getElementById('clock');if(el){const n=new Date();el.textContent=n.toLocaleTimeString('en-GB');}setTimeout(tick,1000);})();
 </script>

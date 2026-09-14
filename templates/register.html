@@ -4,647 +4,235 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<meta name="theme-color" content="#020810">
+<meta name="theme-color" content="#ffffff">
 <title>CyberScan Pro — Create Account</title>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:    #020810;
-  --bg2:   #060c14;
-  --bg3:   #0a1220;
-  --accent:#00c8ff;
-  --green: #00ff9d;
-  --red:   #ef4444;
-  --text:  #e2eaf4;
-  --text2: #304560;
-  --text3: #4d6a85;
-  --border:rgba(0,200,255,0.1);
-  --mono:  'Share Tech Mono',monospace;
-  --sans:  'Inter',sans-serif;
+  --accent:   #0091d1;
+  --accent2:  #00a887;
+  --red:      #e0334f;
+  --ink:      #14181f;
+  --ink2:     #667085;
+  --ink3:     #98a2b3;
+  --line:     #e4e7ec;
+  --bg:       #f8fafb;
+  --card:     #ffffff;
+  --mono:     'Share Tech Mono', monospace;
+  --sans:     'Inter', sans-serif;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;min-height:100dvh;}
 body{
   font-family:var(--sans);
   background:var(--bg);
-  color:var(--text);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  min-height:100vh;
-  min-height:100dvh;
-  padding:16px;
-  position:relative;
-  overflow:hidden;
+  color:var(--ink);
+  min-height:100vh;min-height:100dvh;
 }
 
-/* ── BACKGROUND (matches dashboard exactly) ── */
-#bg-grid{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:
-    linear-gradient(rgba(0,200,255,0.04) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,200,255,0.04) 1px,transparent 1px);
-  background-size:44px 44px;
-}
-#bg-scan{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:repeating-linear-gradient(
-    0deg,transparent,transparent 2px,
-    rgba(0,0,0,0.05) 2px,rgba(0,0,0,0.05) 3px
-  );
-  animation:scanmove 20s linear infinite;
-}
-@keyframes scanmove{from{background-position:0 0}to{background-position:0 100%}}
-#bg-glow{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background:
-    radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,200,255,0.06) 0%,transparent 70%),
-    radial-gradient(ellipse 40% 30% at 85% 85%,rgba(0,150,255,0.04) 0%,transparent 60%),
-    radial-gradient(ellipse 30% 25% at 10% 60%,rgba(0,255,157,0.03) 0%,transparent 60%);
-}
-/* Corner accents */
-.corner{position:fixed;z-index:0;pointer-events:none;opacity:0.5;}
-.c-tl{top:0;left:0;width:120px;height:120px;border-top:1px solid var(--accent);border-left:1px solid var(--accent);}
-.c-tr{top:0;right:0;width:120px;height:120px;border-top:1px solid var(--accent);border-right:1px solid var(--accent);}
-.c-bl{bottom:0;left:0;width:70px;height:70px;border-bottom:1px solid var(--accent);border-left:1px solid var(--accent);}
-.c-br{bottom:0;right:0;width:70px;height:70px;border-bottom:1px solid var(--accent);border-right:1px solid var(--accent);}
+.page{display:flex;min-height:100vh;min-height:100dvh;}
 
-/* ── LAYOUT ── */
-.page{
-  position:relative;z-index:1;
-  width:100%;max-width:900px;
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  min-height:min(600px,90vh);
-  border-radius:16px;
-  overflow:hidden;
-  border:1px solid var(--border);
-  box-shadow:0 30px 80px rgba(0,0,0,0.6),0 0 0 1px rgba(0,200,255,0.05);
-  animation:fadeUp 0.5s ease both;
-}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-
-/* ── LEFT PANEL (branding) ── */
+/* ── LEFT: product showcase ── */
 .left{
-  background:linear-gradient(160deg,rgba(0,200,255,0.06) 0%,rgba(0,10,25,0.95) 60%);
-  border-right:1px solid var(--border);
-  padding:40px 36px;
-  display:flex;flex-direction:column;
-  justify-content:space-between;
+  flex:1.1;background:var(--ink);color:#fff;
+  padding:56px 60px;display:flex;flex-direction:column;justify-content:center;
   position:relative;overflow:hidden;
 }
 .left::before{
-  content:"";position:absolute;inset:0;
-  background:url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%2300c8ff' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
-  pointer-events:none;
+  content:'';position:absolute;inset:0;opacity:0.5;
+  background-image:radial-gradient(rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size:26px 26px;
+  mask-image:radial-gradient(ellipse 80% 60% at 30% 30%, black 40%, transparent 100%);
 }
-/* SVG Logo on left */
-.left-logo{display:flex;align-items:center;gap:12px;margin-bottom:40px;}
-.logo-svg{width:42px;height:42px;flex-shrink:0;}
-.logo-words{}
-.logo-name{font-family:var(--sans);font-size:20px;font-weight:800;color:var(--text);letter-spacing:-0.5px;line-height:1;}
-.logo-name span{color:var(--accent);}
-.logo-tag{font-family:var(--mono);font-size:9px;color:var(--text2);margin-top:5px;letter-spacing:2px;}
-.ai-pill{
-  display:inline-flex;align-items:center;gap:6px;margin-bottom:28px;
-  padding:5px 10px;border-radius:20px;font-family:var(--mono);
-  font-size:9px;letter-spacing:0.5px;color:var(--accent);
-  background:linear-gradient(90deg,rgba(0,200,255,0.1),rgba(0,255,157,0.08));
-  border:1px solid rgba(0,200,255,0.25);
+.left-inner{position:relative;z-index:1;max-width:460px;}
+
+.brand-row{display:flex;align-items:center;gap:13px;margin-bottom:56px;}
+.brand-row img{width:44px;height:44px;border-radius:10px;}
+.brand-name{font-size:19px;font-weight:800;letter-spacing:-0.3px;}
+.brand-name span{color:var(--accent);}
+.brand-tag{font-family:var(--mono);font-size:9.5px;color:#8a94a6;letter-spacing:2px;margin-top:2px;}
+
+.headline{font-size:37px;font-weight:800;line-height:1.18;letter-spacing:-1px;margin-bottom:20px;}
+.headline .accent{color:#26b8f0;}
+.sub-headline{font-size:14px;color:#a6afc0;line-height:1.6;margin-bottom:40px;max-width:400px;}
+
+.feat-list{display:flex;flex-direction:column;gap:20px;margin-bottom:48px;}
+.feat-row{display:flex;align-items:flex-start;gap:14px;}
+.feat-icon{
+  width:38px;height:38px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:16px;
+  background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);
 }
-.ai-pill-icon{filter:drop-shadow(0 0 3px rgba(0,200,255,0.8));}
-.ai-pill-dot{width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:aipulse 1.8s infinite;}
-@keyframes aipulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.feat-title{font-size:13.5px;font-weight:700;margin-bottom:2px;}
+.feat-body{font-size:12px;color:#8a94a6;}
 
-/* Left hero text */
-.left-hero{flex:1;display:flex;flex-direction:column;justify-content:center;padding:20px 0;}
-.left-title{font-size:clamp(22px,3.5vw,30px);font-weight:800;color:var(--text);line-height:1.2;margin-bottom:14px;letter-spacing:-0.5px;}
-.left-title span{color:var(--accent);}
-.left-desc{font-size:13px;color:var(--text3);line-height:1.8;max-width:280px;}
+.left-foot{font-family:var(--mono);font-size:10px;color:#666f80;letter-spacing:1px;}
+.left-foot .yr{color:var(--accent);}
 
-/* Feature bullets */
-.features{display:flex;flex-direction:column;gap:10px;margin-top:28px;}
-.feat{display:flex;align-items:flex-start;gap:10px;}
-.feat-icon{width:28px;height:28px;border-radius:6px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px;}
-.feat-text{}
-.feat-name{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px;}
-.feat-sub{font-size:11px;color:var(--text2);line-height:1.4;}
-
-/* Left footer */
-.left-foot{font-size:10px;color:var(--text2);font-family:var(--mono);letter-spacing:1px;line-height:1.8;}
-.left-foot span{color:rgba(0,200,255,0.4);}
-
-/* ── RIGHT PANEL (form) ── */
+/* ── RIGHT: auth form ── */
 .right{
-  background:rgba(6,12,20,0.98);
-  padding:40px 36px;
-  display:flex;flex-direction:column;
-  justify-content:center;
+  flex:0.85;min-width:380px;background:var(--card);
+  display:flex;align-items:center;justify-content:center;padding:40px;
 }
-.right-header{margin-bottom:32px;}
-.right-eyebrow{font-family:var(--mono);font-size:9px;color:var(--accent);letter-spacing:3px;text-transform:uppercase;margin-bottom:10px;}
-.right-title{font-size:22px;font-weight:800;color:var(--text);letter-spacing:-0.3px;line-height:1.2;}
-.right-sub{font-size:12px;color:var(--text2);margin-top:6px;line-height:1.6;}
+.form-wrap{width:100%;max-width:340px;}
 
-/* Error */
+h1{font-size:20px;font-weight:800;letter-spacing:-0.3px;margin-bottom:5px;}
+.form-sub{font-size:12.5px;color:var(--ink2);margin-bottom:26px;line-height:1.5;}
+
 .error{
-  background:rgba(239,68,68,0.07);
-  border:1px solid rgba(239,68,68,0.2);
-  border-left:3px solid var(--red);
-  border-radius:7px;padding:10px 14px;
-  margin-bottom:20px;font-size:12px;
-  color:var(--red);display:flex;
-  align-items:center;gap:8px;
+  display:flex;align-items:flex-start;gap:9px;
+  background:#fef2f3;border:1px solid #f9d0d5;color:var(--red);
+  padding:11px 13px;border-radius:9px;font-size:12px;line-height:1.5;
+  margin-bottom:20px;
 }
 
-/* Form fields */
-.form{display:flex;flex-direction:column;gap:18px;}
-.field{}
-.field label{
-  display:block;font-size:11px;font-weight:600;
-  color:var(--text3);letter-spacing:0.5px;
-  margin-bottom:8px;
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:11.5px;font-weight:600;color:var(--ink);margin-bottom:6px;}
+.input-wrap{position:relative;}
+.input-wrap input{
+  width:100%;padding:11px 13px;
+  background:var(--bg);border:1.5px solid var(--line);border-radius:9px;
+  color:var(--ink);font-family:var(--sans);font-size:13.5px;
+  transition:border-color .15s;
 }
-.input-wrap{position:relative;display:flex;align-items:center;}
-.input-icon{
-  position:absolute;left:14px;
-  color:var(--text2);font-size:15px;
-  pointer-events:none;flex-shrink:0;
-}
-.field input{
-  width:100%;
-  background:var(--bg3);
-  border:1px solid var(--border);
-  border-radius:8px;
-  padding:13px 14px 13px 42px;
-  color:var(--text);
-  font-family:var(--sans);
-  font-size:14px;
-  outline:none;
-  transition:all 0.2s;
-  -webkit-appearance:none;
-}
-.field input:focus{
-  border-color:rgba(0,200,255,0.4);
-  background:rgba(0,200,255,0.02);
-  box-shadow:0 0 0 3px rgba(0,200,255,0.07);
-}
-.field input::placeholder{color:var(--text2);font-size:13px;}
+.input-wrap input:focus{outline:none;border-color:var(--accent);background:#fff;}
 .eye-btn{
-  position:absolute;right:12px;
-  background:none;border:none;
-  color:var(--text2);cursor:pointer;
-  padding:4px;font-size:15px;
-  transition:color 0.2s;
+  position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;font-size:14px;opacity:0.5;
 }
-.eye-btn:hover{color:var(--accent);}
+.eye-btn:hover{opacity:0.9;}
 
-/* Submit */
 .btn-login{
-  width:100%;
-  padding:14px;
-  background:rgba(0,200,255,0.1);
-  color:var(--accent);
-  border:1px solid rgba(0,200,255,0.35);
-  border-radius:8px;
-  font-size:13px;font-weight:700;
-  font-family:var(--sans);
-  letter-spacing:0.5px;
-  cursor:pointer;
-  transition:all 0.2s;
-  margin-top:4px;
-  display:flex;align-items:center;justify-content:center;gap:8px;
-  -webkit-tap-highlight-color:transparent;
-  touch-action:manipulation;
+  width:100%;padding:12px;margin-top:6px;
+  background:var(--accent);color:#fff;border:none;border-radius:9px;
+  font-family:var(--sans);font-size:13.5px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:opacity .15s;
 }
-.btn-login:hover{
-  background:rgba(0,200,255,0.18);
-  box-shadow:0 0 30px rgba(0,200,255,0.15);
-  transform:translateY(-1px);
-}
-.btn-login:active{transform:translateY(0);}
+.btn-login:hover{opacity:0.9;}
+.btn-login:disabled{opacity:0.5;cursor:not-allowed;}
 
-/* Status footer */
-.right-foot{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-top:28px;padding-top:20px;
-  border-top:1px solid var(--border);
-  flex-wrap:wrap;gap:8px;
-}
-.status-item{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--text2);}
-.s-dot{width:6px;height:6px;border-radius:50%;}
-.s-dot.ok{background:var(--green);box-shadow:0 0 6px var(--green);animation:sdot 2s infinite;}
-.s-dot.blue{background:var(--accent);box-shadow:0 0 6px var(--accent);}
-@keyframes sdot{0%,100%{opacity:1}50%{opacity:0.4}}
-.right-version{font-family:var(--mono);font-size:10px;color:var(--text2);}
+.alt{margin-top:18px;text-align:center;font-size:12.5px;color:var(--ink2);}
+.alt a{color:var(--accent);font-weight:600;text-decoration:none;}
+.alt a:hover{text-decoration:underline;}
 
+.foot{margin-top:26px;padding-top:18px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;}
+.foot-item{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--ink3);font-family:var(--mono);}
+.dot{width:5px;height:5px;border-radius:50%;background:var(--accent2);}
 
-/* Entrance animations */
-.page{animation:pagein 0.5s ease both 0.2s;opacity:0;}
-@keyframes pagein{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-.right-header{animation:fadein 0.4s ease both 0.4s;opacity:0;}
-.form .field:nth-child(1){animation:fadein 0.4s ease both 0.5s;opacity:0;}
-.form .field:nth-child(2){animation:fadein 0.4s ease both 0.6s;opacity:0;}
-.btn-login{animation:fadein 0.4s ease both 0.7s;opacity:0;}
-@keyframes fadein{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
-/* Left panel features stagger */
-.feat:nth-child(1){animation:fadein 0.4s ease both 0.3s;opacity:0;}
-.feat:nth-child(2){animation:fadein 0.4s ease both 0.45s;opacity:0;}
-.feat:nth-child(3){animation:fadein 0.4s ease both 0.6s;opacity:0;}
-.feat:nth-child(4){animation:fadein 0.4s ease both 0.75s;opacity:0;}
-
-/* ── MOBILE ── */
-@media(max-width:640px){
-  .page{grid-template-columns:1fr;min-height:auto;}
+@media(max-width:900px){
   .left{display:none;}
-  .right{padding:32px 24px;}
-  .corner{display:none;}
+  .right{flex:1;min-width:0;}
 }
-@media(max-width:380px){
-  .right{padding:24px 18px;}
-}
-@media(max-height:600px) and (orientation:landscape){
-  body{align-items:flex-start;padding-top:10px;}
-  .left{display:none;}
-}
-
-.login-locked{background:rgba(239,68,68,0.12) !important;border-color:rgba(239,68,68,0.4) !important;color:var(--red) !important;}
 </style>
 </head>
 <body>
 
-<!-- ══ PRELOADER ══ -->
-<div id="preloader">
-  <div class="pre-inner">
-    <div class="pre-logo">
-      <img src="/favicon.ico" class="pre-icon" id="pre-icon" alt="">
-      <div class="pre-rings">
-        <div class="pre-ring r1"></div>
-        <div class="pre-ring r2"></div>
-        <div class="pre-ring r3"></div>
-      </div>
-    </div>
-    <div class="pre-name">CyberScan<span>Pro</span></div>
-    <div class="pre-bar-wrap"><div class="pre-bar" id="pre-bar"></div></div>
-    <div class="pre-status" id="pre-status">Initializing...</div>
-  </div>
-</div>
-
-<style>
-#preloader{
-  position:fixed;inset:0;z-index:9999;
-  background:#020810;
-  display:flex;align-items:center;justify-content:center;
-  transition:opacity 0.5s ease, visibility 0.5s ease;
-}
-#preloader.done{opacity:0;visibility:hidden;pointer-events:none;}
-.pre-inner{display:flex;flex-direction:column;align-items:center;gap:16px;}
-.pre-logo{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;}
-.pre-icon{width:40px;height:40px;z-index:2;position:relative;image-rendering:crisp-edges;}
-.pre-rings{position:absolute;inset:0;}
-.pre-ring{
-  position:absolute;border-radius:50%;
-  border:1px solid transparent;
-  animation:prerotate 2s linear infinite;
-}
-.r1{inset:0;border-top-color:rgba(0,200,255,0.8);border-right-color:rgba(0,200,255,0.2);animation-duration:1.2s;}
-.r2{inset:8px;border-top-color:rgba(0,255,157,0.6);border-left-color:rgba(0,255,157,0.1);animation-duration:1.8s;animation-direction:reverse;}
-.r3{inset:16px;border-bottom-color:rgba(0,200,255,0.4);animation-duration:2.4s;}
-@keyframes prerotate{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.pre-name{
-  font-family:'Share Tech Mono',monospace;
-  font-size:18px;font-weight:700;
-  color:#e2eaf4;letter-spacing:2px;
-}
-.pre-name span{color:#00c8ff;}
-.pre-bar-wrap{
-  width:180px;height:2px;
-  background:rgba(0,200,255,0.1);
-  border-radius:2px;overflow:hidden;
-}
-.pre-bar{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,#00c8ff,#00ff9d);
-  border-radius:2px;
-  transition:width 0.3s ease;
-  box-shadow:0 0 8px rgba(0,200,255,0.5);
-}
-.pre-status{
-  font-family:'Share Tech Mono',monospace;
-  font-size:10px;color:#304560;
-  letter-spacing:2px;
-}
-</style>
-
-<script>
-(function(){
-  const steps = [
-    {w:20,  t:'Loading modules...'},
-    {w:45,  t:'Connecting to database...'},
-    {w:70,  t:'Checking CVE feed...'},
-    {w:90,  t:'Almost ready...'},
-    {w:100, t:'Done'},
-  ];
-  let i = 0;
-  const bar = document.getElementById('pre-bar');
-  const stat = document.getElementById('pre-status');
-  const iv = setInterval(()=>{
-    if(i >= steps.length){ clearInterval(iv); return; }
-    bar.style.width = steps[i].w + '%';
-    stat.textContent = steps[i].t;
-    i++;
-  }, 200);
-  window.addEventListener('load', ()=>{
-    setTimeout(()=>{
-      bar.style.width = '100%';
-      stat.textContent = 'Ready';
-      setTimeout(()=>{
-        document.getElementById('preloader').classList.add('done');
-      }, 400);
-    }, 300);
-  });
-})();
-</script>
-
-<div id="bg-grid"></div>
-<div id="bg-scan"></div>
-<div id="bg-glow"></div>
-<div class="corner c-tl"></div>
-<div class="corner c-tr"></div>
-<div class="corner c-bl"></div>
-<div class="corner c-br"></div>
-
-<!-- ══ AI ANIMATION CANVAS ══ -->
-<canvas id="ai-canvas"></canvas>
-<style>
-#ai-canvas{
-  position:fixed;inset:0;z-index:0;
-  pointer-events:none;
-  opacity:0.6;
-}
-</style>
-<script>
-(function(){
-  const canvas = document.getElementById('ai-canvas');
-  if(!canvas) return;
-  const ctx = canvas.getContext('2d');
-  let W, H, nodes = [], particles = [], frame = 0;
-
-  function resize(){
-    W = canvas.width  = window.innerWidth;
-    H = canvas.height = window.innerHeight;
-  }
-
-  // Neural network nodes
-  function initNodes(){
-    nodes = [];
-    const count = Math.floor((W * H) / 22000);
-    for(let i = 0; i < Math.max(count, 20); i++){
-      nodes.push({
-        x: Math.random() * W,
-        y: Math.random() * H,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        r:  Math.random() * 1.5 + 0.5,
-        pulse: Math.random() * Math.PI * 2,
-        speed: 0.02 + Math.random() * 0.02,
-        alpha: 0.3 + Math.random() * 0.4,
-      });
-    }
-  }
-
-  // Data particles moving along edges
-  function spawnParticle(n1, n2){
-    if(particles.length > 60) return;
-    particles.push({
-      x: n1.x, y: n1.y,
-      tx: n2.x, ty: n2.y,
-      t: 0, speed: 0.008 + Math.random() * 0.012,
-      color: Math.random() > 0.7 ? '#00ff9d' : '#00c8ff',
-    });
-  }
-
-  function draw(){
-    ctx.clearRect(0, 0, W, H);
-    frame++;
-
-    // Update nodes
-    nodes.forEach(n => {
-      n.x += n.vx; n.y += n.vy;
-      n.pulse += n.speed;
-      if(n.x < 0||n.x > W) n.vx *= -1;
-      if(n.y < 0||n.y > H) n.vy *= -1;
-    });
-
-    // Draw edges between nearby nodes
-    for(let i = 0; i < nodes.length; i++){
-      for(let j = i+1; j < nodes.length; j++){
-        const a = nodes[i], b = nodes[j];
-        const dx = a.x - b.x, dy = a.y - b.y;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        const maxDist = Math.min(W, H) * 0.22;
-        if(dist < maxDist){
-          const alpha = (1 - dist/maxDist) * 0.12;
-          ctx.beginPath();
-          ctx.moveTo(a.x, a.y);
-          ctx.lineTo(b.x, b.y);
-          ctx.strokeStyle = `rgba(0,200,255,${alpha})`;
-          ctx.lineWidth = 0.5;
-          ctx.stroke();
-          // Randomly spawn data particles
-          if(frame % 120 === 0 && Math.random() < 0.15){
-            spawnParticle(a, b);
-          }
-        }
-      }
-    }
-
-    // Draw nodes
-    nodes.forEach(n => {
-      const pulse = Math.sin(n.pulse) * 0.5 + 0.5;
-      const r = n.r + pulse * 0.8;
-      const alpha = n.alpha * (0.5 + pulse * 0.5);
-      // Outer glow
-      const grad = ctx.createRadialGradient(n.x,n.y,0,n.x,n.y,r*4);
-      grad.addColorStop(0, `rgba(0,200,255,${alpha * 0.3})`);
-      grad.addColorStop(1, 'rgba(0,200,255,0)');
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, r*4, 0, Math.PI*2);
-      ctx.fillStyle = grad;
-      ctx.fill();
-      // Core dot
-      ctx.beginPath();
-      ctx.arc(n.x, n.y, r, 0, Math.PI*2);
-      ctx.fillStyle = `rgba(0,200,255,${alpha})`;
-      ctx.fill();
-    });
-
-    // Draw + update particles
-    particles = particles.filter(p => p.t < 1);
-    particles.forEach(p => {
-      p.t += p.speed;
-      const t = p.t;
-      const x = p.x + (p.tx - p.x) * t;
-      const y = p.y + (p.ty - p.y) * t;
-      ctx.beginPath();
-      ctx.arc(x, y, 1.5, 0, Math.PI*2);
-      ctx.fillStyle = p.color;
-      ctx.shadowColor = p.color;
-      ctx.shadowBlur = 6;
-      ctx.fill();
-      ctx.shadowBlur = 0;
-    });
-
-    // Occasional scan line effect
-    if(frame % 300 === 0){
-      const scanY = Math.random() * H;
-      ctx.beginPath();
-      ctx.moveTo(0, scanY);
-      ctx.lineTo(W, scanY);
-      ctx.strokeStyle = 'rgba(0,200,255,0.08)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  window.addEventListener('resize', ()=>{ resize(); initNodes(); });
-  resize();
-  initNodes();
-  draw();
-})();
-</script>
-
 <div class="page">
 
-  <!-- LEFT PANEL -->
   <div class="left">
-    <div class="left-logo">
-      <img src="/static/logo.jpeg" alt="CyberScan Pro" class="logo-svg" style="width:42px;height:42px;border-radius:10px;object-fit:cover;">
-      <div class="logo-words">
-        <div class="logo-name">CyberScan<span>Pro</span></div>
-        <div class="logo-tag">SECURITY ASSESSMENT PLATFORM</div>
+    <div class="left-inner">
+      <div class="brand-row">
+        <img src="/static/logo.jpeg" alt="CyberScan Pro">
+        <div>
+          <div class="brand-name">CyberScan<span>Pro</span></div>
+          <div class="brand-tag">SECURITY ASSESSMENT PLATFORM</div>
+        </div>
       </div>
-    </div>
-    <div class="ai-pill">
-      <span class="ai-pill-dot"></span>
-      <span class="ai-pill-icon">✦</span> AI-Assisted Risk Analysis
-    </div>
 
-    <div class="left-hero">
-      <div class="left-title">Automated<br><span>Vulnerability</span><br>Assessment</div>
-      <div class="left-desc">Professional-grade network and web application security scanning for modern teams.</div>
+      <div class="headline">Bring Your Team's <span class="accent">Security</span> Under One Roof</div>
+      <div class="sub-headline">Create an organization, register your assets, and start monitoring — built for teams, not just solo scans.</div>
 
-      <div class="features">
-        <div class="feat">
+      <div class="feat-list">
+        <div class="feat-row">
           <div class="feat-icon">🔍</div>
-          <div class="feat-text">
-            <div class="feat-name">Network & Port Scanning</div>
-            <div class="feat-sub">Nmap-powered host discovery and service detection</div>
+          <div>
+            <div class="feat-title">Network &amp; Port Scanning</div>
+            <div class="feat-body">Nmap-powered host discovery and service detection</div>
           </div>
         </div>
-        <div class="feat">
+        <div class="feat-row">
           <div class="feat-icon">🌐</div>
-          <div class="feat-text">
-            <div class="feat-name">OWASP Top 10 Testing</div>
-            <div class="feat-sub">SQLi, XSS, CSRF, headers, and more</div>
+          <div>
+            <div class="feat-title">OWASP Top 10 Testing</div>
+            <div class="feat-body">SQLi, XSS, CSRF, headers, and more</div>
           </div>
         </div>
-        <div class="feat">
+        <div class="feat-row">
           <div class="feat-icon">📊</div>
-          <div class="feat-text">
-            <div class="feat-name">CVE Intelligence</div>
-            <div class="feat-sub">Real-time NVD database with CVSS scoring</div>
+          <div>
+            <div class="feat-title">CVE Intelligence</div>
+            <div class="feat-body">Real-time NVD database with CVSS scoring</div>
           </div>
         </div>
-        <div class="feat">
+        <div class="feat-row">
           <div class="feat-icon">📄</div>
-          <div class="feat-text">
-            <div class="feat-name">Professional Reports</div>
-            <div class="feat-sub">PDF and HTML reports with plain English</div>
+          <div>
+            <div class="feat-title">Professional Reports</div>
+            <div class="feat-body">PDF and HTML reports with plain English</div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="left-foot">
-      FUPRE FINAL YEAR PROJECT<br>
-      <span>COMPUTER SCIENCE · 2026</span>
+      <div class="left-foot">
+        FUPRE FINAL YEAR PROJECT<br>
+        COMPUTER SCIENCE · <span class="yr">2026</span>
+      </div>
     </div>
   </div>
 
-  <!-- RIGHT PANEL -->
   <div class="right">
-    <div class="right-header">
-      <div class="right-eyebrow">// New Organization</div>
-      <div class="right-title">Create your account</div>
-      <div class="right-sub">Set up your organization and start assessing your assets</div>
-    </div>
+    <div class="form-wrap">
+      <h1>Create your account</h1>
+      <div class="form-sub">Set up your organization and start assessing your assets.</div>
 
-    {% if error %}
-    <div class="error">
-      <span>⚠</span>
-      <span>{{ error }}</span>
-    </div>
-    {% endif %}
+      {% if error %}
+      <div class="error">
+        <span>⚠</span>
+        <span>{{ error }}</span>
+      </div>
+      {% endif %}
 
-    <form class="form" method="POST" autocomplete="off">
-      <div class="field">
-        <label>Organization Name</label>
-        <div class="input-wrap">
-          <span class="input-icon">🏢</span>
-          <input type="text" name="org_name"
-            placeholder="e.g. Acme Corporation"
-            autocomplete="organization"
-            autofocus>
+      <form method="POST" autocomplete="off">
+        <div class="field">
+          <label>Organization Name</label>
+          <div class="input-wrap">
+            <input type="text" name="org_name"
+              placeholder="e.g. Acme Corporation"
+              autocomplete="organization"
+              autofocus>
+          </div>
         </div>
-      </div>
 
-      <div class="field">
-        <label>Username</label>
-        <div class="input-wrap">
-          <span class="input-icon">👤</span>
-          <input type="text" name="username"
-            placeholder="Choose a username"
-            autocomplete="username"
-            autocorrect="off"
-            autocapitalize="none"
-            spellcheck="false">
+        <div class="field">
+          <label>Username</label>
+          <div class="input-wrap">
+            <input type="text" name="username"
+              placeholder="Choose a username"
+              autocomplete="username"
+              autocorrect="off" autocapitalize="none" spellcheck="false">
+          </div>
         </div>
-      </div>
 
-      <div class="field">
-        <label>Password</label>
-        <div class="input-wrap">
-          <span class="input-icon">🔒</span>
-          <input type="password" name="password"
-            id="pass"
-            placeholder="At least 6 characters"
-            autocomplete="new-password">
-          <button type="button" class="eye-btn" onclick="togglePass()">👁</button>
+        <div class="field">
+          <label>Password</label>
+          <div class="input-wrap">
+            <input type="password" name="password" id="pass"
+              placeholder="At least 6 characters"
+              autocomplete="new-password" style="padding-right:40px;">
+            <button type="button" class="eye-btn" onclick="togglePass()">👁</button>
+          </div>
         </div>
-      </div>
 
-      <button type="submit" class="btn-login">
-        Create Account <span>→</span>
-      </button>
-    </form>
+        <button type="submit" class="btn-login">Create Account →</button>
+      </form>
 
-    <div class="right-sub" style="margin-top:16px;text-align:center;">
-      Already have an account? <a href="/login" style="color:var(--accent);text-decoration:none;">Sign in</a>
-    </div>
+      <div class="alt">Already have an account? <a href="/login">Sign in</a></div>
 
-    <div class="right-foot">
-      <div class="status-item">
-        <div class="s-dot ok"></div>
-        System Online
+      <div class="foot">
+        <div class="foot-item"><div class="dot"></div>System Online</div>
+        <div class="foot-item">v1.0.0</div>
       </div>
-      <div class="status-item">
-        <div class="s-dot blue"></div>
-        Encrypted Connection
-      </div>
-      <div class="right-version">v1.0.0</div>
     </div>
   </div>
 
@@ -652,22 +240,9 @@ body{
 
 <script>
 function togglePass(){
-  const i=document.getElementById('pass');
-  i.type=i.type==='password'?'text':'password';
+  const p = document.getElementById('pass');
+  p.type = p.type === 'password' ? 'text' : 'password';
 }
-</script>
-
-<script>
-(function(){
-  const el = document.getElementById('cdown');
-  if(!el) return;
-  let s = parseInt(el.textContent);
-  const t = setInterval(()=>{
-    s--;
-    if(s <= 0){ clearInterval(t); location.reload(); return; }
-    el.textContent = s;
-  }, 1000);
-})();
 </script>
 </body>
 </html>

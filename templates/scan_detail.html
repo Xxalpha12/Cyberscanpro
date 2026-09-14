@@ -171,7 +171,14 @@ body{animation:pagein 0.3s ease both;}
 ::-webkit-scrollbar{width:3px;}
   ::-webkit-scrollbar-track{background:transparent;}
   ::-webkit-scrollbar-thumb{background:rgba(0,200,255,0.15);border-radius:2px;}
-  </style>
+  
+/* desktop-persistent-sidebar-fix */
+@media(min-width:901px){
+  .main{transition:margin-left 0.35s cubic-bezier(0.16,1,0.3,1);}
+  .sidebar.open ~ .main{margin-left:260px;}
+  .overlay{display:none !important;}
+}
+</style>
 <style>
 .back-link{display:inline-flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);text-decoration:none;font-family:'Share Tech Mono',monospace;letter-spacing:1px;margin-bottom:18px;transition:color 0.2s;}
 .back-link:hover{color:var(--accent);}
@@ -499,8 +506,11 @@ body{animation:pagein 0.3s ease both;}
     <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="nav-icon">▶</span>New Scan</a>
     <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}"><span class="nav-icon">☰</span>Scan History</a>
     <a href="/reports" class="nav-link {% if page=='reports' %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
-    <div class="nav-sec">// Analysis</div>
-    <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">◎</span>Targets</a>
+        <div class="nav-sec">// Analysis</div>
+    <a href="/assets" class="nav-link {% if page=='assets' %}active{% endif %}"><span class="nav-icon">◎</span>Assets</a>
+    <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">📈</span>Target History</a>
+    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}"><span class="nav-icon">⇄</span>Compare Scans</a>
+    <a href="/port-intel" class="nav-link {% if page=='port_intel' %}active{% endif %}"><span class="nav-icon">🔌</span>Port Lookup</a>
     <div class="nav-sec">// System</div>
     <a href="/settings" class="nav-link {% if page=='settings' %}active{% endif %}"><span class="nav-icon">⚙</span>Settings</a>
     <div class="nav-sec">// Account</div>
@@ -511,7 +521,7 @@ body{animation:pagein 0.3s ease both;}
 <div class="main">
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:12px;">
-      <button class="menu-btn" onclick="openSidebar()">☰</button>
+      <button class="menu-btn" onclick="toggleSidebar()">☰</button>
       <div>
         <div class="tb-title">// SCAN <span>RESULTS</span></div>
         <div class="tb-sub">ASSESSMENT SUMMARY · {{ session.id if session else '' }}</div>
@@ -663,6 +673,8 @@ async function saveNotes(){
   }catch(e){s.textContent='❌ Failed';s.style.color='var(--red)';}
 }
 function openSidebar(){document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');}
+function toggleSidebar(){const sb=document.getElementById('sidebar');if(sb.classList.contains('open')){closeSidebar();}else{openSidebar();}}
+(function(){if(window.innerWidth>900){document.getElementById('sidebar').classList.add('open');}})();
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('show');}
 (function tick(){const el=document.getElementById('clock');if(el){const n=new Date();el.textContent=n.toLocaleTimeString('en-GB');}setTimeout(tick,1000);})();
 loadNotes();

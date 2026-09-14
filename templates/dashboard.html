@@ -57,10 +57,45 @@ body::before{content:'';position:fixed;inset:0;
 .main{position:relative;z-index:1;padding:32px;}
 
 /* Header row */
-.header-row{margin-bottom:32px;}
+.header-row{margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;}
 .header-row h1{font-size:32px;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:8px;}
 .header-row h1 .hi{color:var(--accent);}
 .header-row p{font-size:13px;color:var(--text3);max-width:480px;}
+.header-text{flex:1;min-width:260px;}
+
+.ai-anim-wrap{position:relative;width:380px;height:190px;flex-shrink:0;opacity:0.95;}
+@media(max-width:900px){.ai-anim-wrap{display:none;}}
+.ai-anim-mode{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1.2s ease;}
+.ai-anim-mode.active{opacity:1;}
+
+.hud-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;fill:var(--text2);text-transform:uppercase;}
+.hud-label-dim{fill:var(--text3);font-size:8px;letter-spacing:1px;}
+.hud-label-green{fill:var(--green);animation:hudblink 2.4s ease-in-out infinite;}
+@keyframes hudblink{0%,100%{opacity:1;}50%{opacity:0.5;}}
+
+/* Mode 1: HUD radar */
+.hud-ring-slow{animation:spinslow 14s linear infinite;transform-origin:0 0;}
+#radar-sweep-group{transform-origin:0 0;animation:radarspin 4s linear infinite;}
+@keyframes radarspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.hud-core-pulse{animation:corepulse 1.6s ease-in-out infinite;}
+@keyframes corepulse{0%,100%{opacity:0.7;r:4;}50%{opacity:1;r:5.5;}}
+.radar-blip{animation:blipfade 4s ease-in-out infinite;}
+.radar-blip.b1{animation-delay:.2s;}
+.radar-blip.b2{animation-delay:1.6s;}
+.radar-blip.b3{animation-delay:2.8s;}
+@keyframes blipfade{0%,78%,100%{opacity:0;}83%,95%{opacity:1;}}
+
+/* Mode 2: AI neural core */
+.ai-node{animation:aipulse2 2.2s ease-in-out infinite;}
+.ai-node.d1{animation-delay:.3s;}
+.ai-node.d2{animation-delay:.6s;}
+.ai-node.d3{animation-delay:.9s;}
+@keyframes aipulse2{0%,100%{opacity:0.5;transform:scale(1);}50%{opacity:1;transform:scale(1.4);}}
+
+/* Mode 3: Shield core */
+.shield-pulse{animation:shieldglow 2.8s ease-in-out infinite;}
+@keyframes shieldglow{0%,100%{filter:drop-shadow(0 0 2px var(--accent));}50%{filter:drop-shadow(0 0 9px var(--accent));}}
+@keyframes spinslow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .status-chip{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--green);background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:20px;padding:4px 12px;font-family:var(--mono);margin-top:12px;}
 .pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
@@ -221,6 +256,13 @@ nav{flex:1;padding:12px 0;}
 .overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(2px);z-index:40;opacity:0;visibility:hidden;transition:opacity 0.3s ease,visibility 0.3s ease;}
 .overlay.show{opacity:1;visibility:visible;}
 
+
+/* desktop-persistent-sidebar-fix */
+@media(min-width:901px){
+  .main{transition:margin-left 0.35s cubic-bezier(0.16,1,0.3,1);}
+  .sidebar.open ~ .main,.sidebar.open ~ .topbar{margin-left:240px;}
+  .overlay{display:none !important;}
+}
 </style>
 </head>
 <body>
@@ -249,9 +291,11 @@ nav{flex:1;padding:12px 0;}
     <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="nav-icon">▶</span>New Scan</a>
     <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}"><span class="nav-icon">☰</span>Scan History</a>
     <a href="/reports" class="nav-link {% if page=='reports' %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
-    <div class="nav-sec">// Analysis</div>
+        <div class="nav-sec">// Analysis</div>
     <a href="/assets" class="nav-link {% if page=='assets' %}active{% endif %}"><span class="nav-icon">◎</span>Assets</a>
     <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">📈</span>Target History</a>
+    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}"><span class="nav-icon">⇄</span>Compare Scans</a>
+    <a href="/port-intel" class="nav-link {% if page=='port_intel' %}active{% endif %}"><span class="nav-icon">🔌</span>Port Lookup</a>
     <div class="nav-sec">// System</div>
     <a href="/settings" class="nav-link {% if page=='settings' %}active{% endif %}"><span class="nav-icon">⚙</span>Settings</a>
     <a href="/logout" class="nav-link"><span class="nav-icon">→</span>Logout</a>
@@ -261,12 +305,12 @@ nav{flex:1;padding:12px 0;}
 
 <div class="topbar">
   <div class="tb-left">
-    <button class="menu-btn" onclick="openSidebar()">☰</button>
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
     <div class="tb-logo">Cyber<em>Scan Pro</em></div>
   </div>
   <div class="tb-right">
     <div class="clock" id="clock">00:00:00</div>
-    <button class="ib" onclick="openSearch ? openSearch() : null" title="Search (Ctrl+K)">🔍</button>
+    <button class="ib" onclick="openSearch()" title="Search (Ctrl+K)">🔍</button>
     <button class="ib">🔔</button>
     <button class="ns-btn">▶ New Scan</button>
   </div>
@@ -276,9 +320,118 @@ nav{flex:1;padding:12px 0;}
 
   <!-- Header -->
   <div class="header-row">
-    <h1 id="greeting-text">Good day, <br><span class="hi">{{ session.username | title }}</span> 👋</h1>
-    <p>Your security posture is being monitored across {{ unique_targets }} target{% if unique_targets != 1 %}s{% endif %}. {{ total_scans }} scan{% if total_scans != 1 %}s{% endif %} completed total.</p>
-    <div class="status-chip"><div class="pulse"></div> Systems Online · All APIs Connected</div>
+    <div class="header-text">
+      <h1 id="greeting-text">Good day, <br><span class="hi">{{ session.username | title }}</span> 👋</h1>
+      <p>Your security posture is being monitored across {{ unique_targets }} target{% if unique_targets != 1 %}s{% endif %}. {{ total_scans }} scan{% if total_scans != 1 %}s{% endif %} completed total.</p>
+      <div class="status-chip"><div class="pulse"></div> Systems Online · All APIs Connected</div>
+    </div>
+    <div class="ai-anim-wrap" id="ai-anim-wrap">
+      <!-- Mode 1: HUD radar scanner (inspired by circular tech-HUD reference) -->
+      <svg class="ai-anim-mode active" id="anim-radar" viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <radialGradient id="radarGrad" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="var(--green)" stop-opacity="0.55"/>
+            <stop offset="100%" stop-color="var(--green)" stop-opacity="0"/>
+          </radialGradient>
+          <filter id="glowSoft" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="2.2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <g transform="translate(190,95)">
+          <circle r="82" fill="none" stroke="var(--accent)" stroke-width="0.6" opacity="0.15"/>
+          <circle r="82" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="2 10" opacity="0.35" class="hud-ring-slow"/>
+          <circle r="60" fill="none" stroke="var(--accent)" stroke-width="0.6" opacity="0.2"/>
+          <g class="hud-ticks" opacity="0.4">
+            <circle r="60" fill="none" stroke="var(--accent)" stroke-width="6" stroke-dasharray="1 7"/>
+          </g>
+          <circle r="34" fill="none" stroke="var(--green)" stroke-width="1" opacity="0.3"/>
+          <g id="radar-sweep-group" filter="url(#glowSoft)">
+            <path d="M0,0 L0,-82 A82,82 0 0,1 71,-41 Z" fill="url(#radarGrad)" opacity="0.65"/>
+            <line x1="0" y1="0" x2="0" y2="-82" stroke="var(--green)" stroke-width="1.2" opacity="0.8"/>
+          </g>
+          <circle r="4" fill="var(--green)" filter="url(#glowSoft)" class="hud-core-pulse"/>
+          <circle cx="46" cy="-24" r="3" fill="var(--red)" class="radar-blip b1"/>
+          <circle cx="-38" cy="30" r="2.5" fill="var(--yellow)" class="radar-blip b2"/>
+          <circle cx="50" cy="28" r="2.2" fill="var(--green)" class="radar-blip b3"/>
+          <circle cx="-52" cy="-18" r="2.2" fill="var(--accent)" class="radar-blip b2"/>
+        </g>
+        <text x="18" y="24" class="hud-label">THREAT SCAN</text>
+        <text x="18" y="38" class="hud-label hud-label-dim">ACTIVE · REAL-TIME</text>
+        <text x="278" y="24" class="hud-label" text-anchor="end">AI ENGINE</text>
+        <text x="278" y="38" class="hud-label hud-label-green" text-anchor="end" id="hud-status-text">● ONLINE</text>
+      </svg>
+
+      <!-- Mode 2: AI core / neural brain (inspired by circuit-brain reference) -->
+      <svg class="ai-anim-mode" id="anim-neural" viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <filter id="glowSoft2" x="-60%" y="-60%" width="220%" height="220%">
+            <feGaussianBlur stdDeviation="2" result="b"/>
+            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <!-- Circuit head silhouette -->
+        <g transform="translate(190,95)" filter="url(#glowSoft2)">
+          <path d="M-30,-45 C-48,-40 -55,-18 -50,2 C-47,16 -38,26 -30,34 L-30,48 L30,48 L30,30
+                   C40,20 46,6 46,-10 C46,-34 26,-52 0,-52 C-11,-52 -22,-49 -30,-45 Z"
+            fill="none" stroke="var(--accent)" stroke-width="1.3" opacity="0.55"/>
+          <g stroke="var(--accent)" stroke-width="0.8" opacity="0.4">
+            <path d="M-30,-45 L-30,-58 M-30,-58 L-20,-58"/>
+            <path d="M46,-10 L60,-10 M60,-10 L60,-2"/>
+            <path d="M0,-52 L0,-64 M0,-64 L10,-64"/>
+            <path d="M-50,2 L-64,2 M-64,2 L-64,10"/>
+          </g>
+          <g class="ai-node" fill="var(--accent)"><circle cx="-30" cy="-58" r="2.2"/></g>
+          <g class="ai-node d2" fill="var(--green)"><circle cx="60" cy="-2" r="2.2"/></g>
+          <g class="ai-node d1" fill="var(--accent)"><circle cx="10" cy="-64" r="2.2"/></g>
+          <g class="ai-node d3" fill="var(--accent)"><circle cx="-64" cy="10" r="2.2"/></g>
+          <!-- inner neural mesh -->
+          <g stroke="var(--green)" stroke-width="0.7" opacity="0.4">
+            <line x1="-18" y1="-20" x2="6" y2="-8"/><line x1="6" y1="-8" x2="-4" y2="16"/>
+            <line x1="6" y1="-8" x2="20" y2="-18"/><line x1="-4" y1="16" x2="16" y2="20"/>
+          </g>
+          <g class="ai-node d1" fill="var(--green)"><circle cx="-18" cy="-20" r="2.6"/></g>
+          <g class="ai-node d3" fill="var(--accent)"><circle cx="6" cy="-8" r="3.4"/></g>
+          <g class="ai-node d2" fill="var(--green)"><circle cx="-4" cy="16" r="2.4"/></g>
+          <g class="ai-node d1" fill="var(--accent)"><circle cx="20" cy="-18" r="2.2"/></g>
+          <g class="ai-node d2" fill="var(--green)"><circle cx="16" cy="20" r="2.2"/></g>
+        </g>
+        <text x="18" y="24" class="hud-label">AI ANALYSIS</text>
+        <text x="18" y="38" class="hud-label hud-label-dim">PATTERN RECOGNITION</text>
+        <text x="278" y="24" class="hud-label" text-anchor="end">VULN ENGINE</text>
+        <text x="278" y="38" class="hud-label hud-label-green" text-anchor="end">● PROCESSING</text>
+      </svg>
+
+      <!-- Mode 3: Secure shield core (inspired by shield/lock + low-poly mesh reference) -->
+      <svg class="ai-anim-mode" id="anim-shield" viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">
+        <g stroke="var(--accent)" stroke-width="0.6" opacity="0.22">
+          <line x1="90" y1="40" x2="150" y2="70"/><line x1="150" y1="70" x2="230" y2="60"/>
+          <line x1="230" y1="60" x2="290" y2="90"/><line x1="90" y1="40" x2="70" y2="110"/>
+          <line x1="70" y1="110" x2="150" y2="70"/><line x1="150" y1="70" x2="150" y2="140"/>
+          <line x1="230" y1="60" x2="230" y2="140"/><line x1="150" y1="140" x2="230" y2="140"/>
+          <line x1="70" y1="110" x2="150" y2="140"/><line x1="230" y1="140" x2="290" y2="90"/>
+        </g>
+        <g class="ai-node d3" fill="var(--accent)" opacity="0.5"><circle cx="90" cy="40" r="2"/></g>
+        <g class="ai-node d1" fill="var(--accent)" opacity="0.5"><circle cx="230" cy="60" r="2"/></g>
+        <g class="ai-node d2" fill="var(--accent)" opacity="0.5"><circle cx="70" cy="110" r="2"/></g>
+        <g class="ai-node d1" fill="var(--accent)" opacity="0.5"><circle cx="290" cy="90" r="2"/></g>
+        <g class="ai-node d2" fill="var(--accent)" opacity="0.5"><circle cx="150" cy="140" r="2"/></g>
+        <g class="ai-node d3" fill="var(--accent)" opacity="0.5"><circle cx="230" cy="140" r="2"/></g>
+
+        <g transform="translate(190,95)">
+          <path d="M0,-42 L28,-30 L28,-2 C28,20 15,36 0,44 C-15,36 -28,20 -28,-2 L-28,-30 Z"
+            fill="rgba(0,200,255,0.05)" stroke="var(--accent)" stroke-width="1.4" opacity="0.75"
+            class="shield-pulse"/>
+          <rect x="-12" y="-4" width="24" height="18" rx="3" fill="rgba(0,255,157,0.1)" stroke="var(--green)" stroke-width="1.2"/>
+          <path d="M-7,-4 V-10 C-7,-16 -2,-19 0,-19 C2,-19 7,-16 7,-10 V-4" fill="none" stroke="var(--green)" stroke-width="1.2"/>
+          <circle cx="0" cy="4" r="2.2" fill="var(--green)"/>
+        </g>
+        <text x="18" y="24" class="hud-label">SYSTEM SECURE</text>
+        <text x="18" y="38" class="hud-label hud-label-dim">ASSETS PROTECTED</text>
+        <text x="278" y="24" class="hud-label" text-anchor="end">INTEGRITY</text>
+        <text x="278" y="38" class="hud-label hud-label-green" text-anchor="end">● VERIFIED</text>
+      </svg>
+    </div>
   </div>
 
   <!-- Score + stats -->
@@ -492,6 +645,19 @@ nav{flex:1;padding:12px 0;}
   }
 })();
 
+// ── Rotating AI animation (cycles through 3 visual modes) ──
+(function(){
+  const modes = ['anim-radar','anim-neural','anim-shield'];
+  let idx = 0;
+  setInterval(()=>{
+    const cur = document.getElementById(modes[idx]);
+    if(cur) cur.classList.remove('active');
+    idx = (idx + 1) % modes.length;
+    const next = document.getElementById(modes[idx]);
+    if(next) next.classList.add('active');
+  }, 6000);
+})();
+
 const MODALS = {
   hosts:{title:"🖥 Hosts Discovered",n:12,color:"#00c8ff",breakdown:[{n:8,l:"Active"},{n:4,l:"Filtered"},{n:3,l:"Web Servers"},{n:2,l:"New"}],tip:"CyberScan Pro discovered 12 active hosts. Click below to view full host-by-host breakdown in your scan history.",link:"View Scan History →"},
   ports:{title:"🔌 Open Ports",n:47,color:"#00ff9d",breakdown:[{n:22,l:"HTTP/HTTPS"},{n:12,l:"Database"},{n:8,l:"SSH/FTP"},{n:5,l:"Other"}],tip:"47 open ports detected. Database ports exposed to the internet represent a High risk — close or firewall them.",link:"Port Intelligence →"},
@@ -514,6 +680,8 @@ function openModal(k){
 }
 function closeModal(){document.getElementById("modal").classList.remove("open");}
 function openSidebar(){document.getElementById("sidebar").classList.add("open");document.getElementById("overlay").classList.add("show");}
+function toggleSidebar(){const sb=document.getElementById('sidebar');if(sb.classList.contains('open')){closeSidebar();}else{openSidebar();}}
+(function(){if(window.innerWidth>900){document.getElementById('sidebar').classList.add('open');}})();
 function closeSidebar(){document.getElementById("sidebar").classList.remove("open");document.getElementById("overlay").classList.remove("show");}
 document.addEventListener("keydown",e=>{if(e.key==="Escape")closeModal();});
 
@@ -530,5 +698,244 @@ window.addEventListener("load",()=>{
   });
 });
 </script>
+<div id="search-overlay">
+  <canvas id="space-canvas"></canvas>
+  <div class="search-box-wrap">
+    <button class="search-close" onclick="closeSearch()">✕</button>
+    <div class="search-input-row">
+      <span class="search-icon-big">🔍</span>
+      <input type="text" id="global-search-input" placeholder="Search targets, scans, reports, vulnerabilities..." autocomplete="off">
+      <span class="search-kbd">ESC</span>
+    </div>
+    <div class="search-results" id="search-results">
+      <div class="search-hint">
+        <div class="sh-row"><span class="sh-kbd">target:</span> search by domain or IP — e.g. <i>target:soap.fupre.edu.ng</i></div>
+        <div class="sh-row"><span class="sh-kbd">cve:</span> find a specific CVE — e.g. <i>cve:CVE-2024-1234</i></div>
+        <div class="sh-row"><span class="sh-kbd">risk:</span> filter by severity — e.g. <i>risk:critical</i></div>
+        <div class="sh-row"><span class="sh-kbd">report:</span> find reports by target name</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+#search-overlay{
+  position:fixed;inset:0;z-index:500;
+  background:radial-gradient(ellipse at center, #050a14 0%, #000003 100%);
+  display:none;align-items:flex-start;justify-content:center;
+  padding-top:8vh;
+  opacity:0;transition:opacity 0.3s ease;
+}
+#search-overlay.show{display:flex;opacity:1;}
+#space-canvas{position:absolute;inset:0;z-index:0;}
+.search-box-wrap{
+  position:relative;z-index:2;
+  width:100%;max-width:640px;
+  padding:0 20px;
+  animation:searchIn 0.3s ease both;
+}
+@keyframes searchIn{from{opacity:0;transform:translateY(-12px) scale(0.98)}to{opacity:1;transform:translateY(0) scale(1)}}
+.search-close{
+  position:absolute;top:-46px;right:20px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(0,200,255,0.2);
+  color:#e2eaf4;width:32px;height:32px;border-radius:8px;
+  cursor:pointer;font-size:14px;transition:all 0.2s;
+}
+.search-close:hover{background:rgba(239,68,68,0.15);border-color:rgba(239,68,68,0.3);color:#ef4444;}
+.search-input-row{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(6,12,20,0.92);
+  border:1px solid rgba(0,200,255,0.25);
+  border-radius:14px;padding:18px 22px;
+  box-shadow:0 0 60px rgba(0,200,255,0.15),0 20px 60px rgba(0,0,0,0.6);
+  backdrop-filter:blur(20px);
+}
+.search-icon-big{font-size:20px;flex-shrink:0;}
+#global-search-input{
+  flex:1;background:none;border:none;outline:none;
+  color:#e2eaf4;font-family:'Inter',sans-serif;font-size:16px;
+}
+#global-search-input::placeholder{color:#304560;}
+.search-kbd{
+  font-family:'Share Tech Mono',monospace;font-size:10px;
+  color:#4d6a85;background:rgba(255,255,255,0.04);
+  border:1px solid rgba(255,255,255,0.08);
+  padding:3px 8px;border-radius:5px;flex-shrink:0;
+}
+.search-results{
+  margin-top:14px;
+  background:rgba(6,12,20,0.88);
+  border:1px solid rgba(0,200,255,0.12);
+  border-radius:14px;overflow:hidden;
+  backdrop-filter:blur(20px);
+  max-height:50vh;overflow-y:auto;
+}
+.search-hint{padding:20px 22px;display:flex;flex-direction:column;gap:10px;}
+.sh-row{font-size:12px;color:#4d6a85;font-family:'Share Tech Mono',monospace;}
+.sh-kbd{color:#00c8ff;font-weight:700;}
+.sh-row i{color:#94a3b8;font-style:normal;}
+.sr-item{
+  display:flex;align-items:center;gap:12px;
+  padding:13px 22px;border-bottom:1px solid rgba(0,200,255,0.06);
+  cursor:pointer;transition:background 0.15s;text-decoration:none;color:inherit;
+}
+.sr-item:hover{background:rgba(0,200,255,0.06);}
+.sr-item:last-child{border-bottom:none;}
+.sr-icon{width:32px;height:32px;border-radius:8px;background:rgba(0,200,255,0.08);border:1px solid rgba(0,200,255,0.15);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;}
+.sr-main{flex:1;min-width:0;}
+.sr-title{font-size:13px;font-weight:600;color:#e2eaf4;font-family:'Share Tech Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.sr-sub{font-size:11px;color:#4d6a85;margin-top:2px;}
+.sr-badge{padding:2px 8px;border-radius:4px;font-size:9px;font-weight:700;font-family:'Share Tech Mono',monospace;flex-shrink:0;}
+.sr-no-results{padding:40px 22px;text-align:center;color:#304560;font-size:12px;font-family:'Share Tech Mono',monospace;}
+</style>
+
+<script>
+// ── SPACE BACKGROUND CANVAS ──────────────────────────────────────────────────
+(function(){
+  const canvas = document.getElementById('space-canvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, stars = [], shootingStars = [];
+
+  function resize(){ W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; }
+
+  function initStars(){
+    stars = [];
+    for(let i=0;i<200;i++){
+      stars.push({
+        x: Math.random()*W, y: Math.random()*H,
+        r: Math.random()*1.3 + 0.2,
+        baseAlpha: Math.random()*0.6 + 0.2,
+        twinkleSpeed: 0.01 + Math.random()*0.02,
+        phase: Math.random()*Math.PI*2,
+        depth: Math.random(), // parallax depth
+      });
+    }
+  }
+
+  function maybeSpawnShootingStar(){
+    if(Math.random() < 0.003 && shootingStars.length < 2){
+      const y = Math.random() * H * 0.5;
+      shootingStars.push({
+        x: Math.random()*W*0.3, y, len: 80+Math.random()*60,
+        speed: 8+Math.random()*6, angle: Math.PI/5, life: 1,
+      });
+    }
+  }
+
+  let frame = 0;
+  function draw(){
+    frame++;
+    ctx.clearRect(0,0,W,H);
+
+    // Nebula glow patches
+    const g1 = ctx.createRadialGradient(W*0.2,H*0.3,0,W*0.2,H*0.3,W*0.4);
+    g1.addColorStop(0,'rgba(0,150,255,0.04)'); g1.addColorStop(1,'transparent');
+    ctx.fillStyle = g1; ctx.fillRect(0,0,W,H);
+
+    const g2 = ctx.createRadialGradient(W*0.8,H*0.7,0,W*0.8,H*0.7,W*0.35);
+    g2.addColorStop(0,'rgba(168,85,247,0.03)'); g2.addColorStop(1,'transparent');
+    ctx.fillStyle = g2; ctx.fillRect(0,0,W,H);
+
+    // Stars with twinkle
+    stars.forEach(s=>{
+      const tw = Math.sin(frame * s.twinkleSpeed + s.phase) * 0.4 + 0.6;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.r, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(180,220,255,${s.baseAlpha * tw})`;
+      ctx.fill();
+      // Occasional glow on bright ones
+      if(s.r > 1){
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.r*3, 0, Math.PI*2);
+        ctx.fillStyle = `rgba(0,200,255,${0.03 * tw})`;
+        ctx.fill();
+      }
+    });
+
+    // Shooting stars
+    maybeSpawnShootingStar();
+    shootingStars = shootingStars.filter(s=>s.life > 0);
+    shootingStars.forEach(s=>{
+      const dx = Math.cos(s.angle)*s.speed, dy = Math.sin(s.angle)*s.speed;
+      s.x += dx; s.y += dy; s.life -= 0.012;
+      const grad = ctx.createLinearGradient(s.x, s.y, s.x - dx*s.len/s.speed, s.y - dy*s.len/s.speed);
+      grad.addColorStop(0, `rgba(255,255,255,${s.life})`);
+      grad.addColorStop(1, 'rgba(0,200,255,0)');
+      ctx.beginPath();
+      ctx.moveTo(s.x, s.y);
+      ctx.lineTo(s.x - dx*s.len/s.speed, s.y - dy*s.len/s.speed);
+      ctx.strokeStyle = grad; ctx.lineWidth = 1.5; ctx.stroke();
+    });
+
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', ()=>{ resize(); initStars(); });
+  resize(); initStars(); draw();
+})();
+
+// ── SEARCH LOGIC ──────────────────────────────────────────────────────────────
+function openSearch(){
+  document.getElementById('search-overlay').classList.add('show');
+  setTimeout(()=>document.getElementById('global-search-input').focus(), 100);
+  document.body.style.overflow = 'hidden';
+}
+function closeSearch(){
+  document.getElementById('search-overlay').classList.remove('show');
+  document.body.style.overflow = '';
+  document.getElementById('global-search-input').value = '';
+}
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Escape') closeSearch();
+  if((e.ctrlKey || e.metaKey) && e.key === 'k'){ e.preventDefault(); openSearch(); }
+});
+document.getElementById('search-overlay')?.addEventListener('click', (e)=>{
+  if(e.target.id === 'search-overlay') closeSearch();
+});
+
+let searchTimeout;
+document.getElementById('global-search-input')?.addEventListener('input', (e)=>{
+  clearTimeout(searchTimeout);
+  const q = e.target.value.trim();
+  if(!q){
+    document.getElementById('search-results').innerHTML = `
+      <div class="search-hint">
+        <div class="sh-row"><span class="sh-kbd">target:</span> search by domain or IP — e.g. <i>target:soap.fupre.edu.ng</i></div>
+        <div class="sh-row"><span class="sh-kbd">cve:</span> find a specific CVE — e.g. <i>cve:CVE-2024-1234</i></div>
+        <div class="sh-row"><span class="sh-kbd">risk:</span> filter by severity — e.g. <i>risk:critical</i></div>
+        <div class="sh-row"><span class="sh-kbd">report:</span> find reports by target name</div>
+      </div>`;
+    return;
+  }
+  searchTimeout = setTimeout(()=>runSearch(q), 250);
+});
+
+async function runSearch(q){
+  const resultsEl = document.getElementById('search-results');
+  resultsEl.innerHTML = '<div class="sr-no-results">Searching...</div>';
+  try{
+    const res = await fetch('/api/search?q=' + encodeURIComponent(q));
+    const data = await res.json();
+    if(!data.results || data.results.length === 0){
+      resultsEl.innerHTML = '<div class="sr-no-results">No results for "' + q + '"</div>';
+      return;
+    }
+    resultsEl.innerHTML = data.results.map(r => `
+      <a href="${r.url}" class="sr-item">
+        <div class="sr-icon">${r.icon}</div>
+        <div class="sr-main">
+          <div class="sr-title">${r.title}</div>
+          <div class="sr-sub">${r.subtitle}</div>
+        </div>
+        ${r.badge ? `<span class="sr-badge" style="background:${r.badge_bg};color:${r.badge_color};">${r.badge}</span>` : ''}
+      </a>
+    `).join('');
+  }catch(e){
+    resultsEl.innerHTML = '<div class="sr-no-results">Search error — try again</div>';
+  }
+}
+</script>
+
 </body>
 </html>
