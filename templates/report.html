@@ -23,7 +23,8 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:
 .cover{background:var(--navy);color:#fff;border-radius:10px;overflow:hidden;margin-bottom:24px;}
 .cover-top{padding:32px 36px 24px;border-bottom:1px solid rgba(255,255,255,0.1);}
 .cover-logo{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
-.cover-logo-mark{width:42px;height:42px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;}
+.cover-logo-mark{width:42px;height:42px;border-radius:8px;overflow:hidden;flex-shrink:0;}
+.cover-logo-mark img{width:100%;height:100%;object-fit:cover;display:block;}
 .cover-logo-name{font-size:13px;font-weight:700;letter-spacing:2px;opacity:0.9;font-family:monospace;}
 .cover-title{font-size:26px;font-weight:700;margin-bottom:4px;letter-spacing:-0.3px;}
 .cover-sub{font-size:12px;opacity:0.55;letter-spacing:0.5px;}
@@ -234,7 +235,9 @@ tr:nth-child(even) td{background:#F8FAFC;}
   <div class="cover">
     <div class="cover-top">
       <div class="cover-logo">
-        <div class="cover-logo-mark">🛡</div>
+        <div class="cover-logo-mark">
+          {% if logo_data_uri %}<img src="{{ logo_data_uri }}" alt="CyberScan Pro">{% endif %}
+        </div>
         <div class="cover-logo-name">CYBERSCAN PRO</div>
       </div>
       <div class="cover-title">Vulnerability Assessment Report</div>
@@ -283,10 +286,16 @@ tr:nth-child(even) td{background:#F8FAFC;}
       <div class="sc-url">{{ target if target.startswith('http') else 'https://' + target }}</div>
     </div>
     <div class="sc-img-wrap" id="sc-wrap">
+      {% if screenshot_data_uri %}
+      <img src="{{ screenshot_data_uri }}"
+           alt="Target screenshot"
+           onload="document.getElementById('sc-wrap').style.background='#000'">
+      {% else %}
       <img src="/screenshots/{{ session_id }}"
            alt="Target screenshot"
            onload="document.getElementById('sc-wrap').style.background='#000'"
-           onerror="this.parentElement.innerHTML='<div class=\'sc-empty\'>📸 Screenshot not available.<br><small>Go to the scan detail page and click Capture Screenshot to generate one.</small></div>'">
+           onerror="this.parentElement.innerHTML='<div class=\'sc-empty\'>Screenshot not available.<br><small>Go to the scan detail page and click Capture Screenshot to generate one.</small></div>'">
+      {% endif %}
     </div>
   </div>
 

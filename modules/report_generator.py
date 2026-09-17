@@ -4,6 +4,7 @@ Generates both HTML and PDF reports with plain English explanations.
 """
 
 import os
+import html as _html
 from datetime import datetime
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from modules.logger import get_logger
@@ -179,8 +180,26 @@ class ReportGenerator:
             })
         return sorted(merged, key=lambda x: SEVERITY_ORDER.get(x.get("severity","Low"), 4))
 
+    def _data_uri(self, path, mime):
+        """Base64-embed an image so the saved report stays viewable even when
+        opened offline or after the Flask app is no longer reachable."""
+        try:
+            import base64
+            with open(path, "rb") as f:
+                b64 = base64.b64encode(f.read()).decode("ascii")
+            return f"data:{mime};base64,{b64}"
+        except Exception:
+            return None
+
     def _context(self):
         counts = self._severity_counts()
+
+        logo_path = os.path.join(os.path.dirname(OUTPUT_DIR), "static", "logo.jpeg")
+        logo_data_uri = self._data_uri(logo_path, "image/jpeg")
+
+        screenshot_path = os.path.join(OUTPUT_DIR, "screenshots", f"screenshot_{self.session_id}.png")
+        screenshot_data_uri = self._data_uri(screenshot_path, "image/png")
+
         return {
             "report_title":    "Vulnerability Assessment Report",
             "target":          self.target,
@@ -201,6 +220,8 @@ class ReportGenerator:
             "abuseipdb":       self.enrichment.get("abuseipdb", {}),
             "urlscan":         self.enrichment.get("urlscan", {}),
             "has_enrichment":  bool(self.enrichment),
+            "logo_data_uri":       logo_data_uri,
+            "screenshot_data_uri": screenshot_data_uri,
         }
 
     def generate(self):
@@ -238,8 +259,9 @@ class ReportGenerator:
             from reportlab.lib.units import cm
             from reportlab.platypus import (SimpleDocTemplate, Paragraph, Spacer,
                                             Table, TableStyle, HRFlowable,
-                                            PageBreak, KeepTogether)
+                                            PageBreak, KeepTogether, Image as RLImage)
             from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+            from reportlab.platypus.flowables import Flowable
         except ImportError:
             logger.error("reportlab not installed — PDF skipped")
             return
@@ -259,8 +281,21 @@ class ReportGenerator:
         SEV_C = {"Critical": CRIT, "High": HIGH, "Medium": MED, "Low": LOW_C, "None": NONE_C}
         RISK_C = {"CRITICAL": CRIT, "HIGH": HIGH, "MEDIUM": MED, "LOW": LOW_C, "INFORMATIONAL": GREEN}
 
+        # Reserve a footer band on every page for "CONFIDENTIAL | page N" —
+        # avoids relying on emoji/unicode the base font can't render.
+        def _footer(canvas, doc_):
+            canvas.saveState()
+            canvas.setFont("Helvetica", 7.5)
+            canvas.setFillColor(colors.HexColor("#8A97A8"))
+            canvas.drawString(2*cm, 1.3*cm,
+                f"CyberScan Pro  ·  FUPRE Final Year Project  ·  Obeh Emmanuel Onoriode (COS/9581/2022)")
+            canvas.drawRightString(A4[0]-2*cm, 1.3*cm, f"Page {doc_.page}")
+            canvas.setStrokeColor(colors.HexColor("#DDDDDD"))
+            canvas.line(2*cm, 1.6*cm, A4[0]-2*cm, 1.6*cm)
+            canvas.restoreState()
+
         doc = SimpleDocTemplate(path, pagesize=A4,
-            topMargin=2*cm, bottomMargin=2.5*cm,
+            topMargin=1.6*cm, bottomMargin=2.2*cm,
             leftMargin=2*cm, rightMargin=2*cm,
             title="CyberScan Pro Report", author="Obeh Emmanuel Onoriode")
 
@@ -270,133 +305,154 @@ class ReportGenerator:
             kw.setdefault("fontName", FONT)
             return ParagraphStyle(name, **kw)
 
-        TITLE = S("T",  fontSize=20, textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER)
-        SUB   = S("SB", fontSize=10, textColor=colors.HexColor("#A8C4D8"), alignment=TA_CENTER)
-        H1    = S("H1", fontSize=14, textColor=NAVY, fontName="Helvetica-Bold", spaceBefore=16, spaceAfter=6)
-        H2    = S("H2", fontSize=11, textColor=BLUE, fontName="Helvetica-Bold", spaceBefore=10, spaceAfter=4)
+        TITLE = S("T",  fontSize=19, textColor=colors.white, fontName="Helvetica-Bold")
+        SUB   = S("SB", fontSize=9,  textColor=colors.HexColor("#A8C4D8"))
+        H1    = S("H1", fontSize=13, textColor=NAVY, fontName="Helvetica-Bold", spaceBefore=14, spaceAfter=6)
+        H2    = S("H2", fontSize=10.5, textColor=BLUE, fontName="Helvetica-Bold", spaceBefore=10, spaceAfter=4)
         BD    = S("BD", fontSize=9,  leading=14, spaceAfter=6, alignment=TA_JUSTIFY)
         SM    = S("SM", fontSize=7.5, textColor=colors.grey, leading=11)
         LB    = S("LB", fontSize=8,  textColor=colors.grey, fontName="Helvetica-Bold")
         PE    = S("PE", fontSize=8.5, leading=13, spaceAfter=3)
+        TC    = S("TC", fontSize=8,  leading=11.5)                    # table cell body text
+        TCB   = S("TCB",fontSize=8,  leading=11.5, fontName="Helvetica-Bold")  # table cell header
 
         def sp(h=0.3): return Spacer(1, h*cm)
         def hr(): return HRFlowable(width="100%", thickness=0.5, color=colors.HexColor("#CCCCCC"))
+        def cell(txt, style=TC): return Paragraph(esc(txt), style)  # wrap plain text so tables wrap correctly instead of overflowing
+        def esc(txt):
+            # Reportlab's Paragraph parses a subset of HTML — unescaped scan data
+            # (evidence, URLs, NVD descriptions) can contain '<', '>', '&' and would
+            # otherwise be silently swallowed or break the layout. Escape first,
+            # then callers may re-insert their OWN trusted <b>/<br/> tags around it.
+            return _html.escape(str(txt), quote=False)
 
         story = []
 
         # ── COVER ──────────────────────────────────────────────────────────
         risk     = ctx["risk_rating"]
         risk_col = RISK_C.get(risk, NONE_C)
+        counts   = ctx["severity_counts"]
 
-        cover = Table([[
-            Paragraph("🛡️  CyberScan Pro", TITLE),
-        ]], colWidths=[17*cm])
-        cover.setStyle(TableStyle([
+        logo_path = os.path.join(os.path.dirname(OUTPUT_DIR), "static", "logo.jpeg")
+        logo_cell = ""
+        if os.path.exists(logo_path):
+            try:
+                logo_cell = RLImage(logo_path, width=1.1*cm, height=1.1*cm)
+            except Exception:
+                logo_cell = ""
+
+        header_row = [logo_cell, Paragraph("CyberScan Pro", TITLE)] if logo_cell else [Paragraph("CyberScan Pro", TITLE)]
+        header_widths = [1.6*cm, 15.4*cm] if logo_cell else [17*cm]
+        cover_head = Table([header_row], colWidths=header_widths)
+        cover_head.setStyle(TableStyle([
             ("BACKGROUND",    (0,0),(-1,-1), NAVY),
-            ("TOPPADDING",    (0,0),(-1,-1), 20),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 20),
+            ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
+            ("TOPPADDING",    (0,0),(-1,-1), 14),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 14),
+            ("LEFTPADDING",   (0,0),(0,-1), 16),
         ]))
-        story += [sp(1.5), cover, sp(0.4)]
 
-        sub_tbl = Table([[
-            Paragraph("Vulnerability Assessment Report", SUB),
-            Paragraph(f"Target: {ctx['target']}", SUB),
-            Paragraph(f"Generated: {ctx['generated_at']}", SUB),
-        ]], colWidths=[17*cm])
-        sub_tbl.setStyle(TableStyle([
-            ("BACKGROUND",    (0,0),(-1,-1), colors.HexColor("#0a1220")),
-            ("TOPPADDING",    (0,0),(-1,-1), 8),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 8),
+        cover_sub = Table([[Paragraph("Vulnerability Assessment Report — Automated Security Scan", SUB)]], colWidths=[17*cm])
+        cover_sub.setStyle(TableStyle([
+            ("BACKGROUND",    (0,0),(-1,-1), colors.HexColor("#16233d")),
+            ("TOPPADDING",    (0,0),(-1,-1), 7),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 7),
+            ("LEFTPADDING",   (0,0),(0,-1), 16),
         ]))
-        story += [sub_tbl, sp(0.6)]
 
-        risk_tbl = Table([[
-            Paragraph(f"OVERALL RISK RATING: {risk}",
-                      S("R", fontSize=14, textColor=colors.white,
-                        fontName="Helvetica-Bold", alignment=TA_CENTER))
-        ]], colWidths=[17*cm])
-        risk_tbl.setStyle(TableStyle([
-            ("BACKGROUND",    (0,0),(-1,-1), risk_col),
-            ("TOPPADDING",    (0,0),(-1,-1), 10),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 10),
+        # Meta grid: target / generated / session on the left, risk badge + stats on the right
+        meta_left = Table([
+            [Paragraph("TARGET", LB)], [Paragraph(f"<b>{esc(ctx['target'])}</b>", S("MV", fontSize=11, fontName="Helvetica-Bold"))],
+            [sp(0.15)],
+            [Paragraph("GENERATED", LB)], [Paragraph(ctx["generated_at"], TC)],
+            [sp(0.15)],
+            [Paragraph("SESSION ID", LB)], [Paragraph(ctx["session_id"], TC)],
+        ], colWidths=[8*cm])
+        meta_left.setStyle(TableStyle([
+            ("TOPPADDING",(0,0),(-1,-1),1), ("BOTTOMPADDING",(0,0),(-1,-1),1), ("LEFTPADDING",(0,0),(-1,-1),0),
         ]))
-        story += [risk_tbl, sp(0.6)]
 
-        counts = ctx["severity_counts"]
-        stats = Table(
-            [["Hosts Found", "Total Findings", "Critical", "High", "Medium", "Low"],
-             [str(ctx["total_hosts"]), str(ctx["total_findings"]),
-              str(counts["Critical"]), str(counts["High"]),
-              str(counts["Medium"]),   str(counts["Low"])]],
-            colWidths=[2.83*cm]*6
-        )
-        stats.setStyle(TableStyle([
-            ("BACKGROUND",    (0,0),(-1,0), NAVY),
-            ("TEXTCOLOR",     (0,0),(-1,0), colors.white),
-            ("FONTNAME",      (0,0),(-1,-1), "Helvetica-Bold"),
-            ("FONTSIZE",      (0,0),(-1,-1), 9),
-            ("FONTSIZE",      (0,1),(-1,1), 16),
-            ("ALIGN",         (0,0),(-1,-1), "CENTER"),
-            ("ROWBACKGROUNDS",(0,1),(-1,-1), [LBLUE]),
-            ("TOPPADDING",    (0,0),(-1,-1), 8),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 8),
-            ("TEXTCOLOR",     (2,1),(2,1), CRIT),
-            ("TEXTCOLOR",     (3,1),(3,1), HIGH),
-            ("TEXTCOLOR",     (4,1),(4,1), MED),
-            ("TEXTCOLOR",     (5,1),(5,1), LOW_C),
+        risk_badge = Table([[Paragraph(f"RISK: {risk}", S("RB", fontSize=11, textColor=colors.white, fontName="Helvetica-Bold", alignment=TA_CENTER))]], colWidths=[8*cm])
+        risk_badge.setStyle(TableStyle([
+            ("BACKGROUND",(0,0),(-1,-1), risk_col),
+            ("TOPPADDING",(0,0),(-1,-1),8), ("BOTTOMPADDING",(0,0),(-1,-1),8),
         ]))
-        story += [stats, sp(0.5),
-                  Paragraph("FUPRE Final Year Project | Obeh Emmanuel Onoriode (COS/9581/2022)", SM),
-                  PageBreak()]
+        stat_row = Table([
+            [Paragraph("HOSTS", LB), Paragraph("FINDINGS", LB), Paragraph("CRITICAL", LB), Paragraph("HIGH", LB)],
+            [Paragraph(str(ctx["total_hosts"]), S("SV", fontSize=15, fontName="Helvetica-Bold")),
+             Paragraph(str(ctx["total_findings"]), S("SV", fontSize=15, fontName="Helvetica-Bold")),
+             Paragraph(str(counts["Critical"]), S("SVC", fontSize=15, fontName="Helvetica-Bold", textColor=CRIT)),
+             Paragraph(str(counts["High"]), S("SVH", fontSize=15, fontName="Helvetica-Bold", textColor=HIGH))],
+        ], colWidths=[2*cm]*4)
+        stat_row.setStyle(TableStyle([
+            ("ALIGN",(0,0),(-1,-1),"CENTER"), ("TOPPADDING",(0,0),(-1,-1),3), ("BOTTOMPADDING",(0,0),(-1,-1),3),
+        ]))
+        meta_right = Table([[risk_badge],[sp(0.25)],[stat_row]], colWidths=[8*cm])
+        meta_right.setStyle(TableStyle([("TOPPADDING",(0,0),(-1,-1),0),("BOTTOMPADDING",(0,0),(-1,-1),0)]))
 
-        # ── TARGET SCREENSHOT ──────────────────────────────────────────────
+        cover_meta = Table([[meta_left, meta_right]], colWidths=[8.5*cm, 8.5*cm])
+        cover_meta.setStyle(TableStyle([
+            ("BACKGROUND",    (0,0),(-1,-1), colors.white),
+            ("BOX",           (0,0),(-1,-1), 1, colors.HexColor("#E2E8F0")),
+            ("TOPPADDING",    (0,0),(-1,-1), 16),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 16),
+            ("LEFTPADDING",   (0,0),(0,-1), 16),
+            ("RIGHTPADDING",  (1,0),(1,-1), 16),
+            ("VALIGN",        (0,0),(-1,-1), "TOP"),
+        ]))
+
+        story += [cover_head, cover_sub, cover_meta, sp(0.5)]
+
+        # ── TARGET SCREENSHOT (flows right under the cover, same page if it fits) ──
         screenshot_path = os.path.join(OUTPUT_DIR, "screenshots", f"screenshot_{self.session_id}.png")
         if os.path.exists(screenshot_path):
             try:
-                from reportlab.platypus import Image as RLImage
                 from PIL import Image as PILImage
                 with PILImage.open(screenshot_path) as im:
                     iw, ih = im.size
-                max_w = 16 * cm
-                display_h = max_w * (ih / iw)
+                max_w = 17 * cm
+                display_h = min(max_w * (ih / iw), 9*cm)
+                display_w = display_h * (iw/ih) if display_h == 9*cm else max_w
                 story += [
-                    Paragraph("Target Screenshot", H1), hr(), sp(0.2),
-                    Paragraph("Visual capture of the target taken at the time of this scan.", SM), sp(0.2),
-                    RLImage(screenshot_path, width=max_w, height=display_h),
-                    sp(0.5), PageBreak(),
+                    Paragraph("Target Screenshot", H1), hr(), sp(0.15),
+                    RLImage(screenshot_path, width=display_w, height=display_h),
+                    sp(0.3),
                 ]
             except Exception as e:
                 logger.warning(f"Could not embed screenshot in PDF: {e}")
 
+        story.append(PageBreak())
+
         # ── PLAIN ENGLISH GUIDE ────────────────────────────────────────────
         story += [Paragraph("What This Report Means", H1), hr(), sp(0.2),
-                  Paragraph("This report was generated by CyberScan Pro after scanning <b>" + ctx['target'] + "</b>. It identifies security weaknesses that could be exploited by attackers. <b>You do not need to be a technical expert to understand this report.</b> Every finding includes a plain English explanation of what the problem is, what could happen if exploited, and exactly how to fix it.", BD), sp(0.3)]
+                  Paragraph("This report was generated by CyberScan Pro after scanning <b>" + esc(ctx['target']) + "</b>. It identifies security weaknesses that could be exploited by attackers. <b>You do not need to be a technical expert to understand this report.</b> Every finding includes a plain English explanation of what the problem is, what could happen if exploited, and exactly how to fix it.", BD), sp(0.2)]
 
         guide = Table([
-            ["CRITICAL\n🚨 Fix in 24h", "HIGH\n🔴 Fix in 7 days", "MEDIUM\n🟠 Fix in 30 days", "LOW\n🔵 Fix when possible"],
-            ["Attackers can fully\ncompromise the system\nor steal all data",
-             "Significant damage\nor data breach likely",
-             "Moderate risk,\nspecific conditions\nrequired to exploit",
-             "Minor risk,\nlimited direct\nimpact"]
+            [cell("CRITICAL", TCB), cell("HIGH", TCB), cell("MEDIUM", TCB), cell("LOW", TCB)],
+            [cell("Fix within 24 hours", SM), cell("Fix within 7 days", SM), cell("Fix within 30 days", SM), cell("Fix when possible", SM)],
+            [cell("Attackers can fully compromise the system or steal all data", TC),
+             cell("Significant damage or data breach likely", TC),
+             cell("Moderate risk, specific conditions required to exploit", TC),
+             cell("Minor risk, limited direct impact", TC)]
         ], colWidths=[4.25*cm]*4)
         guide.setStyle(TableStyle([
-            ("BACKGROUND",    (0,0),(0,1), colors.HexColor("#fff0f0")),
-            ("BACKGROUND",    (1,0),(1,1), colors.HexColor("#fff5f0")),
-            ("BACKGROUND",    (2,0),(2,1), colors.HexColor("#fffbf0")),
-            ("BACKGROUND",    (3,0),(3,1), colors.HexColor("#f0f6ff")),
-            ("FONTNAME",      (0,0),(-1,0), "Helvetica-Bold"),
-            ("FONTSIZE",      (0,0),(-1,-1), 8),
+            ("BACKGROUND",    (0,0),(0,-1), colors.HexColor("#fff0f0")),
+            ("BACKGROUND",    (1,0),(1,-1), colors.HexColor("#fff5f0")),
+            ("BACKGROUND",    (2,0),(2,-1), colors.HexColor("#fffbf0")),
+            ("BACKGROUND",    (3,0),(3,-1), colors.HexColor("#f0f6ff")),
+            ("TEXTCOLOR",     (0,0),(0,1), CRIT), ("TEXTCOLOR",(1,0),(1,1), HIGH),
+            ("TEXTCOLOR",     (2,0),(2,1), MED),  ("TEXTCOLOR",(3,0),(3,1), LOW_C),
             ("ALIGN",         (0,0),(-1,-1), "CENTER"),
             ("GRID",          (0,0),(-1,-1), 0.5, colors.HexColor("#DDDDDD")),
-            ("TOPPADDING",    (0,0),(-1,-1), 8),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 8),
+            ("TOPPADDING",    (0,0),(-1,-1), 7),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 7),
             ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
         ]))
-        story += [guide, PageBreak()]
+        story += [guide, sp(0.3)]
 
         # ── EXECUTIVE SUMMARY ──────────────────────────────────────────────
         story += [Paragraph("Executive Summary", H1), hr(), sp(0.2)]
-        summ = (f"An automated vulnerability assessment was conducted against <b>{ctx['target']}</b> on {ctx['generated_at']}. "
+        summ = (f"An automated vulnerability assessment was conducted against <b>{esc(ctx['target'])}</b> on {ctx['generated_at']}. "
                 f"The scan discovered <b>{ctx['total_hosts']}</b> live host(s) with <b>{ctx['total_findings']}</b> security findings. "
                 f"The overall risk is rated <b>{risk}</b>. ")
         if counts["Critical"] > 0:
@@ -405,22 +461,22 @@ class ReportGenerator:
             summ += f"{counts['High']} HIGH severity issue(s) should be resolved within 7 days. "
         if ctx["total_findings"] == 0:
             summ += "No vulnerabilities were detected — the target appears well-secured against the tested attack vectors."
-        story += [Paragraph(summ, BD), PageBreak()]
+        story += [Paragraph(summ, BD), sp(0.3)]
 
         # ── METHODOLOGY ────────────────────────────────────────────────────
         story += [Paragraph("Scan Methodology", H1), hr(), sp(0.2)]
-        mdata = [["Phase", "What Was Done", "What We Looked For"]] + \
-                [[m[0], m[1], m[2]] for m in ctx["methodology"]]
-        mt = Table(mdata, colWidths=[4*cm, 6.5*cm, 6.5*cm])
+        mdata = [[cell("Phase", TCB), cell("What Was Done", TCB), cell("What We Looked For", TCB)]] + \
+                [[cell(m[0]), cell(m[1]), cell(m[2])] for m in ctx["methodology"]]
+        mt = Table(mdata, colWidths=[3.4*cm, 6.8*cm, 6.8*cm])
         mt.setStyle(TableStyle([
             ("BACKGROUND",    (0,0),(-1,0), NAVY),
             ("TEXTCOLOR",     (0,0),(-1,0), colors.white),
-            ("FONTNAME",      (0,0),(-1,0), "Helvetica-Bold"),
-            ("FONTSIZE",      (0,0),(-1,-1), 8),
             ("ROWBACKGROUNDS",(0,1),(-1,-1), [colors.white, LBLUE]),
             ("GRID",          (0,0),(-1,-1), 0.5, colors.HexColor("#CCCCCC")),
-            ("TOPPADDING",    (0,0),(-1,-1), 5),
-            ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+            ("TOPPADDING",    (0,0),(-1,-1), 6),
+            ("BOTTOMPADDING", (0,0),(-1,-1), 6),
+            ("LEFTPADDING",   (0,0),(-1,-1), 6),
+            ("RIGHTPADDING",  (0,0),(-1,-1), 6),
             ("VALIGN",        (0,0),(-1,-1), "TOP"),
         ]))
         story += [mt, PageBreak()]
@@ -428,53 +484,51 @@ class ReportGenerator:
         # ── HOSTS ──────────────────────────────────────────────────────────
         if ctx["hosts"]:
             story += [Paragraph("Discovered Hosts and Open Services", H1), hr(), sp(0.2),
-                      Paragraph("The following hosts and open ports were discovered. Each open port represents a service accessible from the internet.", BD)]
+                      Paragraph("The following hosts and open ports were discovered. Each open port represents a service accessible from the internet.", BD), sp(0.1)]
             for host in ctx["hosts"]:
-                story.append(Paragraph(f"<b>{host['ip']}</b> — {host.get('hostname','N/A')} — OS: {host.get('os','Unknown')}", H2))
+                host_block = [Paragraph(f"<b>{esc(host['ip'])}</b> — {esc(host.get('hostname','N/A'))} — OS: {esc(host.get('os','Unknown'))}", H2)]
                 if host.get("ports"):
-                    pd = [["Port", "Service", "Version", "Security Note"]]
+                    pd = [[cell("Port", TCB), cell("Service", TCB), cell("Version", TCB), cell("Security Note", TCB)]]
                     for p in host["ports"]:
                         port = p.get("port", 0)
                         note = {22:"Ensure key-based auth, disable root login",
-                                21:"⚠️ FTP unencrypted — use SFTP instead",
-                                23:"🚨 Telnet unencrypted — disable immediately",
+                                21:"FTP is unencrypted — use SFTP instead",
+                                23:"Telnet is unencrypted — disable immediately",
                                 80:"Redirect all traffic to HTTPS (port 443)",
                                 443:"Ensure TLS 1.2+ only, disable old SSL",
-                                3306:"⚠️ MySQL publicly exposed — restrict by firewall",
-                                3389:"🚨 RDP exposed — restrict to specific IPs only",
-                                6379:"🚨 Redis exposed — verify authentication enabled",
+                                3306:"MySQL publicly exposed — restrict by firewall",
+                                3389:"RDP exposed — restrict to specific IPs only",
+                                6379:"Redis exposed — verify authentication enabled",
                                }.get(port, "Verify this port needs public access")
-                        pd.append([f"{port}/{p.get('protocol','tcp')}",
-                                   p.get("service",""), str(p.get("version",""))[:30], note])
-                    pt = Table(pd, colWidths=[2*cm,2.5*cm,4.5*cm,8*cm])
+                        pd.append([cell(f"{port}/{p.get('protocol','tcp')}"),
+                                   cell(p.get("service","")), cell(str(p.get("version",""))[:30]), cell(note)])
+                    pt = Table(pd, colWidths=[2*cm,2.3*cm,4.2*cm,8.5*cm])
                     pt.setStyle(TableStyle([
                         ("BACKGROUND",    (0,0),(-1,0), NAVY),
                         ("TEXTCOLOR",     (0,0),(-1,0), colors.white),
-                        ("FONTNAME",      (0,0),(-1,0), "Helvetica-Bold"),
-                        ("FONTSIZE",      (0,0),(-1,-1), 7.5),
                         ("ROWBACKGROUNDS",(0,1),(-1,-1), [colors.white, LBLUE]),
                         ("GRID",          (0,0),(-1,-1), 0.5, colors.HexColor("#CCCCCC")),
-                        ("TOPPADDING",    (0,0),(-1,-1), 4),
-                        ("BOTTOMPADDING", (0,0),(-1,-1), 4),
+                        ("TOPPADDING",    (0,0),(-1,-1), 5),
+                        ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+                        ("LEFTPADDING",   (0,0),(-1,-1), 6),
                         ("VALIGN",        (0,0),(-1,-1), "TOP"),
                     ]))
-                    story.append(pt)
-                story.append(sp(0.4))
-            story.append(PageBreak())
+                    host_block.append(pt)
+                host_block.append(sp(0.35))
+                story.append(KeepTogether(host_block))
 
         # ── WEB FINDINGS ───────────────────────────────────────────────────
         if ctx["web_findings"]:
             story += [Paragraph("Web Application Security Findings", H1), hr(), sp(0.2),
-                      Paragraph("Each finding below includes a plain English explanation — what the problem is, what an attacker could do with it, and exactly how to fix it.", BD), sp(0.3)]
+                      Paragraph("Each finding below includes a plain English explanation — what the problem is, what an attacker could do with it, and exactly how to fix it.", BD), sp(0.25)]
 
             for i, f in enumerate(ctx["web_findings"], 1):
                 sev = f.get("severity","Low")
                 sc  = SEV_C.get(sev, NONE_C)
 
                 block = []
-                # Header
                 hdr = Table([[
-                    Paragraph(f"<b>{i}. {f.get('vuln_type','')}</b>",
+                    Paragraph(f"<b>{i}. {esc(f.get('vuln_type',''))}</b>",
                               S("FH", fontSize=10, textColor=colors.HexColor("#111"),
                                 fontName="Helvetica-Bold")),
                     Paragraph(sev, S("SV", fontSize=9, textColor=sc,
@@ -489,16 +543,15 @@ class ReportGenerator:
                 ]))
                 block.append(hdr)
 
-                # Plain English 2x2 grid
                 pe = Table([
-                    [Paragraph("<b>🔍 What is this vulnerability?</b>", LB),
-                     Paragraph("<b>💡 What does it mean for "+ctx['target']+"?</b>", LB)],
+                    [Paragraph("<b>What is this vulnerability?</b>", LB),
+                     Paragraph("<b>What does it mean for "+esc(ctx['target'])+"?</b>", LB)],
                     [Paragraph(f.get("plain_what",""), PE),
                      Paragraph(f.get("plain_means",""), PE)],
-                    [Paragraph("<b>💥 What could an attacker do?</b>", LB),
-                     Paragraph("<b>🔧 How to fix it</b>", LB)],
+                    [Paragraph("<b>What could an attacker do?</b>", LB),
+                     Paragraph("<b>How to fix it</b>", LB)],
                     [Paragraph(f.get("plain_impact",""), PE),
-                     Paragraph(f.get("plain_fix","") + (f"\n\n⏱️ {f.get('plain_difficulty','')}" if f.get("plain_difficulty") else ""), PE)],
+                     Paragraph(f.get("plain_fix","") + (f"<br/><br/><b>Difficulty:</b> {f.get('plain_difficulty','')}" if f.get("plain_difficulty") else ""), PE)],
                 ], colWidths=[8.5*cm, 8.5*cm])
                 pe.setStyle(TableStyle([
                     ("BACKGROUND",    (0,0),(-1,-1), colors.HexColor("#f0f8ff")),
@@ -511,16 +564,12 @@ class ReportGenerator:
                 ]))
                 block.append(pe)
 
-                # Technical details
                 td = Table([
                     [Paragraph("<b>Technical Details (for developers)</b>", LB), ""],
-                    ["URL:",       str(f.get("url",""))[:90]],
-                    ["Evidence:", str(f.get("evidence","N/A"))[:90]],
+                    [cell("URL:", TCB),       cell(str(f.get("url",""))[:90])],
+                    [cell("Evidence:", TCB), cell(str(f.get("evidence","N/A"))[:90])],
                 ], colWidths=[3*cm, 14*cm])
                 td.setStyle(TableStyle([
-                    ("FONTSIZE",      (0,0),(-1,-1), 7.5),
-                    ("FONTNAME",      (0,1),(0,-1), "Helvetica-Bold"),
-                    ("TEXTCOLOR",     (0,1),(0,-1), colors.grey),
                     ("GRID",          (0,1),(-1,-1), 0.3, colors.HexColor("#EEEEEE")),
                     ("TOPPADDING",    (0,0),(-1,-1), 4),
                     ("BOTTOMPADDING", (0,0),(-1,-1), 4),
@@ -528,33 +577,31 @@ class ReportGenerator:
                     ("SPAN",          (0,0),(-1,0)),
                 ]))
                 block.append(td)
-                block.append(sp(0.4))
+                block.append(sp(0.35))
                 story.append(KeepTogether(block))
-            story.append(PageBreak())
 
         # ── CVE FINDINGS ───────────────────────────────────────────────────
         if ctx["cve_findings"]:
             story += [Paragraph("Known Software Vulnerabilities (CVEs)", H1), hr(), sp(0.2),
-                      Paragraph("These are publicly documented security flaws found in software running on <b>"+ctx['target']+"</b>. Because they are publicly known, automated hacking tools actively scan the internet looking for servers running these versions.", BD),
-                      Paragraph("⚠️ Automated attack tools scan for these vulnerabilities 24/7. Update the affected software immediately.", S("W", fontSize=9, textColor=CRIT, fontName="Helvetica-Bold", spaceBefore=6, spaceAfter=10)), sp(0.2)]
+                      Paragraph("These are publicly documented security flaws found in software running on <b>"+esc(ctx['target'])+"</b>. Because they are publicly known, automated hacking tools actively scan the internet looking for servers running these versions.", BD),
+                      Paragraph("Automated attack tools scan for these vulnerabilities around the clock. Update the affected software immediately.", S("W", fontSize=9, textColor=CRIT, fontName="Helvetica-Bold", spaceBefore=6, spaceAfter=10)), sp(0.15)]
 
-            cve_data = [["CVE ID", "Host", "Port", "Service", "CVSS", "Severity"]]
+            cve_data = [[cell("CVE ID",TCB), cell("Host",TCB), cell("Port",TCB), cell("Service",TCB), cell("CVSS",TCB), cell("Severity",TCB)]]
             for f in ctx["cve_findings"]:
-                cve_data.append([f.get("cve_id",""), f.get("host_ip",""),
-                                  str(f.get("port","")), str(f.get("service",""))[:20],
-                                  str(f.get("cvss_score","")), f.get("severity","")])
+                cve_data.append([cell(f.get("cve_id","")), cell(f.get("host_ip","")),
+                                  cell(str(f.get("port",""))), cell(str(f.get("service",""))[:20]),
+                                  cell(str(f.get("cvss_score",""))), cell(f.get("severity",""))])
             ct = Table(cve_data, colWidths=[3.5*cm,3*cm,1.5*cm,3.5*cm,1.5*cm,4*cm])
             ct.setStyle(TableStyle([
                 ("BACKGROUND",    (0,0),(-1,0), NAVY),
                 ("TEXTCOLOR",     (0,0),(-1,0), colors.white),
-                ("FONTNAME",      (0,0),(-1,0), "Helvetica-Bold"),
-                ("FONTSIZE",      (0,0),(-1,-1), 8),
                 ("ROWBACKGROUNDS",(0,1),(-1,-1), [colors.white, LBLUE]),
                 ("GRID",          (0,0),(-1,-1), 0.5, colors.HexColor("#CCCCCC")),
                 ("TOPPADDING",    (0,0),(-1,-1), 5),
                 ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+                ("LEFTPADDING",   (0,0),(-1,-1), 6),
             ]))
-            story += [ct, sp(0.4)]
+            story += [ct, sp(0.3)]
 
             for f in ctx["cve_findings"]:
                 score = float(f.get("cvss_score") or 0)
@@ -565,46 +612,45 @@ class ReportGenerator:
 
                 sev = f.get("severity","Low")
                 sc  = SEV_C.get(sev, NONE_C)
-                story += [
-                    Paragraph(f"<b>{f.get('cve_id','')} — CVSS {f.get('cvss_score','')}/10 ({sev})</b>",
-                              S("CH", fontSize=9, textColor=sc, fontName="Helvetica-Bold", spaceBefore=10)),
+                cve_block = [
+                    Paragraph(f"<b>{esc(f.get('cve_id',''))} — CVSS {esc(f.get('cvss_score',''))}/10 ({sev})</b>",
+                              S("CH", fontSize=9, textColor=sc, fontName="Helvetica-Bold", spaceBefore=8)),
                     Paragraph(f"<b>Danger level:</b> {danger}", PE),
-                    Paragraph(f"<b>Description:</b> {f.get('description','See NVD for details.')[:250]}", PE),
-                    Paragraph(f"<b>Fix:</b> Update <b>{f.get('service','')}</b> to the latest version. Visit nvd.nist.gov and search for <b>{f.get('cve_id','')}</b> for specific patch information.", PE),
-                    sp(0.2)
+                    Paragraph(f"<b>Description:</b> {esc(f.get('description','See NVD for details.'))[:250]}", PE),
+                    Paragraph(f"<b>Fix:</b> Update <b>{esc(f.get('service',''))}</b> to the latest version. Visit nvd.nist.gov and search for <b>{esc(f.get('cve_id',''))}</b> for specific patch information.", PE),
+                    sp(0.15)
                 ]
-            story.append(PageBreak())
+                story.append(KeepTogether(cve_block))
 
         # ── ACTION PLAN ────────────────────────────────────────────────────
         story += [Paragraph("Your Action Plan — What To Do Next", H1), hr(), sp(0.2),
-                  Paragraph("Address these security issues in the following order. Start at the top and work down:", BD), sp(0.2)]
+                  Paragraph("Address these security issues in the following order. Start at the top and work down:", BD), sp(0.15)]
 
         if ctx["all_findings"]:
-            ap = [["#", "Issue", "Severity", "Action Required"]]
+            ap = [[cell("#",TCB), cell("Issue",TCB), cell("Severity",TCB), cell("Action Required",TCB)]]
             for i, f in enumerate(ctx["all_findings"][:10], 1):
-                ap.append([str(i),
-                           f.get("vuln_type","")[:40],
-                           f.get("severity",""),
-                           f.get("recommendation","Fix this issue.")[:70]])
+                ap.append([cell(str(i)),
+                           cell(f.get("vuln_type","")[:40]),
+                           cell(f.get("severity","")),
+                           cell(f.get("recommendation","Fix this issue.")[:70])])
             apt = Table(ap, colWidths=[0.8*cm, 6*cm, 2.5*cm, 7.7*cm])
             apt.setStyle(TableStyle([
                 ("BACKGROUND",    (0,0),(-1,0), NAVY),
                 ("TEXTCOLOR",     (0,0),(-1,0), colors.white),
-                ("FONTNAME",      (0,0),(-1,0), "Helvetica-Bold"),
-                ("FONTSIZE",      (0,0),(-1,-1), 8),
                 ("ROWBACKGROUNDS",(0,1),(-1,-1), [colors.white, LBLUE]),
                 ("GRID",          (0,0),(-1,-1), 0.5, colors.HexColor("#CCCCCC")),
                 ("TOPPADDING",    (0,0),(-1,-1), 5),
                 ("BOTTOMPADDING", (0,0),(-1,-1), 5),
+                ("LEFTPADDING",   (0,0),(-1,-1), 6),
                 ("VALIGN",        (0,0),(-1,-1), "TOP"),
             ]))
             story.append(apt)
         else:
-            story.append(Paragraph("✅ No immediate actions required. Re-scan periodically to detect new vulnerabilities.", BD))
+            story.append(Paragraph("No immediate actions required. Re-scan periodically to detect new vulnerabilities.", BD))
 
-        # ── FOOTER ─────────────────────────────────────────────────────────
-        story += [sp(1), hr(), sp(0.2),
-                  Paragraph(f"CyberScan Pro v1.0.0 | FUPRE Final Year Project | Obeh Emmanuel Onoriode (COS/9581/2022) | {ctx['generated_at']} | ⚠ This report is confidential. Authorized use only.", SM)]
+        story += [sp(0.6),
+                  Paragraph("This report is confidential and intended for authorized use only. It reflects the security posture of the "
+                            "target at the time of the scan; new vulnerabilities may emerge afterward.", SM)]
 
-        doc.build(story)
+        doc.build(story, onFirstPage=_footer, onLaterPages=_footer)
         logger.info(f"PDF report: {path}")
