@@ -786,6 +786,47 @@ class Database:
         row = c.fetchone()
         return row["notes"] if row else ""
 
+    # analyst_notes is a SEPARATE column from `notes` (above), which is used
+    # internally to store enrichment JSON (Shodan/VirusTotal/etc). Sharing one
+    # column caused internal debug JSON to leak into the user-facing notes box.
+    def save_analyst_notes(self, session_id: str, notes: str):
+        c = self.conn.cursor()
+        now = datetime.now().isoformat()
+        try:
+            c.execute(self._q("ALTER TABLE scan_notes ADD COLUMN analyst_notes TEXT DEFAULT ''"))
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+        if self._pg:
+            c.execute(
+                "INSERT INTO scan_notes (session_id, analyst_notes, updated_at) VALUES (%s,%s,%s) "
+                "ON CONFLICT (session_id) DO UPDATE SET analyst_notes=EXCLUDED.analyst_notes, updated_at=EXCLUDED.updated_at",
+                (session_id, notes, now)
+            )
+        else:
+            c.execute(
+                "INSERT INTO scan_notes (session_id, analyst_notes, updated_at) VALUES (?,?,?) "
+                "ON CONFLICT(session_id) DO UPDATE SET analyst_notes=excluded.analyst_notes, updated_at=excluded.updated_at",
+                (session_id, notes, now)
+            )
+        self.conn.commit()
+
+    def get_analyst_notes(self, session_id: str) -> str:
+        c = self.conn.cursor()
+        try:
+            c.execute(self._q("ALTER TABLE scan_notes ADD COLUMN analyst_notes TEXT DEFAULT ''"))
+            self.conn.commit()
+        except Exception:
+            self.conn.rollback()
+        c.execute(self._q("SELECT analyst_notes FROM scan_notes WHERE session_id=?"), (session_id,))
+        row = c.fetchone()
+        if not row:
+            return ""
+        try:
+            return row["analyst_notes"] or ""
+        except Exception:
+            return ""
+
     # ── SCHEDULES ─────────────────────────────────────────────────────────────
 
     def get_schedules(self) -> list:

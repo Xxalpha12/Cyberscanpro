@@ -504,12 +504,10 @@ body{animation:pagein 0.3s ease both;}
     <div class="nav-sec">// Assessment</div>
     <a href="/" class="nav-link {% if page=='home' %}active{% endif %}"><span class="nav-icon">⬡</span>Dashboard</a>
     <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="nav-icon">▶</span>New Scan</a>
-    <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}"><span class="nav-icon">☰</span>Scan History</a>
-    <a href="/reports" class="nav-link {% if page=='reports' %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
+    <a href="/reports" class="nav-link {% if page in ['reports','history'] %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
         <div class="nav-sec">// Analysis</div>
     <a href="/assets" class="nav-link {% if page=='assets' %}active{% endif %}"><span class="nav-icon">◎</span>Assets</a>
     <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">📈</span>Target History</a>
-    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}"><span class="nav-icon">⇄</span>Compare Scans</a>
     <a href="/port-intel" class="nav-link {% if page=='port_intel' %}active{% endif %}"><span class="nav-icon">🔌</span>Port Lookup</a>
     <div class="nav-sec">// System</div>
     <a href="/settings" class="nav-link {% if page=='settings' %}active{% endif %}"><span class="nav-icon">⚙</span>Settings</a>
@@ -540,7 +538,7 @@ body{animation:pagein 0.3s ease both;}
     </div>
   </div>
   <div class="content">
-    <a href="/history" class="back-link">← BACK TO HISTORY</a>
+    <a href="/reports" class="back-link">← BACK TO REPORTS</a>
 
     <!-- Hero -->
     <div class="scan-hero">
@@ -629,17 +627,129 @@ body{animation:pagein 0.3s ease both;}
       </div>
     </div>
 
-    <!-- Full details in reports note -->
-    <div style="background:rgba(0,200,255,0.04);border:1px solid rgba(0,200,255,0.12);border-radius:8px;padding:16px 20px;display:flex;align-items:center;gap:14px;">
-      <span style="font-size:22px;">📋</span>
-      <div>
-        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">Full Technical Details Available in Reports</div>
-        <div style="font-size:12px;color:var(--text2);line-height:1.6;">Open ports, discovered services, web vulnerability findings, CVE details, plain English explanations, and remediation guidance are all included in the generated PDF and HTML reports above.</div>
-      </div>
+    <!-- Executive Summary -->
+    <div class="detail-section">
+      <div class="detail-section-hd">Executive Summary</div>
+      <p class="exec-summary-text">{{ exec_summary }}</p>
     </div>
+
+    <!-- Discovered Hosts and Open Services -->
+    {% if hosts %}
+    <div class="detail-section">
+      <div class="detail-section-hd">Discovered Hosts &amp; Open Services</div>
+      {% for host in hosts %}
+      <div class="host-block">
+        <div class="host-title">{{ host.ip }} — {{ host.hostname or 'N/A' }} — OS: {{ host.os or 'Unknown' }}</div>
+        {% if host.ports %}
+        <table class="detail-table">
+          <thead><tr><th>Port</th><th>Service</th><th>Version</th></tr></thead>
+          <tbody>
+            {% for p in host.ports %}
+            <tr><td>{{ p.port }}/{{ p.protocol or 'tcp' }}</td><td>{{ p.service or '' }}</td><td>{{ p.version or '' }}</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Web Application Security Findings -->
+    {% if web_findings %}
+    <div class="detail-section">
+      <div class="detail-section-hd">Web Application Security Findings</div>
+      {% for f in web_findings %}
+      <div class="finding-card sev-border-{{ f.severity|lower }}">
+        <div class="finding-hd">
+          <span class="finding-title">{{ loop.index }}. {{ f.vuln_type }}</span>
+          <span class="sev-badge sev-{{ f.severity|lower }}">{{ f.severity }}</span>
+        </div>
+        <div class="finding-grid">
+          <div><div class="finding-label">What is this vulnerability?</div><div class="finding-body">{{ f.plain_what }}</div></div>
+          <div><div class="finding-label">What could an attacker do?</div><div class="finding-body">{{ f.plain_impact }}</div></div>
+          <div><div class="finding-label">What does it mean?</div><div class="finding-body">{{ f.plain_means }}</div></div>
+          <div><div class="finding-label">How to fix it</div><div class="finding-body">{{ f.plain_fix }}{% if f.plain_difficulty %} <em>({{ f.plain_difficulty }})</em>{% endif %}</div></div>
+        </div>
+        <div class="finding-tech">
+          <div><b>Affected URL:</b> {{ f.url }}</div>
+          {% if f.evidence %}<div><b>Evidence:</b> {{ f.evidence }}</div>{% endif %}
+          <div><b>Host:</b> {{ f.host_ip }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Known Software Vulnerabilities (CVEs) -->
+    {% if cve_findings %}
+    <div class="detail-section">
+      <div class="detail-section-hd">Known Software Vulnerabilities (CVEs)</div>
+      {% for f in cve_findings %}
+      <div class="finding-card sev-border-{{ f.severity|lower }}">
+        <div class="finding-hd">
+          <span class="finding-title">{{ f.cve_id }} — CVSS {{ f.cvss_score }}/10</span>
+          <span class="sev-badge sev-{{ f.severity|lower }}">{{ f.severity }}</span>
+        </div>
+        <div class="finding-tech" style="margin-top:0;">
+          <div><b>Service:</b> {{ f.service }} {% if f.port %}(port {{ f.port }}){% endif %} on {{ f.host_ip }}</div>
+          <div><b>Description:</b> {{ f.description or 'See nvd.nist.gov for details.' }}</div>
+          <div><b>Fix:</b> Update {{ f.service }} to the latest patched version. Search {{ f.cve_id }} at nvd.nist.gov.</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Prioritised Action Plan -->
+    {% if action_plan %}
+    <div class="detail-section">
+      <div class="detail-section-hd">Prioritised Action Plan</div>
+      <table class="detail-table">
+        <thead><tr><th>#</th><th>Issue</th><th>Severity</th><th>Host</th><th>Action Required</th></tr></thead>
+        <tbody>
+          {% for a in action_plan[:15] %}
+          <tr>
+            <td>{{ loop.index }}</td><td>{{ a.vuln_type }}</td>
+            <td><span class="sev-badge sev-{{ a.severity|lower }}">{{ a.severity }}</span></td>
+            <td>{{ a.host_ip }}</td><td>{{ a.recommendation }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% endif %}
 
   </div>
 </div>
+<style>
+.detail-section{background:var(--bg2, #0a1220);border:1px solid var(--border);border-radius:12px;padding:20px 22px;margin-bottom:18px;}
+.detail-section-hd{font-size:14px;font-weight:700;color:var(--accent);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+.exec-summary-text{font-size:13px;line-height:1.7;color:var(--text, #e2eaf4);}
+.host-block{margin-bottom:16px;}
+.host-title{font-size:13px;font-weight:700;color:var(--blue);margin-bottom:8px;}
+.detail-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:8px;}
+.detail-table th{background:rgba(0,200,255,0.08);color:var(--accent);text-align:left;padding:8px 10px;font-size:11px;letter-spacing:0.5px;}
+.detail-table td{padding:8px 10px;border-bottom:1px solid var(--border2);color:var(--text2, #a8b3c7);}
+.finding-card{border:1px solid var(--border);border-left-width:3px;border-radius:8px;padding:16px;margin-bottom:14px;background:rgba(255,255,255,0.015);}
+.sev-border-critical{border-left-color:var(--red);}
+.sev-border-high{border-left-color:var(--orange);}
+.sev-border-medium{border-left-color:var(--yellow);}
+.sev-border-low{border-left-color:var(--blue);}
+.finding-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.finding-title{font-size:13.5px;font-weight:700;}
+.sev-badge{font-size:10px;font-weight:700;letter-spacing:0.5px;padding:3px 10px;border-radius:20px;}
+.sev-badge.sev-critical{background:rgba(239,68,68,0.12);color:var(--red);}
+.sev-badge.sev-high{background:rgba(249,115,22,0.12);color:var(--orange);}
+.sev-badge.sev-medium{background:rgba(234,179,8,0.12);color:var(--yellow);}
+.sev-badge.sev-low{background:rgba(59,130,246,0.12);color:var(--blue);}
+.finding-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+.finding-label{font-size:10px;color:var(--text2, #a8b3c7);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;}
+.finding-body{font-size:12px;line-height:1.6;color:var(--text, #e2eaf4);}
+.finding-tech{font-size:11.5px;color:var(--text2, #a8b3c7);line-height:1.8;border-top:1px solid var(--border2);padding-top:10px;margin-top:4px;word-break:break-word;}
+.finding-tech b{color:var(--text, #e2eaf4);}
+@media(max-width:720px){.finding-grid{grid-template-columns:1fr;}}
+</style>
 <script>
 async function captureScreenshot(){
   const btn=document.getElementById('ss-btn');

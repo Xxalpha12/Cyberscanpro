@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <link rel="icon" type="image/x-icon" href="/favicon.ico">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Scan History — CyberScan Pro</title>
+<title>Reports — CyberScan Pro</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Share+Tech+Mono&display=swap" rel="stylesheet">
   <style>
   /* ── ROOT ── */
@@ -496,12 +496,10 @@ select.fi{cursor:pointer;}
     <div class="nav-sec">// Assessment</div>
     <a href="/" class="nav-link {% if page=='home' %}active{% endif %}"><span class="nav-icon">⬡</span>Dashboard</a>
     <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="nav-icon">▶</span>New Scan</a>
-    <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}"><span class="nav-icon">☰</span>Scan History</a>
-    <a href="/reports" class="nav-link {% if page=='reports' %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
+    <a href="/reports" class="nav-link {% if page in ['reports','history'] %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
         <div class="nav-sec">// Analysis</div>
     <a href="/assets" class="nav-link {% if page=='assets' %}active{% endif %}"><span class="nav-icon">◎</span>Assets</a>
     <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">📈</span>Target History</a>
-    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}"><span class="nav-icon">⇄</span>Compare Scans</a>
     <a href="/port-intel" class="nav-link {% if page=='port_intel' %}active{% endif %}"><span class="nav-icon">🔌</span>Port Lookup</a>
     <div class="nav-sec">// System</div>
     <a href="/settings" class="nav-link {% if page=='settings' %}active{% endif %}"><span class="nav-icon">⚙</span>Settings</a>
@@ -516,8 +514,8 @@ select.fi{cursor:pointer;}
     <div style="display:flex;align-items:center;gap:12px;">
       <button class="menu-btn" onclick="toggleSidebar()">☰</button>
       <div>
-        <div class="tb-title">// SCAN <span>HISTORY</span></div>
-        <div class="tb-sub">COMPLETE AUDIT LOG OF ALL ASSESSMENTS</div>
+        <div class="tb-title">// <span>REPORTS</span></div>
+        <div class="tb-sub">EVERY SCAN, FINDING, AND GENERATED REPORT IN ONE PLACE</div>
       </div>
     </div>
     <div class="tb-right">
@@ -576,6 +574,11 @@ select.fi{cursor:pointer;}
       {% set total = sc.get('Critical',0)+sc.get('High',0)+sc.get('Medium',0)+sc.get('Low',0) %}
       <a href="/scan/{{ s.id }}" class="t-item" data-target="{{ s.target }}" data-status="{{ s.status }}" data-risk="{{ risk }}">
         <div class="t-stripe {{ risk }}"></div>
+        {% if s.has_screenshot %}
+        <div class="t-thumb"><img src="/screenshots/{{ s.id }}" alt="" loading="lazy"></div>
+        {% else %}
+        <div class="t-thumb t-thumb-empty">🌐</div>
+        {% endif %}
         <div class="t-body">
           <div style="flex:1;min-width:120px;">
             <div class="t-target">{{ s.target }}</div>
@@ -597,6 +600,14 @@ select.fi{cursor:pointer;}
             {% endif %}
           </div>
         </div>
+        <div class="t-reports">
+          {% if s.reports.get('pdf') %}
+          <span class="t-report-link t-report-pdf" onclick="event.preventDefault();event.stopPropagation();window.open('/report/{{ s.reports.pdf }}','_blank');">📄 PDF</span>
+          {% endif %}
+          {% if s.reports.get('html') %}
+          <span class="t-report-link t-report-html" onclick="event.preventDefault();event.stopPropagation();window.open('/report/{{ s.reports.html }}','_blank');">🌐 HTML</span>
+          {% endif %}
+        </div>
         <div class="t-action">
           <div class="view-btn">VIEW →</div>
         </div>
@@ -608,6 +619,17 @@ select.fi{cursor:pointer;}
 
   </div>
 </div>
+<style>
+.t-thumb{width:56px;height:42px;border-radius:6px;overflow:hidden;flex-shrink:0;background:var(--bg3);display:flex;align-items:center;justify-content:center;margin-right:14px;}
+.t-thumb img{width:100%;height:100%;object-fit:cover;}
+.t-thumb-empty{font-size:16px;opacity:0.35;}
+.t-reports{display:flex;gap:6px;flex-shrink:0;margin-right:14px;}
+.t-report-link{font-family:'Share Tech Mono',monospace;font-size:10px;font-weight:700;padding:5px 9px;border-radius:6px;cursor:pointer;white-space:nowrap;border:1px solid var(--border);}
+.t-report-pdf{color:var(--red);border-color:rgba(239,68,68,0.25);}
+.t-report-html{color:var(--accent);border-color:rgba(0,200,255,0.25);}
+.t-report-link:hover{filter:brightness(1.3);}
+@media(max-width:720px){.t-thumb,.t-reports{display:none;}}
+</style>
 <script>
 function filterRows(){
   const q=document.getElementById('q').value.toLowerCase();

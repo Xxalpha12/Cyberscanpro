@@ -8,6 +8,7 @@ from flask import (Flask, render_template, request, jsonify,
                    send_file, abort, redirect, url_for, session,
                    make_response)
 import os
+from modules.report_generator import SEVERITY_ORDER
 import io
 import csv
 import threading
@@ -533,6 +534,15 @@ def run_scan():
             active_scans[session_id]["report_paths"] = paths
             db.complete_session(session_id)
 
+            # Reflect the scan's outcome back onto the asset it was run against,
+            # so the Assets page shows real status instead of staying "unknown" forever.
+            if asset_id:
+                try:
+                    final_counts = db.get_severity_counts(session_id)
+                    db.update_asset_status(asset_id, gen._risk_rating(final_counts).lower())
+                except Exception as e:
+                    logger.warning(f"Could not update asset status: {e}")
+
             # ── Persist report files into the database (survives Render redeploys) ──
             for p in paths:
                 try:
@@ -641,12 +651,67 @@ def view_scan(session_id):
     report_files = [r["filename"] for r in db_reports]
     db.close()
 
+    # ── Enrich web findings with plain-English explanations ──────────────────
+    from modules.vuln_explanations import get_explanation
+    for f in web_findings:
+        exp = get_explanation(f.get("vuln_type", ""))
+        f["plain_what"]       = exp.get("what_it_is", "")
+        f["plain_means"]      = exp.get("what_it_means", "")
+        f["plain_impact"]     = exp.get("real_world_impact", "")
+        f["plain_fix"]        = exp.get("how_to_fix", "")
+        f["plain_difficulty"] = exp.get("difficulty", "")
+
+    web_findings = sorted(web_findings, key=lambda x: SEVERITY_ORDER.get(x.get("severity","Low"), 4))
+    cve_findings = sorted(cve_findings, key=lambda x: SEVERITY_ORDER.get(x.get("severity","Low"), 4))
+
+    # ── Overall risk rating (same thresholds used in generated reports) ──────
+    counts = severity_counts
+    if counts.get("Critical", 0) > 0: risk_rating = "CRITICAL"
+    elif counts.get("High", 0) > 0:   risk_rating = "HIGH"
+    elif counts.get("Medium", 0) > 0: risk_rating = "MEDIUM"
+    elif counts.get("Low", 0) > 0:    risk_rating = "LOW"
+    else:                              risk_rating = "INFORMATIONAL"
+
+    # ── Executive summary ─────────────────────────────────────────────────────
+    exec_summary = (
+        f"An automated vulnerability assessment was conducted against {sess['target']}. "
+        f"The scan discovered {len(hosts)} live host(s) with {total_findings} security finding(s). "
+        f"The overall risk is rated {risk_rating}."
+    )
+    if counts.get("Critical", 0) > 0:
+        exec_summary += f" {counts['Critical']} CRITICAL issue(s) require immediate action within 24 hours."
+    if counts.get("High", 0) > 0:
+        exec_summary += f" {counts['High']} HIGH severity issue(s) should be resolved within 7 days."
+    if total_findings == 0:
+        exec_summary += " No vulnerabilities were detected — the target appears well-secured against the tested attack vectors."
+
+    # ── Prioritised action plan (same merge/sort logic as the generated report) ─
+    action_plan = []
+    for f in web_findings:
+        action_plan.append({
+            "severity": f.get("severity"), "vuln_type": f.get("vuln_type"),
+            "host_ip": f.get("host_ip"),
+            "recommendation": f.get("recommendation", f.get("plain_fix","")),
+        })
+    for f in cve_findings:
+        action_plan.append({
+            "severity": f.get("severity"), "vuln_type": f.get("cve_id"),
+            "host_ip": f.get("host_ip"),
+            "recommendation": f"Update {f.get('service','')} to the latest patched version. Search {f.get('cve_id','')} at nvd.nist.gov.",
+        })
+    action_plan.sort(key=lambda x: SEVERITY_ORDER.get(x.get("severity","Low"), 4))
+
+    has_screenshot = os.path.exists(os.path.join(
+        os.path.dirname(__file__), "output", "screenshots", f"screenshot_{session_id}.png"))
+
     return render_template(
         "scan_detail.html",
         session=sess, hosts=hosts,
         web_findings=web_findings, cve_findings=cve_findings,
         severity_counts=severity_counts, total_findings=total_findings,
-        risk_scores=risk_scores,
+        risk_scores=risk_scores, risk_rating=risk_rating,
+        exec_summary=exec_summary, action_plan=action_plan,
+        has_screenshot=has_screenshot,
         report_files=report_files,
         page="results", title=f"Scan {session_id}"
     )
@@ -783,20 +848,6 @@ def test_email():
         return jsonify({"success": False, "error": str(e)})
 
 
-# ── COMPARE PAGE ──────────────────────────────────────────────────────────────
-
-@app.route("/compare")
-@login_required
-def compare_page():
-    db = Database()
-    sessions = db.get_all_sessions(session.get("org_id"))
-    db.close()
-    return render_template("compare.html",
-        sessions=sessions,
-        page="compare", title="Compare Scans"
-    )
-
-
 # ── SCREENSHOTS API ───────────────────────────────────────────────────────────
 
 @app.route("/api/screenshot/<session_id>", methods=["POST"])
@@ -839,7 +890,7 @@ def serve_screenshot(session_id):
 @login_required
 def get_notes(session_id):
     db = Database()
-    notes = db.get_notes(session_id)
+    notes = db.get_analyst_notes(session_id)
     db.close()
     return jsonify({"notes": notes})
 
@@ -850,7 +901,7 @@ def save_notes(session_id):
     data  = request.get_json() or {}
     notes = data.get("notes","")
     db = Database()
-    db.save_notes(session_id, notes)
+    db.save_analyst_notes(session_id, notes)
     db.close()
     return jsonify({"success": True})
 
@@ -1042,22 +1093,53 @@ def live_virustotal(target):
 
 
 
-# ── HISTORY PAGE ──────────────────────────────────────────────────────────────
+# ── REPORTS PAGE (merged: scan history + generated reports, one page) ─────────
 
 @app.route("/history")
 @login_required
 def history_page():
+    # Old URL — redirect to the merged Reports page so no existing link breaks.
+    return redirect(url_for("reports_page"))
+
+
+@app.route("/reports")
+@login_required
+def reports_page():
     db = Database()
     sessions = db.get_all_sessions(session.get("org_id"))
-    enriched = []
-    for s in sessions:
-        sc = db.get_severity_counts(s["id"])
-        enriched.append({**dict(s), "severity_counts": sc})
+    db_reports = db.get_all_report_files()
     db.close()
+
+    # Index report files by session so each row can show its PDF/HTML links
+    # directly, without a separate "Reports" page duplicating this list.
+    reports_by_session = {}
+    for r in db_reports:
+        reports_by_session.setdefault(r["session_id"], {})[r["file_type"]] = r["filename"]
+
+    screenshot_dir = os.path.join(os.path.dirname(__file__), "output", "screenshots")
+    enriched = []
+    db2 = Database()
+    for s in sessions:
+        sc = db2.get_severity_counts(s["id"])
+        has_shot = os.path.exists(os.path.join(screenshot_dir, f"screenshot_{s['id']}.png"))
+        enriched.append({
+            **dict(s),
+            "severity_counts": sc,
+            "reports": reports_by_session.get(s["id"], {}),
+            "has_screenshot": has_shot,
+        })
+    db2.close()
+
+    total_reports = sum(len(v) for v in reports_by_session.values())
+
     return render_template("history.html",
         sessions=enriched,
-        page="history", title="Scan History"
+        total_reports=total_reports,
+        page="history", title="Reports"
     )
+
+
+# ── API NOTIFICATIONS ─────────────────────────────────────────────────────────
 
 
 # ── SETTINGS PAGE ─────────────────────────────────────────────────────────────
@@ -1115,65 +1197,6 @@ def export_csv():
     output.headers["Content-Disposition"] = "attachment; filename=cyberscanpro_history.csv"
     output.headers["Content-Type"] = "text/csv"
     return output
-
-
-# ── REPORTS PAGE ──────────────────────────────────────────────────────────────
-
-@app.route("/reports")
-@login_required
-def reports_page():
-    db = Database()
-    sessions = db.get_all_sessions(session.get("org_id"))
-    session_risks = {}
-    for s in sessions:
-        counts = db.get_severity_counts(s["id"])
-        risk = "CRITICAL" if counts.get("Critical",0) > 0 else                "HIGH"     if counts.get("High",0) > 0     else                "MEDIUM"   if counts.get("Medium",0) > 0   else                "LOW"      if counts.get("Low",0) > 0       else "NONE"
-        session_risks[s["id"]] = risk
-
-    db_reports = db.get_all_report_files()
-    db.close()
-
-    reports = []
-    screenshot_dir = os.path.join(os.path.dirname(__file__), "output", "screenshots")
-    for r in db_reports:
-        size_kb = (r.get("file_size") or 0) // 1024
-        date = (r.get("created_at","") or "")[:16].replace("T"," ")
-        has_shot = os.path.exists(os.path.join(screenshot_dir, f"screenshot_{r['session_id']}.png"))
-        reports.append({
-            "filename":   r["filename"],
-            "type":       r["file_type"],
-            "target":     r["target"],
-            "session_id": r["session_id"],
-            "risk":       session_risks.get(r["session_id"], "NONE"),
-            "date":       date,
-            "size":       f"{size_kb} KB",
-            "screenshot": f"/screenshots/{r['session_id']}" if has_shot else None,
-        })
-
-    # Group by scan session — one card per scan, with both PDF/HTML download
-    # links attached, instead of duplicate rows for each file type.
-    grouped = {}
-    for r in reports:
-        g = grouped.setdefault(r["session_id"], {
-            "session_id": r["session_id"], "target": r["target"], "risk": r["risk"],
-            "date": r["date"], "screenshot": r["screenshot"], "pdf": None, "html": None,
-        })
-        g[r["type"]] = {"filename": r["filename"], "size": r["size"]}
-    grouped_reports = sorted(grouped.values(), key=lambda g: g["date"], reverse=True)
-
-    pdf_count  = sum(1 for r in reports if r["type"] == "pdf")
-    html_count = sum(1 for r in reports if r["type"] == "html")
-    sess_ids   = set(r["session_id"] for r in reports)
-
-    return render_template("reports.html",
-        reports=reports,
-        grouped_reports=grouped_reports,
-        total_reports=len(reports),
-        pdf_count=pdf_count,
-        html_count=html_count,
-        sessions_with_reports=len(sess_ids),
-        page="reports", title="Reports"
-    )
 
 
 # ── API NOTIFICATIONS ─────────────────────────────────────────────────────────
@@ -1425,52 +1448,6 @@ def port_intel():
         title="Port Intelligence"
     )
 
-
-
-@app.route("/api/compare")
-@login_required
-def api_compare():
-    s1_id = request.args.get("s1", "").strip()
-    s2_id = request.args.get("s2", "").strip()
-    if not s1_id or not s2_id:
-        return jsonify({"error": "Select two scans to compare."}), 400
-
-    db = Database()
-
-    def build(sid):
-        sess = db.get_session(sid)
-        if not sess:
-            return None
-        # Enforce org isolation — can't compare a scan from another org
-        org_id = session.get("org_id")
-        if org_id is not None and sess.get("org_id") not in (org_id, None):
-            return None
-        hosts = db.get_hosts(sid)
-        web = db.get_web_findings(sid)
-        cve = db.get_cve_findings(sid)
-        counts = db.get_severity_counts(sid)
-        total = sum(counts.get(k, 0) for k in ("Critical", "High", "Medium", "Low"))
-        return {
-            "session": {
-                "id": sess["id"], "target": sess["target"],
-                "started_at": sess.get("started_at", ""),
-                "status": sess.get("status", "unknown"),
-            },
-            "host_count": len(hosts),
-            "web_count": len(web),
-            "cve_count": len(cve),
-            "total_findings": total,
-            "severity_counts": counts,
-        }
-
-    d1 = build(s1_id)
-    d2 = build(s2_id)
-    db.close()
-
-    if not d1 or not d2:
-        return jsonify({"error": "One or both scans could not be found."}), 404
-
-    return jsonify({"session1": d1, "session2": d2})
 
 
 @app.route("/defense-prep")

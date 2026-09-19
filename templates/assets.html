@@ -253,12 +253,10 @@ nav{flex:1;padding:12px 0;}
     <div class="nav-sec">// Assessment</div>
     <a href="/" class="nav-link {% if page=='home' %}active{% endif %}"><span class="nav-icon">⬡</span>Dashboard</a>
     <a href="/scan/new" class="nav-link {% if page=='new_scan' %}active{% endif %}"><span class="nav-icon">▶</span>New Scan</a>
-    <a href="/history" class="nav-link {% if page=='history' %}active{% endif %}"><span class="nav-icon">☰</span>Scan History</a>
-    <a href="/reports" class="nav-link {% if page=='reports' %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
+    <a href="/reports" class="nav-link {% if page in ['reports','history'] %}active{% endif %}"><span class="nav-icon">📄</span>Reports</a>
         <div class="nav-sec">// Analysis</div>
     <a href="/assets" class="nav-link {% if page=='assets' %}active{% endif %}"><span class="nav-icon">◎</span>Assets</a>
     <a href="/targets" class="nav-link {% if page=='targets' %}active{% endif %}"><span class="nav-icon">📈</span>Target History</a>
-    <a href="/compare" class="nav-link {% if page=='compare' %}active{% endif %}"><span class="nav-icon">⇄</span>Compare Scans</a>
     <a href="/port-intel" class="nav-link {% if page=='port_intel' %}active{% endif %}"><span class="nav-icon">🔌</span>Port Lookup</a>
     <div class="nav-sec">// System</div>
     <a href="/settings" class="nav-link {% if page=='settings' %}active{% endif %}"><span class="nav-icon">⚙</span>Settings</a>
@@ -366,7 +364,10 @@ nav{flex:1;padding:12px 0;}
 .ac-type-icon{font-size:20px;}
 .ac-status{font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:1px;padding:3px 8px;border-radius:20px;background:var(--bg3);color:var(--text3);}
 .ac-status-healthy{color:var(--green);background:rgba(0,255,157,0.1);}
+.ac-status-informational{color:var(--green);background:rgba(0,255,157,0.1);}
 .ac-status-high{color:var(--orange);background:rgba(251,146,60,0.1);}
+.ac-status-medium{color:var(--yellow);background:rgba(234,179,8,0.1);}
+.ac-status-low{color:var(--blue);background:rgba(59,130,246,0.1);}
 .ac-status-critical{color:var(--red);background:rgba(239,68,68,0.1);}
 .ac-name{font-size:15px;font-weight:800;margin-bottom:4px;}
 .ac-address{font-family:var(--mono);font-size:11px;color:var(--text3);margin-bottom:6px;word-break:break-all;}
