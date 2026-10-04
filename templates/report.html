@@ -7,736 +7,583 @@
 <style>
 /* ── Variables ─────────────────────────────────────────────────────────── */
 :root{
-  --navy:#1F3864; --navy-light:#2E4A7A; --blue:#2E75B6; --blue-light:#3B8FD4;
+  --navy:#1F3864; --navy-light:#2E4A7A; --blue:#2E75B6;
   --red:#C00000; --orange:#D35400; --yellow:#B7950B; --green:#1E8449;
-  --bg:#F4F6F9; --white:#FFFFFF; --border:#DDE3ED; --text:#2C3E50; --text2:#6B7C93;
-  --font:'Segoe UI',system-ui,Arial,sans-serif;
+  --ink:#1C2733; --ink2:#5B6B7F; --ink3:#8C98A6;
+  --paper:#FFFFFF; --wash:#F7F8FA; --line:#E1E5EA;
+  --serif:Georgia,'Times New Roman',serif;
+  --sans:'Segoe UI',system-ui,Arial,sans-serif;
+  --mono:'Consolas','SF Mono',monospace;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
-html{font-size:13px;}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;}
+html{font-size:14px;}
+body{font-family:var(--sans);background:var(--paper);color:var(--ink);line-height:1.65;}
 
-/* ── Page wrapper ──────────────────────────────────────────────────────── */
-.page{max-width:1080px;margin:0 auto;padding:32px 24px;}
+/* ── Sticky section nav ────────────────────────────────────────────────── */
+.toc-bar{position:sticky;top:0;z-index:50;background:var(--navy);box-shadow:0 1px 0 rgba(0,0,0,0.08);}
+.toc-inner{max-width:860px;margin:0 auto;padding:0 32px;display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;}
+.toc-inner::-webkit-scrollbar{display:none;}
+.toc-link{flex-shrink:0;color:rgba(255,255,255,0.6);text-decoration:none;font-size:12px;font-weight:600;letter-spacing:0.3px;padding:13px 14px;border-bottom:2px solid transparent;white-space:nowrap;transition:all .15s;display:flex;align-items:center;gap:6px;}
+.toc-link:hover{color:#fff;}
+.toc-dot{width:5px;height:5px;border-radius:50%;background:#F0A868;display:inline-block;}
 
-/* ── Cover header ──────────────────────────────────────────────────────── */
-.cover{background:var(--navy);color:#fff;border-radius:10px;overflow:hidden;margin-bottom:24px;}
-.cover-top{padding:32px 36px 24px;border-bottom:1px solid rgba(255,255,255,0.1);}
-.cover-logo{display:flex;align-items:center;gap:12px;margin-bottom:20px;}
-.cover-logo-mark{width:42px;height:42px;border-radius:8px;overflow:hidden;flex-shrink:0;}
-.cover-logo-mark img{width:100%;height:100%;object-fit:cover;display:block;}
-.cover-logo-name{font-size:13px;font-weight:700;letter-spacing:2px;opacity:0.9;font-family:monospace;}
-.cover-title{font-size:26px;font-weight:700;margin-bottom:4px;letter-spacing:-0.3px;}
-.cover-sub{font-size:12px;opacity:0.55;letter-spacing:0.5px;}
-.cover-meta{display:grid;grid-template-columns:repeat(3,1fr);padding:0;}
-.cover-meta-item{padding:18px 36px;border-right:1px solid rgba(255,255,255,0.08);}
-.cover-meta-item:last-child{border-right:none;}
-.cover-meta-item label{display:block;font-size:9px;opacity:0.5;letter-spacing:2px;text-transform:uppercase;margin-bottom:5px;}
-.cover-meta-item span{font-size:14px;font-weight:700;}
-.cover-meta-item .risk-pill{display:inline-block;padding:3px 12px;border-radius:4px;font-size:12px;font-weight:700;}
-.pill-CRITICAL{background:#C00000;}
-.pill-HIGH{background:#E74C3C;}
-.pill-MEDIUM{background:#E67E22;}
-.pill-LOW{background:#2980B9;}
-.pill-NONE{background:#7F8C8D;}
+/* ── Letterhead / cover band (full-bleed, sits above the page column) ───── */
+.letterhead{background:var(--navy);color:#fff;}
+.letterhead-inner{max-width:860px;margin:0 auto;padding:40px 32px 32px;}
+.lh-logo{display:flex;align-items:center;gap:11px;margin-bottom:28px;}
+.lh-logo-mark{width:34px;height:34px;border-radius:6px;overflow:hidden;flex-shrink:0;}
+.lh-logo-mark img{width:100%;height:100%;object-fit:cover;display:block;}
+.lh-logo-name{font-size:12px;font-weight:700;letter-spacing:2.5px;opacity:0.85;}
+.lh-title{font-family:var(--serif);font-size:30px;font-weight:700;letter-spacing:-0.2px;margin-bottom:6px;}
+.lh-sub{font-size:11px;opacity:0.55;letter-spacing:0.6px;margin-bottom:28px;}
+.lh-meta{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.15);}
+.lh-meta-item label{display:block;font-size:9px;opacity:0.5;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;}
+.lh-meta-item span{font-size:15px;font-weight:700;}
+.risk-pill{display:inline-block;padding:4px 13px;border-radius:3px;font-size:12px;font-weight:700;letter-spacing:0.5px;}
+.pill-CRITICAL{background:var(--red);} .pill-HIGH{background:#E74C3C;} .pill-MEDIUM{background:var(--orange);}
+.pill-LOW{background:var(--blue);} .pill-NONE{background:#7F8C8D;}
 
-/* ── Section cards ─────────────────────────────────────────────────────── */
-.card{background:var(--white);border:1px solid var(--border);border-radius:8px;margin-bottom:18px;overflow:hidden;}
-.card-head{padding:16px 22px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
-.card-head h2{font-size:15px;font-weight:700;color:var(--navy);display:flex;align-items:center;gap:8px;}
-.card-head .section-num{font-size:10px;font-weight:700;color:var(--blue);background:rgba(46,117,182,0.08);padding:3px 8px;border-radius:4px;letter-spacing:1px;}
-.card-body{padding:20px 22px;}
-.card-body p{color:var(--text);line-height:1.75;margin-bottom:10px;}
-.card-body p:last-child{margin-bottom:0;}
+/* ── The page itself: one continuous column ──────────────────────────────  */
+.page{max-width:860px;margin:0 auto;padding:0 32px 60px;}
 
-/* ── Risk summary bar ──────────────────────────────────────────────────── */
-.sev-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
-.sev-chip{padding:8px 20px;border-radius:6px;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;min-width:90px;}
-.sev-chip .sev-n{font-size:28px;font-weight:800;line-height:1;}
-.sev-chip .sev-l{font-size:9px;letter-spacing:1.5px;margin-top:3px;opacity:0.85;}
-.sev-Critical{background:#FFF0F0;color:#C00000;border:1px solid #FBBCBC;}
-.sev-High{background:#FFF5F0;color:#D35400;border:1px solid #FAC3A0;}
-.sev-Medium{background:#FFFBF0;color:#B7950B;border:1px solid #F5E6A0;}
-.sev-Low{background:#F0F6FF;color:#2E75B6;border:1px solid #A0C4F5;}
+/* ── Figure (target screenshot) ───────────────────────────────────────── */
+.figure{margin:36px 0;}
+.figure-frame{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#0D1117;}
+.figure-frame img{width:100%;display:block;}
+.figure-empty{padding:60px 20px;text-align:center;color:#5B6B7F;font-size:12px;}
+.figure-caption{font-size:11.5px;color:var(--ink3);margin-top:8px;font-style:italic;}
 
-/* ── Risk guide ────────────────────────────────────────────────────────── */
-.risk-guide{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px;}
-.rg-box{border-radius:7px;padding:14px 12px;text-align:center;}
-.rg-box.critical{background:#FFF0F0;border:1px solid #FBBCBC;}
-.rg-box.high{background:#FFF5F0;border:1px solid #FAC3A0;}
-.rg-box.medium{background:#FFFBF0;border:1px solid #F5E6A0;}
-.rg-box.low{background:#F0F6FF;border:1px solid #A0C4F5;}
-.rg-label{font-size:13px;font-weight:800;margin-bottom:4px;}
-.rg-label.critical{color:#C00000;}
-.rg-label.high{color:#D35400;}
-.rg-label.medium{color:#B7950B;}
-.rg-label.low{color:#2E75B6;}
-.rg-when{font-size:11px;font-weight:700;margin-bottom:4px;}
-.rg-desc{font-size:10px;color:var(--text2);line-height:1.5;}
+/* ── Section rhythm ───────────────────────────────────────────────────── */
+section.doc-section{padding:40px 0;border-top:1px solid var(--line);}
+section.doc-section:first-of-type{border-top:none;padding-top:36px;}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:16px;margin-bottom:18px;}
+.sec-head h2{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--navy);letter-spacing:-0.2px;}
+.sec-num{font-size:10px;font-weight:700;color:var(--ink3);letter-spacing:1.5px;white-space:nowrap;}
+.doc-section > p{color:var(--ink);margin-bottom:14px;}
+.doc-section > p:last-child{margin-bottom:0;}
 
-/* ── Alert banners ─────────────────────────────────────────────────────── */
-.alert{padding:12px 16px;border-radius:6px;font-size:12px;font-weight:600;margin-bottom:10px;display:flex;align-items:flex-start;gap:10px;line-height:1.5;}
-.alert-crit{background:#FFF0F0;border:1px solid #F5BCBC;border-left:4px solid #C00000;color:#900000;}
-.alert-high{background:#FFF5F0;border:1px solid #FAC3A0;border-left:4px solid #D35400;color:#A34000;}
-.alert-ok{background:#F0FFF4;border:1px solid #B0E6C0;border-left:4px solid #1E8449;color:#145A32;}
+/* ── Guide boxes (What This Report Means) ─────────────────────────────── */
+.risk-guide{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin-top:18px;}
+.rg-box{background:var(--paper);padding:16px 14px;}
+.rg-label{font-size:11px;font-weight:800;letter-spacing:1px;margin-bottom:8px;}
+.rg-label.critical{color:var(--red);} .rg-label.high{color:#E74C3C;} .rg-label.medium{color:var(--orange);} .rg-label.low{color:var(--blue);}
+.rg-when{font-size:11px;color:var(--ink);font-weight:600;margin-bottom:6px;}
+.rg-desc{font-size:11px;color:var(--ink2);line-height:1.5;}
 
-/* ── Screenshot ────────────────────────────────────────────────────────── */
-.screenshot-wrap{background:#0D1117;border-radius:8px;overflow:hidden;margin-bottom:18px;}
-.sc-titlebar{background:var(--navy);padding:12px 18px;display:flex;align-items:center;justify-content:space-between;}
-.sc-titlebar span{font-size:12px;color:rgba(255,255,255,0.7);font-family:monospace;}
-.sc-chrome{background:#1A1A2E;padding:8px 14px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #2A2A3E;}
-.sc-dots{display:flex;gap:5px;}
-.sc-dot{width:10px;height:10px;border-radius:50%;}
-.sc-url{flex:1;background:#0D0D1A;border-radius:4px;padding:4px 12px;font-size:11px;color:#888;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.sc-img-wrap{min-height:180px;display:flex;align-items:center;justify-content:center;}
-.sc-img-wrap img{width:100%;display:block;max-height:480px;object-fit:contain;}
-.sc-empty{padding:40px;text-align:center;color:#444;font-size:12px;font-family:monospace;}
+/* ── Executive summary: donut + legend ────────────────────────────────── */
+.sev-donut-row{display:flex;align-items:center;gap:30px;margin-bottom:20px;flex-wrap:wrap;}
+.sev-donut{width:108px;height:108px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
+.sev-donut-hole{width:72px;height:72px;border-radius:50%;background:var(--paper);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px var(--line);}
+.sev-donut-hole span{font-family:var(--serif);font-size:21px;font-weight:700;color:var(--navy);line-height:1;}
+.sev-donut-hole small{font-size:8px;color:var(--ink3);letter-spacing:0.5px;text-transform:uppercase;margin-top:2px;}
+.sev-donut-legend{display:flex;flex-direction:column;gap:7px;flex:1;min-width:180px;}
+.sev-legend-item{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--ink);}
+.sev-legend-dot{width:9px;height:9px;border-radius:2px;flex-shrink:0;}
+.sev-legend-item b{margin-left:auto;font-variant-numeric:tabular-nums;}
+.sev-bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+.sev-chip{padding:8px 18px;border-radius:4px;font-size:13px;font-weight:700;display:flex;flex-direction:column;align-items:center;min-width:80px;border:1px solid var(--line);}
+.sev-chip .sev-n{font-size:24px;font-weight:800;line-height:1;}
+.sev-chip .sev-l{font-size:9px;letter-spacing:1.5px;margin-top:3px;color:var(--ink2);}
 
-/* ── Methodology table ─────────────────────────────────────────────────── */
-table{width:100%;border-collapse:collapse;font-size:12px;}
-th{background:var(--navy);color:#fff;padding:9px 13px;text-align:left;font-size:11px;letter-spacing:0.5px;}
-td{padding:9px 13px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--text);}
-tr:last-child td{border-bottom:none;}
-tr:nth-child(even) td{background:#F8FAFC;}
-.table-wrap{overflow-x:auto;}
+.alert{padding:12px 16px;border-radius:4px;font-size:12.5px;margin-top:12px;border-left:3px solid;}
+.alert-crit{background:#FDF0F0;color:#8A0000;border-color:var(--red);}
+.alert-high{background:#FDF4EE;color:#9C4300;border-color:var(--orange);}
+.alert-ok{background:#EFFAF2;color:#145C32;border-color:var(--green);}
 
-/* ── Host/port cards ───────────────────────────────────────────────────── */
-.host-block{margin-bottom:20px;}
-.host-block:last-child{margin-bottom:0;}
-.host-title{font-size:13px;font-weight:700;color:var(--navy);padding:10px 0 8px;border-bottom:2px solid var(--blue);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-
-.port-card{border:1px solid var(--border);border-radius:6px;margin-bottom:12px;overflow:hidden;}
-.port-card-head{padding:11px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);background:#FAFBFD;}
-.port-num{font-family:monospace;font-size:14px;font-weight:800;color:var(--navy);}
-.port-svc{font-size:11px;color:var(--text2);margin-left:6px;}
-.port-ver{font-size:10px;color:#999;font-family:monospace;}
-.port-risk{font-size:10px;font-weight:700;padding:3px 10px;border-radius:4px;}
-.pr-CRITICAL{background:#FFF0F0;color:#C00000;border:1px solid #FBBCBC;}
-.pr-HIGH{background:#FFF5F0;color:#D35400;border:1px solid #FAC3A0;}
-.pr-MEDIUM{background:#FFFBF0;color:#B7950B;border:1px solid #F5E6A0;}
-.pr-LOW{background:#F0F6FF;color:#2E75B6;border:1px solid #A0C4F5;}
-
-.port-card-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0;}
-.pcb-col{padding:13px 14px;border-right:1px solid var(--border);}
-.pcb-col:last-child{border-right:none;}
-.pcb-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:7px;}
-.pcb-what .pcb-label{color:var(--blue);}
-.pcb-attack .pcb-label{color:var(--red);}
-.pcb-fix .pcb-label{color:var(--green);}
-.pcb-text{font-size:11px;color:var(--text2);line-height:1.7;}
-
-/* ── Finding cards ─────────────────────────────────────────────────────── */
-.finding-card{border:1px solid var(--border);border-radius:7px;margin-bottom:16px;overflow:hidden;}
-.fc-head{padding:13px 16px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;}
-.fc-head.Critical{background:#FFF0F0;border-left:5px solid #C00000;}
-.fc-head.High{background:#FFF5F0;border-left:5px solid #D35400;}
-.fc-head.Medium{background:#FFFBF0;border-left:5px solid #B7950B;}
-.fc-head.Low{background:#F0F6FF;border-left:5px solid #2E75B6;}
-.fc-title{font-weight:700;font-size:14px;color:#1A252F;margin-bottom:3px;}
-.fc-loc{font-size:10px;color:var(--text2);font-family:monospace;}
-.badge{display:inline-block;padding:3px 10px;border-radius:4px;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
-.badge.Critical{background:#C00000;}
-.badge.High{background:#D35400;}
-.badge.Medium{background:#B7950B;}
-.badge.Low{background:#2E75B6;}
-.badge.None{background:#7F8C8D;}
-
-.fc-explain{background:#F7FAFD;border-bottom:1px solid var(--border);padding:16px;}
-.fc-explain h4{font-size:11px;font-weight:700;color:var(--navy);letter-spacing:1px;text-transform:uppercase;margin-bottom:12px;}
-.pe-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.pe-box{background:#fff;border:1px solid var(--border);border-radius:5px;padding:12px;}
-.pe-box.what{border-top:3px solid var(--blue);}
-.pe-box.means{border-top:3px solid var(--orange);}
-.pe-box.impact{border-top:3px solid var(--red);}
-.pe-box.fix{border-top:3px solid var(--green);}
-.pe-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px;}
-.pe-box.what .pe-label{color:var(--blue);}
-.pe-box.means .pe-label{color:var(--orange);}
-.pe-box.impact .pe-label{color:var(--red);}
-.pe-box.fix .pe-label{color:var(--green);}
-.pe-text{font-size:11px;color:var(--text2);line-height:1.7;}
-
-.fc-tech{padding:12px 16px;background:#FAFBFD;}
-.fc-tech p{font-size:9px;font-weight:700;letter-spacing:1.5px;color:var(--text2);text-transform:uppercase;margin-bottom:8px;}
-.fc-tech table td:first-child{font-weight:600;color:#555;width:120px;font-size:11px;}
-.fc-tech table td{font-size:11px;}
-
-/* ── CVE badge ─────────────────────────────────────────────────────────── */
-.cvss-score{font-size:11px;color:var(--text2);font-weight:600;margin-top:4px;}
-
-/* ── Threat intel cards ────────────────────────────────────────────────── */
-.ti-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin-top:14px;}
-.ti-card{background:#fff;border:1px solid var(--border);border-radius:7px;overflow:hidden;}
-.ti-card-head{background:var(--navy);padding:10px 14px;font-size:11px;font-weight:700;color:#fff;letter-spacing:0.5px;}
+/* ── Threat intel grid ─────────────────────────────────────────────────── */
+.ti-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px;}
+.ti-card{border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+.ti-card-head{background:var(--wash);padding:10px 14px;font-size:12px;font-weight:700;color:var(--navy);border-bottom:1px solid var(--line);}
 .ti-card-body{padding:14px;}
-.ti-stat-row{display:flex;gap:8px;margin-bottom:12px;}
-.ti-stat{flex:1;text-align:center;background:#F4F6F9;border-radius:5px;padding:10px 6px;}
-.ti-stat-n{font-size:22px;font-weight:800;line-height:1;}
-.ti-stat-l{font-size:9px;color:var(--text2);letter-spacing:1px;margin-top:3px;}
-.ti-table{width:100%;font-size:11px;border-collapse:collapse;}
-.ti-table td{padding:5px 0;border-bottom:1px solid #F0F0F0;color:var(--text);}
-.ti-table td:first-child{color:var(--text2);width:110px;}
+.ti-table{width:100%;font-size:11.5px;border-collapse:collapse;}
+.ti-table td{padding:5px 0;border-bottom:1px solid var(--line);color:var(--ink2);}
+.ti-table td:last-child{text-align:right;color:var(--ink);font-weight:600;}
 .ti-table tr:last-child td{border-bottom:none;}
-.ti-link{display:block;margin-top:10px;padding:7px 12px;background:var(--blue);color:#fff;text-align:center;border-radius:5px;font-size:11px;font-weight:700;text-decoration:none;}
-.ti-link:hover{background:var(--navy);}
-.ti-screenshot{width:100%;border-radius:4px;margin-top:8px;border:1px solid var(--border);}
+.ti-stat-row{display:flex;justify-content:space-around;margin-bottom:12px;}
+.ti-stat{text-align:center;}
+.ti-stat-n{font-size:26px;font-weight:800;line-height:1;}
+.ti-stat-l{font-size:8.5px;color:var(--ink3);letter-spacing:1px;margin-top:4px;}
+.ti-link{display:inline-block;margin-top:10px;font-size:11.5px;color:var(--blue);text-decoration:none;font-weight:600;}
+.ti-screenshot{width:100%;margin-top:10px;border:1px solid var(--line);border-radius:3px;}
+
+/* ── Tables (methodology, technical details) ──────────────────────────── */
+.table-wrap{border:1px solid var(--line);border-radius:4px;overflow:hidden;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+table th{background:var(--navy);color:#fff;text-align:left;padding:9px 13px;font-size:10.5px;font-weight:700;letter-spacing:0.4px;}
+table td{padding:9px 13px;border-top:1px solid var(--line);color:var(--ink2);vertical-align:top;}
+table tr:first-child td{border-top:none;}
+table td:first-child{color:var(--ink);font-weight:600;width:30%;}
+.fc-tech table td:first-child{width:22%;}
+
+/* ── Hosts / ports ─────────────────────────────────────────────────────── */
+.host-block{margin-bottom:22px;}
+.host-block:last-child{margin-bottom:0;}
+.host-title{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line);}
+.port-card{border:1px solid var(--line);border-left:3px solid var(--ink3);border-radius:3px;margin-bottom:10px;background:var(--wash);}
+.port-card-head{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid var(--line);}
+.port-num{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--navy);}
+.port-svc{font-size:11px;font-weight:700;color:var(--ink);margin-left:8px;}
+.port-ver{font-size:10.5px;color:var(--ink3);margin-left:6px;font-family:var(--mono);}
+.port-risk{font-size:9px;font-weight:800;letter-spacing:0.5px;padding:3px 9px;border-radius:3px;color:#fff;}
+.pr-CRITICAL{background:var(--red);} .pr-HIGH{background:#E74C3C;} .pr-MEDIUM{background:var(--orange);} .pr-LOW{background:var(--blue);}
+.port-card.risk-CRITICAL{border-left-color:var(--red);}
+.port-card.risk-HIGH{border-left-color:#E74C3C;}
+.port-card.risk-MEDIUM{border-left-color:var(--orange);}
+.port-card.risk-LOW{border-left-color:var(--blue);}
+.port-card-body{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;background:var(--line);}
+.pcb-col{background:var(--paper);padding:12px 14px;}
+.pcb-label{font-size:10px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px;}
+.pcb-text{font-size:11.5px;color:var(--ink2);line-height:1.55;}
+.pcb-text code{background:var(--wash);padding:1px 4px;border-radius:2px;font-family:var(--mono);font-size:10.5px;color:var(--navy);}
+
+/* ── Finding cards (web findings / CVEs) ──────────────────────────────── */
+.finding-card{border:1px solid var(--line);border-radius:4px;margin-bottom:18px;overflow:hidden;}
+.finding-card:last-child{margin-bottom:0;}
+.fc-head{display:flex;justify-content:space-between;align-items:flex-start;padding:14px 16px;border-bottom:1px solid var(--line);border-left:4px solid;}
+.fc-head.Critical{border-left-color:var(--red);background:#FDF6F6;} .fc-head.High{border-left-color:#E74C3C;background:#FEF8F6;}
+.fc-head.Medium{border-left-color:var(--orange);background:#FEFAF3;} .fc-head.Low{border-left-color:var(--blue);background:#F6FAFE;}
+.fc-title{font-size:14px;font-weight:700;color:var(--ink);}
+.fc-loc{font-family:var(--mono);font-size:10.5px;color:var(--ink3);margin-top:4px;word-break:break-all;}
+.cvss-score{font-size:11px;font-weight:700;color:var(--navy);margin-top:4px;}
+.new-badge{display:inline-flex;align-items:center;gap:4px;background:#F0A868;color:#3D2600;font-size:9px;font-weight:800;letter-spacing:0.4px;padding:3px 8px;border-radius:3px;margin-left:8px;text-transform:uppercase;vertical-align:middle;}
+.badge{font-size:10px;font-weight:800;letter-spacing:0.5px;padding:4px 11px;border-radius:3px;color:#fff;white-space:nowrap;}
+.badge.Critical{background:var(--red);} .badge.High{background:#E74C3C;} .badge.Medium{background:var(--orange);} .badge.Low{background:var(--blue);}
+
+.fc-explain{padding:16px;}
+.fc-explain h4{font-size:11px;font-weight:700;color:var(--ink2);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;}
+.pe-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--line);border:1px solid var(--line);border-radius:3px;overflow:hidden;}
+.pe-box{background:var(--paper);padding:12px 14px;}
+.pe-label{font-size:10px;font-weight:700;color:var(--ink2);margin-bottom:6px;}
+.pe-text{font-size:12px;color:var(--ink2);line-height:1.6;}
+
+.fc-tech{padding:0 16px 16px;}
+.fc-tech p{font-size:10.5px;font-weight:700;color:var(--ink3);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;}
 
 /* ── Action plan ───────────────────────────────────────────────────────── */
-.action-item{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border-radius:6px;margin-bottom:8px;}
-.action-item.critical{background:#FFF0F0;border-left:4px solid #C00000;}
-.action-item.high{background:#FFF5F0;border-left:4px solid #D35400;}
-.action-item.medium{background:#FFFBF0;border-left:4px solid #B7950B;}
-.action-item.low{background:#F0F6FF;border-left:4px solid #2E75B6;}
-.action-num{font-size:20px;font-weight:800;color:#CCC;min-width:28px;font-family:monospace;}
+.action-item{display:flex;gap:14px;padding:13px 0;border-top:1px solid var(--line);}
+.action-item:first-child{border-top:none;}
+.action-num{font-family:var(--serif);font-size:16px;font-weight:700;color:var(--ink3);min-width:22px;}
 .action-content{flex:1;}
-.action-title{font-size:12px;font-weight:700;color:#1A252F;margin-bottom:3px;}
-.action-rec{font-size:11px;color:var(--text2);line-height:1.6;}
+.action-title{font-size:13px;font-weight:700;color:var(--ink);}
+.action-rec{font-size:11.5px;color:var(--ink2);margin-top:3px;}
 
-/* ── Disclaimer ────────────────────────────────────────────────────────── */
-.disclaimer{background:#F8F9FA;border:1px solid var(--border);border-radius:7px;padding:16px 20px;margin-top:20px;}
-.disclaimer p{font-size:11px;color:var(--text2);line-height:1.7;margin-bottom:0;}
-.disclaimer strong{color:var(--text);}
+/* ── Disclaimer / footer ──────────────────────────────────────────────── */
+.disclaimer{margin-top:0;padding-top:28px;border-top:1px solid var(--line);font-size:10.5px;color:var(--ink3);line-height:1.6;}
 
-/* ── Responsive ────────────────────────────────────────────────────────── */
-@media(max-width:768px){
-  .page{padding:16px 12px;}
-  .cover-meta{grid-template-columns:1fr 1fr;}
-  .cover-meta-item{padding:14px 18px;}
-  .cover-top{padding:22px 20px 18px;}
-  .cover-title{font-size:20px;}
-  .pe-grid{grid-template-columns:1fr;}
-  .port-card-body{grid-template-columns:1fr;}
-  .pcb-col{border-right:none;border-bottom:1px solid var(--border);}
-  .pcb-col:last-child{border-bottom:none;}
-  .risk-guide{grid-template-columns:1fr 1fr;}
-  .sev-bar{gap:6px;}
-  .ti-grid{grid-template-columns:1fr;}
-  .table-wrap{overflow-x:auto;}
-  table{min-width:420px;}
-}
-@media(max-width:480px){
-  .cover-meta{grid-template-columns:1fr;}
-  .risk-guide{grid-template-columns:1fr;}
-  .sev-chip{min-width:70px;padding:6px 10px;}
-  .sev-chip .sev-n{font-size:22px;}
-}
+/* ── Print ─────────────────────────────────────────────────────────────── */
 @media print{
-  body{background:#fff;}
-  .page{padding:0;max-width:100%;}
-  .card{box-shadow:none;break-inside:avoid;}
-  .finding-card,.port-card{break-inside:avoid;}
+  @page{size:A4;margin:16mm 14mm;}
+  .toc-bar{display:none;}
+  body{font-size:11px;}
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .letterhead{background:var(--navy) !important;}
+  .page{max-width:100%;padding:0;}
+  .letterhead-inner{max-width:100%;padding:0 0 20px;}
+  section.doc-section{padding:20px 0;break-inside:avoid-page;}
+  .finding-card,.port-card,.host-block,.ti-card{break-inside:avoid-page;}
+  .figure-frame{break-inside:avoid-page;}
+}
+
+@media(max-width:720px){
+  .lh-meta{grid-template-columns:1fr 1fr;}
+  .risk-guide{grid-template-columns:1fr 1fr;}
+  .ti-grid{grid-template-columns:1fr;}
+  .port-card-body{grid-template-columns:1fr;}
+  .pe-grid{grid-template-columns:1fr;}
 }
 </style>
 </head>
 <body>
+
+<nav class="toc-bar" id="tocBar">
+  <div class="toc-inner">
+    <a href="#exec-summary" class="toc-link">Summary</a>
+    {% if has_enrichment %}<a href="#threat-intel" class="toc-link">Threat Intel</a>{% endif %}
+    <a href="#methodology" class="toc-link">Methodology</a>
+    {% if hosts %}<a href="#hosts" class="toc-link">Hosts</a>{% endif %}
+    {% if web_findings %}<a href="#web-findings" class="toc-link">Web Findings{% if web_findings|selectattr('is_new')|list|length > 0 %}<span class="toc-dot"></span>{% endif %}</a>{% endif %}
+    {% if cve_findings %}<a href="#cves" class="toc-link">CVEs{% if cve_findings|selectattr('is_new')|list|length > 0 %}<span class="toc-dot"></span>{% endif %}</a>{% endif %}
+    <a href="#action-plan" class="toc-link">Action Plan</a>
+  </div>
+</nav>
+
+<div class="letterhead">
+  <div class="letterhead-inner">
+    <div class="lh-logo">
+      <div class="lh-logo-mark">{% if logo_data_uri %}<img src="{{ logo_data_uri }}" alt="CyberScan Pro">{% endif %}</div>
+      <div class="lh-logo-name">CYBERSCAN PRO</div>
+    </div>
+    <div class="lh-title">Vulnerability Assessment Report</div>
+    <div class="lh-sub">AUTOMATED SECURITY ASSESSMENT &nbsp;·&nbsp; FUPRE FINAL YEAR PROJECT &nbsp;·&nbsp; OBEH EMMANUEL ONORIODE</div>
+    <div class="lh-meta">
+      <div class="lh-meta-item"><label>Target</label><span>{{ target }}</span></div>
+      <div class="lh-meta-item"><label>Generated</label><span>{{ generated_at }}</span></div>
+      <div class="lh-meta-item"><label>Overall Risk</label><span class="risk-pill pill-{{ risk_rating }}">{{ risk_rating }}</span></div>
+      <div class="lh-meta-item"><label>Hosts Discovered</label><span>{{ total_hosts }}</span></div>
+      <div class="lh-meta-item"><label>Total Findings</label><span>{{ total_findings }}</span></div>
+      <div class="lh-meta-item"><label>Session ID</label><span style="font-family:var(--mono);font-size:12px;">{{ session_id[:12] }}...</span></div>
+    </div>
+  </div>
+</div>
+
 <div class="page">
 
-  <!-- ══ COVER HEADER ══════════════════════════════════════════════════════ -->
-  <div class="cover">
-    <div class="cover-top">
-      <div class="cover-logo">
-        <div class="cover-logo-mark">
-          {% if logo_data_uri %}<img src="{{ logo_data_uri }}" alt="CyberScan Pro">{% endif %}
-        </div>
-        <div class="cover-logo-name">CYBERSCAN PRO</div>
-      </div>
-      <div class="cover-title">Vulnerability Assessment Report</div>
-      <div class="cover-sub">AUTOMATED SECURITY ASSESSMENT &nbsp;·&nbsp; FUPRE FINAL YEAR PROJECT &nbsp;·&nbsp; OBEH EMMANUEL ONORIODE</div>
-    </div>
-    <div class="cover-meta">
-      <div class="cover-meta-item">
-        <label>Target</label>
-        <span>{{ target }}</span>
-      </div>
-      <div class="cover-meta-item">
-        <label>Generated</label>
-        <span>{{ generated_at }}</span>
-      </div>
-      <div class="cover-meta-item">
-        <label>Overall Risk</label>
-        <span><span class="risk-pill pill-{{ risk_rating }}">{{ risk_rating }}</span></span>
-      </div>
-      <div class="cover-meta-item">
-        <label>Hosts Discovered</label>
-        <span>{{ total_hosts }}</span>
-      </div>
-      <div class="cover-meta-item">
-        <label>Total Findings</label>
-        <span>{{ total_findings }}</span>
-      </div>
-      <div class="cover-meta-item">
-        <label>Session ID</label>
-        <span style="font-size:11px;font-family:monospace;">{{ session_id[:16] }}...</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- ══ SCREENSHOT ════════════════════════════════════════════════════════ -->
-  <div class="screenshot-wrap">
-    <div class="sc-titlebar">
-      <span>Target Website Preview</span>
-      <span>{{ target }}</span>
-    </div>
-    <div class="sc-chrome">
-      <div class="sc-dots">
-        <div class="sc-dot" style="background:#FF5F57;"></div>
-        <div class="sc-dot" style="background:#FFBD2E;"></div>
-        <div class="sc-dot" style="background:#28CA41;"></div>
-      </div>
-      <div class="sc-url">{{ target if target.startswith('http') else 'https://' + target }}</div>
-    </div>
-    <div class="sc-img-wrap" id="sc-wrap">
+  <!-- ══ TARGET SCREENSHOT ════════════════════════════════════════════════ -->
+  <div class="figure">
+    <div class="figure-frame">
       {% if screenshot_data_uri %}
-      <img src="{{ screenshot_data_uri }}"
-           alt="Target screenshot"
-           onload="document.getElementById('sc-wrap').style.background='#000'">
+      <img src="{{ screenshot_data_uri }}" alt="Screenshot of {{ target }}">
       {% else %}
-      <img src="/screenshots/{{ session_id }}"
-           alt="Target screenshot"
-           onload="document.getElementById('sc-wrap').style.background='#000'"
-           onerror="this.parentElement.innerHTML='<div class=\'sc-empty\'>Screenshot not available.<br><small>Go to the scan detail page and click Capture Screenshot to generate one.</small></div>'">
+      <div class="figure-empty">Screenshot not available.<br>Go to the scan detail page and click Capture Screenshot to generate one.</div>
       {% endif %}
     </div>
+    <div class="figure-caption">Figure 1 — Visual capture of {{ target }} at the time of this assessment.</div>
   </div>
 
-  <!-- ══ WHAT THIS REPORT MEANS ════════════════════════════════════════════ -->
-  <div class="card">
-    <div class="card-head">
-      <h2>📋 What This Report Means</h2>
-      <span class="section-num">GUIDE</span>
+  <!-- ══ WHAT THIS REPORT MEANS ═══════════════════════════════════════════ -->
+  <section class="doc-section" id="guide">
+    <div class="sec-head"><h2>What This Report Means</h2><span class="sec-num">GUIDE</span></div>
+    <p>This report was automatically generated by <strong>CyberScan Pro</strong> after scanning <strong>{{ target }}</strong>. It identifies security weaknesses that could be exploited by attackers to steal data, disrupt services, or gain unauthorised access.</p>
+    <p><strong>You do not need to be a technical expert to read this.</strong> Every finding includes a plain English explanation of what the problem is, what could happen if exploited, and exactly what steps to take to fix it.</p>
+    <div class="risk-guide">
+      <div class="rg-box"><div class="rg-label critical">CRITICAL</div><div class="rg-when">Fix within 24 hours</div><div class="rg-desc">Attackers can gain full control or steal all data immediately.</div></div>
+      <div class="rg-box"><div class="rg-label high">HIGH</div><div class="rg-when">Fix within 7 days</div><div class="rg-desc">Significant damage or data breach likely. Address urgently.</div></div>
+      <div class="rg-box"><div class="rg-label medium">MEDIUM</div><div class="rg-when">Fix within 30 days</div><div class="rg-desc">Moderate risk requiring specific conditions to exploit.</div></div>
+      <div class="rg-box"><div class="rg-label low">LOW</div><div class="rg-when">Fix when possible</div><div class="rg-desc">Minor risk. Address during next scheduled maintenance.</div></div>
     </div>
-    <div class="card-body">
-      <p>This report was automatically generated by <strong>CyberScan Pro</strong> after scanning <strong>{{ target }}</strong>. It identifies security weaknesses that could be exploited by attackers to steal data, disrupt services, or gain unauthorised access.</p>
-      <p><strong>You do not need to be a technical expert to read this.</strong> Every finding includes a plain English explanation of what the problem is, what could happen if exploited, and exactly what steps to take to fix it.</p>
-      <div class="risk-guide">
-        <div class="rg-box critical">
-          <div class="rg-label critical">CRITICAL</div>
-          <div class="rg-when">🚨 Fix within 24 hours</div>
-          <div class="rg-desc">Attackers can gain full control or steal all data immediately.</div>
-        </div>
-        <div class="rg-box high">
-          <div class="rg-label high">HIGH</div>
-          <div class="rg-when">🔴 Fix within 7 days</div>
-          <div class="rg-desc">Significant damage or data breach likely. Address urgently.</div>
-        </div>
-        <div class="rg-box medium">
-          <div class="rg-label medium">MEDIUM</div>
-          <div class="rg-when">🟠 Fix within 30 days</div>
-          <div class="rg-desc">Moderate risk requiring specific conditions to exploit.</div>
-        </div>
-        <div class="rg-box low">
-          <div class="rg-label low">LOW</div>
-          <div class="rg-when">🔵 Fix when possible</div>
-          <div class="rg-desc">Minor risk. Address during next scheduled maintenance.</div>
-        </div>
+  </section>
+
+  <!-- ══ EXECUTIVE SUMMARY ═══════════════════════════════════════════════ -->
+  <section class="doc-section" id="exec-summary">
+    <div class="sec-head"><h2>Executive Summary</h2><span class="sec-num">SECTION 1</span></div>
+    {% if total_findings > 0 %}
+    {% set c_pct = (severity_counts['Critical'] / total_findings * 100) %}
+    {% set h_pct = (severity_counts['High'] / total_findings * 100) %}
+    {% set m_pct = (severity_counts['Medium'] / total_findings * 100) %}
+    {% set ch = c_pct %}{% set ch_h = c_pct + h_pct %}{% set ch_hm = c_pct + h_pct + m_pct %}
+    <div class="sev-donut-row">
+      <div class="sev-donut" style="background:conic-gradient(#C00000 0% {{ ch }}%, #D35400 {{ ch }}% {{ ch_h }}%, #B7950B {{ ch_h }}% {{ ch_hm }}%, #2E75B6 {{ ch_hm }}% 100%);">
+        <div class="sev-donut-hole"><span>{{ total_findings }}</span><small>findings</small></div>
       </div>
-    </div>
-  </div>
-
-  <!-- ══ EXECUTIVE SUMMARY ══════════════════════════════════════════════════ -->
-  <div class="card">
-    <div class="card-head">
-      <h2>📊 Executive Summary</h2>
-      <span class="section-num">SECTION 1</span>
-    </div>
-    <div class="card-body">
-      <div class="sev-bar">
-        {% for sev in ['Critical','High','Medium','Low'] %}
-        <div class="sev-chip sev-{{ sev }}">
-          <span class="sev-n">{{ severity_counts[sev] }}</span>
-          <span class="sev-l">{{ sev }}</span>
-        </div>
+      <div class="sev-donut-legend">
+        {% for sev, color in [('Critical','#C00000'),('High','#D35400'),('Medium','#B7950B'),('Low','#2E75B6')] %}
+        <div class="sev-legend-item"><span class="sev-legend-dot" style="background:{{ color }}"></span>{{ sev }}<b>{{ severity_counts[sev] }}</b></div>
         {% endfor %}
       </div>
-      <p>A vulnerability assessment was conducted against <strong>{{ target }}</strong> on {{ generated_at }}. The scan discovered <strong>{{ total_hosts }}</strong> live host(s) with <strong>{{ total_findings }}</strong> total security finding(s). The overall risk rating is <strong>{{ risk_rating }}</strong>.</p>
-      {% if severity_counts['Critical'] > 0 %}
-      <div class="alert alert-crit">🚨 <strong>{{ severity_counts['Critical'] }} CRITICAL issue(s) found</strong> — immediate action required within 24 hours to prevent potential compromise.</div>
-      {% endif %}
-      {% if severity_counts['High'] > 0 %}
-      <div class="alert alert-high">🔴 <strong>{{ severity_counts['High'] }} HIGH severity issue(s) found</strong> — address within 7 days.</div>
-      {% endif %}
-      {% if total_findings == 0 %}
-      <div class="alert alert-ok">✅ <strong>No vulnerabilities detected.</strong> The target appears well-secured against the tested attack vectors. Continue monitoring regularly.</div>
-      {% endif %}
     </div>
-  </div>
+    {% else %}
+    <div class="sev-bar">
+      {% for sev in ['Critical','High','Medium','Low'] %}
+      <div class="sev-chip"><span class="sev-n">{{ severity_counts[sev] }}</span><span class="sev-l">{{ sev }}</span></div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    <p>A vulnerability assessment was conducted against <strong>{{ target }}</strong> on {{ generated_at }}. The scan discovered <strong>{{ total_hosts }}</strong> live host(s) with <strong>{{ total_findings }}</strong> total security finding(s). The overall risk rating is <strong>{{ risk_rating }}</strong>.</p>
+    {% if severity_counts['Critical'] > 0 %}<div class="alert alert-crit"><strong>{{ severity_counts['Critical'] }} CRITICAL issue(s) found</strong> — immediate action required within 24 hours to prevent potential compromise.</div>{% endif %}
+    {% if severity_counts['High'] > 0 %}<div class="alert alert-high"><strong>{{ severity_counts['High'] }} HIGH severity issue(s) found</strong> — address within 7 days.</div>{% endif %}
+    {% if total_findings == 0 %}<div class="alert alert-ok"><strong>No vulnerabilities detected.</strong> The target appears well-secured against the tested attack vectors. Continue monitoring regularly.</div>{% endif %}
+  </section>
 
-  <!-- ══ THREAT INTELLIGENCE ════════════════════════════════════════════════ -->
+  <!-- ══ THREAT INTELLIGENCE ══════════════════════════════════════════════ -->
   {% if has_enrichment %}
-  <div class="card">
-    <div class="card-head">
-      <h2>🔍 Threat Intelligence</h2>
-      <span class="section-num">SECTION 2</span>
-    </div>
-    <div class="card-body">
-      <p>The following intelligence data was gathered from external threat databases automatically during the assessment.</p>
-      <div class="ti-grid">
-
-        {% if shodan %}
-        <div class="ti-card">
-          <div class="ti-card-head">🔎 Shodan Intelligence</div>
-          <div class="ti-card-body">
-            <table class="ti-table">
-              {% if shodan.org %}<tr><td>Organisation</td><td>{{ shodan.org }}</td></tr>{% endif %}
-              {% if shodan.isp %}<tr><td>ISP</td><td>{{ shodan.isp }}</td></tr>{% endif %}
-              {% if shodan.country %}<tr><td>Country</td><td>{{ shodan.country }}{% if shodan.city %}, {{ shodan.city }}{% endif %}</td></tr>{% endif %}
-              {% if shodan.os %}<tr><td>OS Detected</td><td>{{ shodan.os }}</td></tr>{% endif %}
-              {% if shodan.open_ports %}<tr><td>Known Ports</td><td>{{ shodan.open_ports | join(", ") }}</td></tr>{% endif %}
-              {% if shodan.vulns %}<tr><td>Known CVEs</td><td style="color:#C00000;font-weight:700;">{{ shodan.vulns | join(", ") }}</td></tr>{% endif %}
-              {% if shodan.tags %}<tr><td>Tags</td><td>{{ shodan.tags | join(", ") }}</td></tr>{% endif %}
-            </table>
-          </div>
+  <section class="doc-section" id="threat-intel">
+    <div class="sec-head"><h2>Threat Intelligence</h2><span class="sec-num">SECTION 2</span></div>
+    <p>The following intelligence data was gathered from external threat databases automatically during the assessment.</p>
+    <div class="ti-grid">
+      {% if shodan %}
+      <div class="ti-card">
+        <div class="ti-card-head">Shodan Intelligence</div>
+        <div class="ti-card-body">
+          <table class="ti-table">
+            {% if shodan.org %}<tr><td>Organisation</td><td>{{ shodan.org }}</td></tr>{% endif %}
+            {% if shodan.isp %}<tr><td>ISP</td><td>{{ shodan.isp }}</td></tr>{% endif %}
+            {% if shodan.country %}<tr><td>Country</td><td>{{ shodan.country }}{% if shodan.city %}, {{ shodan.city }}{% endif %}</td></tr>{% endif %}
+            {% if shodan.os %}<tr><td>OS Detected</td><td>{{ shodan.os }}</td></tr>{% endif %}
+            {% if shodan.open_ports %}<tr><td>Known Ports</td><td>{{ shodan.open_ports | join(", ") }}</td></tr>{% endif %}
+            {% if shodan.vulns %}<tr><td>Known CVEs</td><td style="color:#C00000;">{{ shodan.vulns | join(", ") }}</td></tr>{% endif %}
+            {% if shodan.tags %}<tr><td>Tags</td><td>{{ shodan.tags | join(", ") }}</td></tr>{% endif %}
+          </table>
         </div>
-        {% endif %}
-
-        {% if virustotal %}
-        {% set mal = virustotal.malicious %}
-        <div class="ti-card">
-          <div class="ti-card-head">🛡 VirusTotal Analysis</div>
-          <div class="ti-card-body">
-            <div class="ti-stat-row">
-              <div class="ti-stat">
-                <div class="ti-stat-n" style="color:{% if mal > 0 %}#C00000{% else %}#1E8449{% endif %};">{{ mal }}</div>
-                <div class="ti-stat-l">MALICIOUS</div>
-              </div>
-              <div class="ti-stat">
-                <div class="ti-stat-n" style="color:#D35400;">{{ virustotal.suspicious }}</div>
-                <div class="ti-stat-l">SUSPICIOUS</div>
-              </div>
-              <div class="ti-stat">
-                <div class="ti-stat-n" style="color:#1E8449;">{{ virustotal.harmless }}</div>
-                <div class="ti-stat-l">CLEAN</div>
-              </div>
-            </div>
-            <table class="ti-table">
-              {% if virustotal.as_owner %}<tr><td>Network</td><td>{{ virustotal.as_owner }}</td></tr>{% endif %}
-              {% if virustotal.country %}<tr><td>Country</td><td>{{ virustotal.country }}</td></tr>{% endif %}
-              <tr><td>Reputation</td><td>{{ virustotal.reputation }}</td></tr>
-            </table>
-            <a href="{{ virustotal.vt_url }}" target="_blank" class="ti-link">View Full VirusTotal Report →</a>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if abuseipdb %}
-        {% set score = abuseipdb.abuse_score %}
-        <div class="ti-card">
-          <div class="ti-card-head">⚠️ AbuseIPDB Reputation</div>
-          <div class="ti-card-body">
-            <div style="text-align:center;margin-bottom:12px;">
-              <div style="font-size:42px;font-weight:800;color:{% if score > 50 %}#C00000{% elif score > 10 %}#D35400{% else %}#1E8449{% endif %};">{{ score }}%</div>
-              <div style="font-size:10px;color:var(--text2);letter-spacing:1px;">ABUSE CONFIDENCE SCORE</div>
-            </div>
-            <table class="ti-table">
-              <tr><td>Total Reports</td><td>{{ abuseipdb.total_reports }}</td></tr>
-              <tr><td>ISP</td><td>{{ abuseipdb.isp }}</td></tr>
-              <tr><td>Country</td><td>{{ abuseipdb.country }}</td></tr>
-              <tr><td>Usage Type</td><td>{{ abuseipdb.usage_type }}</td></tr>
-              <tr><td>Last Reported</td><td>{{ abuseipdb.last_reported or 'Never' }}</td></tr>
-            </table>
-          </div>
-        </div>
-        {% endif %}
-
-        {% if urlscan %}
-        <div class="ti-card">
-          <div class="ti-card-head">🌐 URLScan.io Analysis</div>
-          <div class="ti-card-body">
-            <p style="font-size:11px;color:var(--text2);margin-bottom:10px;">Visual browser analysis submitted during this assessment.</p>
-            <a href="{{ urlscan.result_url }}" target="_blank" class="ti-link">View URLScan Result →</a>
-            {% if urlscan.screenshot %}
-            <img src="{{ urlscan.screenshot }}" class="ti-screenshot" alt="URLScan screenshot" onerror="this.style.display='none'">
-            {% endif %}
-          </div>
-        </div>
-        {% endif %}
-
       </div>
+      {% endif %}
+      {% if virustotal %}
+      {% set mal = virustotal.malicious %}
+      <div class="ti-card">
+        <div class="ti-card-head">VirusTotal Analysis</div>
+        <div class="ti-card-body">
+          <div class="ti-stat-row">
+            <div class="ti-stat"><div class="ti-stat-n" style="color:{% if mal > 0 %}#C00000{% else %}#1E8449{% endif %};">{{ mal }}</div><div class="ti-stat-l">MALICIOUS</div></div>
+            <div class="ti-stat"><div class="ti-stat-n" style="color:#D35400;">{{ virustotal.suspicious }}</div><div class="ti-stat-l">SUSPICIOUS</div></div>
+            <div class="ti-stat"><div class="ti-stat-n" style="color:#1E8449;">{{ virustotal.harmless }}</div><div class="ti-stat-l">CLEAN</div></div>
+          </div>
+          <table class="ti-table">
+            {% if virustotal.as_owner %}<tr><td>Network</td><td>{{ virustotal.as_owner }}</td></tr>{% endif %}
+            {% if virustotal.country %}<tr><td>Country</td><td>{{ virustotal.country }}</td></tr>{% endif %}
+            <tr><td>Reputation</td><td>{{ virustotal.reputation }}</td></tr>
+          </table>
+          <a href="{{ virustotal.vt_url }}" target="_blank" class="ti-link">View Full VirusTotal Report →</a>
+        </div>
+      </div>
+      {% endif %}
+      {% if abuseipdb %}
+      {% set score = abuseipdb.abuse_score %}
+      <div class="ti-card">
+        <div class="ti-card-head">AbuseIPDB Reputation</div>
+        <div class="ti-card-body">
+          <div style="text-align:center;margin-bottom:12px;">
+            <div style="font-size:36px;font-weight:800;color:{% if score > 50 %}#C00000{% elif score > 10 %}#D35400{% else %}#1E8449{% endif %};">{{ score }}%</div>
+            <div style="font-size:9px;color:var(--ink3);letter-spacing:1px;">ABUSE CONFIDENCE SCORE</div>
+          </div>
+          <table class="ti-table">
+            <tr><td>Total Reports</td><td>{{ abuseipdb.total_reports }}</td></tr>
+            <tr><td>ISP</td><td>{{ abuseipdb.isp }}</td></tr>
+            <tr><td>Country</td><td>{{ abuseipdb.country }}</td></tr>
+            <tr><td>Usage Type</td><td>{{ abuseipdb.usage_type }}</td></tr>
+            <tr><td>Last Reported</td><td>{{ abuseipdb.last_reported or 'Never' }}</td></tr>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+      {% if urlscan %}
+      <div class="ti-card">
+        <div class="ti-card-head">URLScan.io Analysis</div>
+        <div class="ti-card-body">
+          <p style="font-size:11px;color:var(--ink2);margin-bottom:10px;">Visual browser analysis submitted during this assessment.</p>
+          <a href="{{ urlscan.result_url }}" target="_blank" class="ti-link">View URLScan Result →</a>
+          {% if urlscan.screenshot %}<img src="{{ urlscan.screenshot }}" class="ti-screenshot" alt="URLScan screenshot" onerror="this.style.display='none'">{% endif %}
+        </div>
+      </div>
+      {% endif %}
     </div>
-  </div>
+  </section>
   {% endif %}
 
-  <!-- ══ METHODOLOGY ════════════════════════════════════════════════════════ -->
-  <div class="card">
-    <div class="card-head">
-      <h2>🔬 How the Scan Was Conducted</h2>
-      <span class="section-num">SECTION 3</span>
+  <!-- ══ METHODOLOGY ══════════════════════════════════════════════════════ -->
+  <section class="doc-section" id="methodology">
+    <div class="sec-head"><h2>How the Scan Was Conducted</h2><span class="sec-num">SECTION 3</span></div>
+    <p>CyberScan Pro performed the following assessment phases against <strong>{{ target }}</strong>:</p>
+    <div class="table-wrap" style="margin-top:14px;">
+      <table>
+        <tr><th>Phase</th><th>What Was Done</th><th>What We Were Looking For</th></tr>
+        {% for phase, desc, looked in methodology %}
+        <tr><td>{{ phase }}</td><td>{{ desc }}</td><td>{{ looked }}</td></tr>
+        {% endfor %}
+      </table>
     </div>
-    <div class="card-body">
-      <p>CyberScan Pro performed the following assessment phases against <strong>{{ target }}</strong>:</p>
-      <div class="table-wrap" style="margin-top:12px;">
-        <table>
-          <tr><th>Phase</th><th>What Was Done</th><th>What We Were Looking For</th></tr>
-          {% for phase, desc, looked in methodology %}
-          <tr><td><strong>{{ phase }}</strong></td><td>{{ desc }}</td><td>{{ looked }}</td></tr>
-          {% endfor %}
-        </table>
-      </div>
-    </div>
-  </div>
+  </section>
 
-  <!-- ══ DISCOVERED HOSTS ════════════════════════════════════════════════════ -->
+  <!-- ══ DISCOVERED HOSTS ═════════════════════════════════════════════════ -->
   {% if hosts %}
-  <div class="card">
-    <div class="card-head">
-      <h2>🖥️ Discovered Hosts &amp; Open Services</h2>
-      <span class="section-num">SECTION 4</span>
-    </div>
-    <div class="card-body">
-      <p>The following network hosts and open ports were discovered. Each open port is a service running on the server that is accessible from the internet — each one is a potential entry point for attackers if not properly secured.</p>
+  <section class="doc-section" id="hosts">
+    <div class="sec-head"><h2>Discovered Hosts &amp; Open Services</h2><span class="sec-num">SECTION 4</span></div>
+    <p>The following network hosts and open ports were discovered. Each open port is a service running on the server that is accessible from the internet — each one is a potential entry point for attackers if not properly secured.</p>
 
-      {% for host in hosts %}
-      <div class="host-block">
-        <div class="host-title">
-          🖥 {{ host.ip }}{% if host.hostname and host.hostname != 'N/A' %} — {{ host.hostname }}{% endif %}
-        </div>
-
-        {% if host.ports %}
-        {% for p in host.ports %}
-        {% set is_crit = p.port in [23, 3306, 3389, 6379, 27017] %}
-        {% set is_high = p.port in [21, 25, 53, 110, 143] %}
-        {% set risk_class = "CRITICAL" if is_crit else "HIGH" if is_high else "MEDIUM" if p.port == 80 else "LOW" %}
-        <div class="port-card">
-          <div class="port-card-head">
-            <div style="display:flex;align-items:center;gap:6px;">
-              <span class="port-num">:{{ p.port }}</span>
-              <span class="port-svc">{{ p.service | upper if p.service else 'UNKNOWN' }}</span>
-              {% if p.version %}<span class="port-ver">{{ p.version[:40] }}</span>{% endif %}
-            </div>
-            <span class="port-risk pr-{{ risk_class }}">{{ risk_class }} RISK</span>
+    {% for host in hosts %}
+    <div class="host-block">
+      <div class="host-title">{{ host.ip }}{% if host.hostname and host.hostname != 'N/A' %} — {{ host.hostname }}{% endif %}</div>
+      {% if host.ports %}
+      {% for p in host.ports %}
+      {% set is_crit = p.port in [23, 3306, 3389, 6379, 27017] %}
+      {% set is_high = p.port in [21, 25, 53, 110, 143] %}
+      {% set risk_class = "CRITICAL" if is_crit else "HIGH" if is_high else "MEDIUM" if p.port == 80 else "LOW" %}
+      <div class="port-card risk-{{ risk_class }}">
+        <div class="port-card-head">
+          <div>
+            <span class="port-num">:{{ p.port }}</span>
+            <span class="port-svc">{{ p.service | upper if p.service else 'UNKNOWN' }}</span>
+            {% if p.version %}<span class="port-ver">{{ p.version[:40] }}</span>{% endif %}
           </div>
-          <div class="port-card-body">
-            <div class="pcb-col pcb-what">
-              <div class="pcb-label">🔍 What is this?</div>
-              <div class="pcb-text">
-                {% if p.port == 21 %}FTP (File Transfer Protocol) allows uploading and downloading files to/from the server. It has no built-in encryption — everything is transmitted in plain text including passwords.
-                {% elif p.port == 22 %}SSH (Secure Shell) is an encrypted protocol for remotely accessing and managing a server. It is the standard secure replacement for Telnet.
-                {% elif p.port == 23 %}Telnet is a legacy remote access protocol created in 1969. It transmits all data — including passwords — as plain readable text with zero encryption.
-                {% elif p.port == 25 %}SMTP (Simple Mail Transfer Protocol) handles email transmission between mail servers. Port 25 is used for server-to-server email delivery.
-                {% elif p.port == 53 %}DNS (Domain Name System) translates domain names into IP addresses. It handles billions of queries daily and is a critical infrastructure service.
-                {% elif p.port == 80 %}HTTP (HyperText Transfer Protocol) serves web pages with zero encryption. All data — including login credentials — travels as readable plain text.
-                {% elif p.port == 110 %}POP3 (Post Office Protocol) is used to download emails from the server to a local device. Without SSL, all email access is unencrypted.
-                {% elif p.port == 143 %}IMAP (Internet Message Access Protocol) allows email clients to access and manage emails on the server. Without encryption, all credentials are exposed.
-                {% elif p.port == 443 %}HTTPS (HTTP Secure) is the encrypted version of HTTP using TLS/SSL. It protects data in transit between browser and server.
-                {% elif p.port == 3306 %}MySQL is a popular relational database system. Port 3306 provides direct access to all stored data. It should never be publicly accessible.
-                {% elif p.port == 3389 %}RDP (Remote Desktop Protocol) allows full graphical remote control of a Windows server. It is a frequent target for ransomware groups.
-                {% elif p.port == 6379 %}Redis is an in-memory data store used for caching and sessions. By default it has no password and no encryption — trivially exploitable if exposed.
-                {% elif p.port == 27017 %}MongoDB is a NoSQL database. Early versions had no authentication by default. Direct internet exposure leads to immediate data theft.
-                {% else %}This is a network service running on port {{ p.port }}. Every open port is a potential entry point if not properly secured and kept patched.{% endif %}
-              </div>
+          <span class="port-risk pr-{{ risk_class }}">{{ risk_class }} RISK</span>
+        </div>
+        <div class="port-card-body">
+          <div class="pcb-col">
+            <div class="pcb-label">What is this?</div>
+            <div class="pcb-text">
+              {% if p.port == 21 %}FTP (File Transfer Protocol) allows uploading and downloading files to/from the server. It has no built-in encryption — everything is transmitted in plain text including passwords.
+              {% elif p.port == 22 %}SSH (Secure Shell) is an encrypted protocol for remotely accessing and managing a server. It is the standard secure replacement for Telnet.
+              {% elif p.port == 23 %}Telnet is a legacy remote access protocol created in 1969. It transmits all data — including passwords — as plain readable text with zero encryption.
+              {% elif p.port == 25 %}SMTP (Simple Mail Transfer Protocol) handles email transmission between mail servers. Port 25 is used for server-to-server email delivery.
+              {% elif p.port == 53 %}DNS (Domain Name System) translates domain names into IP addresses. It handles billions of queries daily and is a critical infrastructure service.
+              {% elif p.port == 80 %}HTTP (HyperText Transfer Protocol) serves web pages with zero encryption. All data — including login credentials — travels as readable plain text.
+              {% elif p.port == 110 %}POP3 (Post Office Protocol) is used to download emails from the server to a local device. Without SSL, all email access is unencrypted.
+              {% elif p.port == 143 %}IMAP (Internet Message Access Protocol) allows email clients to access and manage emails on the server. Without encryption, all credentials are exposed.
+              {% elif p.port == 443 %}HTTPS (HTTP Secure) is the encrypted version of HTTP using TLS/SSL. It protects data in transit between browser and server.
+              {% elif p.port == 3306 %}MySQL is a popular relational database system. Port 3306 provides direct access to all stored data. It should never be publicly accessible.
+              {% elif p.port == 3389 %}RDP (Remote Desktop Protocol) allows full graphical remote control of a Windows server. It is a frequent target for ransomware groups.
+              {% elif p.port == 6379 %}Redis is an in-memory data store used for caching and sessions. By default it has no password and no encryption — trivially exploitable if exposed.
+              {% elif p.port == 27017 %}MongoDB is a NoSQL database. Early versions had no authentication by default. Direct internet exposure leads to immediate data theft.
+              {% else %}This is a network service running on port {{ p.port }}. Every open port is a potential entry point if not properly secured and kept patched.{% endif %}
             </div>
-            <div class="pcb-col pcb-attack">
-              <div class="pcb-label">💥 Attack risk</div>
-              <div class="pcb-text">
-                {% if p.port == 21 %}Attackers use packet sniffers to capture FTP traffic and extract login credentials in plain text, then log in and steal or modify all files.
-                {% elif p.port == 22 %}Bots run 24/7 brute-forcing usernames and passwords. If a weak password is used, attackers gain complete server control and can install ransomware.
-                {% elif p.port == 23 %}Free tools like Wireshark capture everything transmitted during a Telnet session, including your password typed in real time.
-                {% elif p.port == 25 %}If misconfigured as an open relay, attackers route millions of spam emails through your server, destroying your domain reputation and getting it blacklisted.
-                {% elif p.port == 53 %}Attackers exploit DNS for amplification DDoS attacks, cache poisoning to redirect users to fake sites, or zone transfers to map your internal network.
-                {% elif p.port == 80 %}Attackers intercept HTTP traffic to steal session cookies, capture login credentials, or inject malicious content into pages served to users.
-                {% elif p.port == 110 %}Attackers capture POP3 traffic, extract email credentials, and gain access to all communications and linked accounts.
-                {% elif p.port == 143 %}Persistent access to all emails — reading confidential messages, impersonating the account holder, resetting passwords for any linked service.
-                {% elif p.port == 443 %}If old TLS versions are enabled, attackers exploit known vulnerabilities (POODLE, BEAST) to decrypt supposedly secure traffic.
-                {% elif p.port == 3306 %}Automated tools scan for exposed MySQL, brute-force the root account, and dump the entire database — every user record, password, and sensitive detail.
-                {% elif p.port == 3389 %}Ransomware groups scan specifically for exposed RDP, gain access via brute force, then encrypt every file and demand payment.
-                {% elif p.port == 6379 %}Attackers connect without a password (default config), read all cached data including session tokens, or write a cron job to execute commands on the server.
-                {% elif p.port == 27017 %}Attackers connect without authentication, dump the entire database, delete it, and leave a ransom note demanding payment.
-                {% else %}Attackers probe this service for known vulnerabilities, attempt default credential login, or use it as a pivot point to access other internal systems.{% endif %}
-              </div>
+          </div>
+          <div class="pcb-col">
+            <div class="pcb-label">Attack risk</div>
+            <div class="pcb-text">
+              {% if p.port == 21 %}Attackers use packet sniffers to capture FTP traffic and extract login credentials in plain text, then log in and steal or modify all files.
+              {% elif p.port == 22 %}Bots run 24/7 brute-forcing usernames and passwords. If a weak password is used, attackers gain complete server control and can install ransomware.
+              {% elif p.port == 23 %}Free tools like Wireshark capture everything transmitted during a Telnet session, including your password typed in real time.
+              {% elif p.port == 25 %}If misconfigured as an open relay, attackers route millions of spam emails through your server, destroying your domain reputation and getting it blacklisted.
+              {% elif p.port == 53 %}Attackers exploit DNS for amplification DDoS attacks, cache poisoning to redirect users to fake sites, or zone transfers to map your internal network.
+              {% elif p.port == 80 %}Attackers intercept HTTP traffic to steal session cookies, capture login credentials, or inject malicious content into pages served to users.
+              {% elif p.port == 110 %}Attackers capture POP3 traffic, extract email credentials, and gain access to all communications and linked accounts.
+              {% elif p.port == 143 %}Persistent access to all emails — reading confidential messages, impersonating the account holder, resetting passwords for any linked service.
+              {% elif p.port == 443 %}If old TLS versions are enabled, attackers exploit known vulnerabilities (POODLE, BEAST) to decrypt supposedly secure traffic.
+              {% elif p.port == 3306 %}Automated tools scan for exposed MySQL, brute-force the root account, and dump the entire database — every user record, password, and sensitive detail.
+              {% elif p.port == 3389 %}Ransomware groups scan specifically for exposed RDP, gain access via brute force, then encrypt every file and demand payment.
+              {% elif p.port == 6379 %}Attackers connect without a password (default config), read all cached data including session tokens, or write a cron job to execute commands on the server.
+              {% elif p.port == 27017 %}Attackers connect without authentication, dump the entire database, delete it, and leave a ransom note demanding payment.
+              {% else %}Attackers probe this service for known vulnerabilities, attempt default credential login, or use it as a pivot point to access other internal systems.{% endif %}
             </div>
-            <div class="pcb-col pcb-fix">
-              <div class="pcb-label">🔧 How to fix</div>
-              <div class="pcb-text">
-                {% if p.port == 21 %}Disable FTP: <code>systemctl stop vsftpd && systemctl disable vsftpd</code>. Use SFTP over SSH instead — same capability, fully encrypted.
-                {% elif p.port == 22 %}Disable password auth: set <code>PasswordAuthentication no</code> in sshd_config. Use SSH keys only. Install fail2ban. Disable root login.
-                {% elif p.port == 23 %}IMMEDIATELY: <code>systemctl stop telnetd && systemctl disable telnetd</code>. There is no secure version of Telnet. It must be completely removed.
-                {% elif p.port == 25 %}Require SMTP authentication for relay. Configure SPF, DKIM, and DMARC in DNS. Block port 25 outbound except to your mail server.
-                {% elif p.port == 53 %}Disable zone transfers to unauthorised servers. Disable recursion for external clients. Implement DNS rate limiting. Keep BIND updated.
-                {% elif p.port == 80 %}Get a free SSL certificate from Let's Encrypt: <code>certbot --apache</code>. Redirect all HTTP to HTTPS. Add HSTS header.
-                {% elif p.port == 110 %}Disable port 110 at the firewall. Enable POP3S on port 995 instead. Update all mail client configurations.
-                {% elif p.port == 143 %}Disable port 143 at the firewall. Enable IMAPS on port 993. Set <code>ssl = required</code> in Dovecot.
-                {% elif p.port == 443 %}Disable TLS 1.0, 1.1, SSLv3. Enable TLS 1.2 and 1.3 only. Test at ssllabs.com and aim for grade A+.
-                {% elif p.port == 3306 %}IMMEDIATELY: set <code>bind-address = 127.0.0.1</code> in my.cnf. Block port 3306 at firewall. Use SSH tunnelling for remote DB access.
-                {% elif p.port == 3389 %}Allow RDP only from your specific IP at the firewall. Enable Network Level Authentication. Set up VPN before allowing RDP connections.
-                {% elif p.port == 6379 %}Add <code>requirepass StrongPassword</code> and <code>bind 127.0.0.1</code> to redis.conf. Block port 6379 at the firewall.
-                {% elif p.port == 27017 %}Enable authentication in mongod.conf: <code>security.authorization: enabled</code>. Bind to localhost. Block port 27017 at the firewall.
-                {% else %}Verify if public access to port {{ p.port }} is necessary. Firewall it if internal only. Keep the software patched to the latest version. Monitor access logs.{% endif %}
-              </div>
+          </div>
+          <div class="pcb-col">
+            <div class="pcb-label">How to fix</div>
+            <div class="pcb-text">
+              {% if p.port == 21 %}Disable FTP: <code>systemctl stop vsftpd && systemctl disable vsftpd</code>. Use SFTP over SSH instead — same capability, fully encrypted.
+              {% elif p.port == 22 %}Disable password auth: set <code>PasswordAuthentication no</code> in sshd_config. Use SSH keys only. Install fail2ban. Disable root login.
+              {% elif p.port == 23 %}IMMEDIATELY: <code>systemctl stop telnetd && systemctl disable telnetd</code>. There is no secure version of Telnet. It must be completely removed.
+              {% elif p.port == 25 %}Require SMTP authentication for relay. Configure SPF, DKIM, and DMARC in DNS. Block port 25 outbound except to your mail server.
+              {% elif p.port == 53 %}Disable zone transfers to unauthorised servers. Disable recursion for external clients. Implement DNS rate limiting. Keep BIND updated.
+              {% elif p.port == 80 %}Get a free SSL certificate from Let's Encrypt: <code>certbot --apache</code>. Redirect all HTTP to HTTPS. Add HSTS header.
+              {% elif p.port == 110 %}Disable port 110 at the firewall. Enable POP3S on port 995 instead. Update all mail client configurations.
+              {% elif p.port == 143 %}Disable port 143 at the firewall. Enable IMAPS on port 993. Set <code>ssl = required</code> in Dovecot.
+              {% elif p.port == 443 %}Disable TLS 1.0, 1.1, SSLv3. Enable TLS 1.2 and 1.3 only. Test at ssllabs.com and aim for grade A+.
+              {% elif p.port == 3306 %}IMMEDIATELY: set <code>bind-address = 127.0.0.1</code> in my.cnf. Block port 3306 at firewall. Use SSH tunnelling for remote DB access.
+              {% elif p.port == 3389 %}Allow RDP only from your specific IP at the firewall. Enable Network Level Authentication. Set up VPN before allowing RDP connections.
+              {% elif p.port == 6379 %}Add <code>requirepass StrongPassword</code> and <code>bind 127.0.0.1</code> to redis.conf. Block port 6379 at the firewall.
+              {% elif p.port == 27017 %}Enable authentication in mongod.conf: <code>security.authorization: enabled</code>. Bind to localhost. Block port 27017 at the firewall.
+              {% else %}Verify if public access to port {{ p.port }} is necessary. Firewall it if internal only. Keep the software patched to the latest version. Monitor access logs.{% endif %}
             </div>
           </div>
         </div>
-        {% endfor %}
-        {% else %}
-        <p style="color:#999;font-size:12px;">No open ports detected on this host.</p>
-        {% endif %}
       </div>
       {% endfor %}
+      {% else %}
+      <p style="color:var(--ink3);font-size:12px;">No open ports detected on this host.</p>
+      {% endif %}
     </div>
-  </div>
+    {% endfor %}
+  </section>
   {% endif %}
 
-  <!-- ══ WEB APPLICATION FINDINGS ════════════════════════════════════════════ -->
+  <!-- ══ WEB APPLICATION FINDINGS ═════════════════════════════════════════ -->
   {% if web_findings %}
-  <div class="card">
-    <div class="card-head">
-      <h2>🌐 Web Application Security Findings</h2>
-      <span class="section-num">SECTION 5</span>
-    </div>
-    <div class="card-body">
-      <p>The following security issues were found in the web application at <strong>{{ target }}</strong>. Each finding includes a plain English explanation of the risk and how to fix it.</p>
+  <section class="doc-section" id="web-findings">
+    <div class="sec-head"><h2>Web Application Security Findings</h2><span class="sec-num">SECTION 5</span></div>
+    <p>The following security issues were found in the web application at <strong>{{ target }}</strong>. Each finding includes a plain English explanation of the risk and how to fix it.</p>
 
-      {% for f in web_findings %}
-      <div class="finding-card">
-        <div class="fc-head {{ f.severity }}">
-          <div>
-            <div class="fc-title">{{ loop.index }}. {{ f.vuln_type }}</div>
-            <div class="fc-loc">📍 {{ f.host_ip }} — {{ f.url }}</div>
-          </div>
-          <span class="badge {{ f.severity }}">{{ f.severity }}</span>
+    {% for f in web_findings %}
+    <div class="finding-card">
+      <div class="fc-head {{ f.severity }}">
+        <div>
+          <div class="fc-title">{{ loop.index }}. {{ f.vuln_type }}{% if f.is_new %}<span class="new-badge">New since last scan</span>{% endif %}</div>
+          <div class="fc-loc">{{ f.host_ip }} — {{ f.url }}</div>
         </div>
-        <div class="fc-explain">
-          <h4>🗣 Plain English Explanation</h4>
-          <div class="pe-grid">
-            <div class="pe-box what">
-              <div class="pe-label">🔍 What is this vulnerability?</div>
-              <div class="pe-text">{{ f.plain_what }}</div>
-            </div>
-            <div class="pe-box means">
-              <div class="pe-label">💡 What does this mean for {{ target }}?</div>
-              <div class="pe-text">{{ f.plain_means }}</div>
-            </div>
-            <div class="pe-box impact">
-              <div class="pe-label">💥 What could an attacker do?</div>
-              <div class="pe-text">{{ f.plain_impact }}</div>
-            </div>
-            <div class="pe-box fix">
-              <div class="pe-label">🔧 How to fix this</div>
-              <div class="pe-text">{{ f.plain_fix }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="fc-tech">
-          <p>Technical Details</p>
-          <div class="table-wrap">
-            <table>
-              <tr><td>Affected URL</td><td style="font-family:monospace;word-break:break-all;">{{ f.url }}</td></tr>
-              {% if f.evidence %}<tr><td>Evidence</td><td style="font-family:monospace;word-break:break-all;color:#C00000;">{{ f.evidence }}</td></tr>{% endif %}
-              <tr><td>Recommendation</td><td>{{ f.recommendation }}</td></tr>
-            </table>
-          </div>
+        <span class="badge {{ f.severity }}">{{ f.severity }}</span>
+      </div>
+      <div class="fc-explain">
+        <h4>Plain English Explanation</h4>
+        <div class="pe-grid">
+          <div class="pe-box"><div class="pe-label">What is this vulnerability?</div><div class="pe-text">{{ f.plain_what }}</div></div>
+          <div class="pe-box"><div class="pe-label">What does this mean for {{ target }}?</div><div class="pe-text">{{ f.plain_means }}</div></div>
+          <div class="pe-box"><div class="pe-label">What could an attacker do?</div><div class="pe-text">{{ f.plain_impact }}</div></div>
+          <div class="pe-box"><div class="pe-label">How to fix this</div><div class="pe-text">{{ f.plain_fix }}</div></div>
         </div>
       </div>
-      {% endfor %}
+      <div class="fc-tech">
+        <p>Technical Details</p>
+        <div class="table-wrap">
+          <table>
+            <tr><td>Affected URL</td><td style="font-family:var(--mono);word-break:break-all;">{{ f.url }}</td></tr>
+            {% if f.evidence %}<tr><td>Evidence</td><td style="font-family:var(--mono);word-break:break-all;color:#C00000;">{{ f.evidence }}</td></tr>{% endif %}
+            <tr><td>Recommendation</td><td>{{ f.recommendation }}</td></tr>
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
+    {% endfor %}
+  </section>
   {% endif %}
 
-  <!-- ══ CVE FINDINGS ════════════════════════════════════════════════════════ -->
+  <!-- ══ CVE FINDINGS ═════════════════════════════════════════════════════ -->
   {% if cve_findings %}
-  <div class="card">
-    <div class="card-head">
-      <h2>🔴 Known Software Vulnerabilities (CVEs)</h2>
-      <span class="section-num">SECTION 6</span>
-    </div>
-    <div class="card-body">
-      <p>The following publicly known vulnerabilities were identified based on the software versions detected on <strong>{{ target }}</strong>. These are documented in the <strong>National Vulnerability Database (NVD)</strong> — a public registry of security flaws maintained by the US government.</p>
-      <div class="alert alert-crit" style="margin-bottom:16px;">⚠️ Because these vulnerabilities are publicly documented, automated hacking tools actively scan the internet looking for servers running these exact software versions.</div>
+  <section class="doc-section" id="cves">
+    <div class="sec-head"><h2>Known Software Vulnerabilities (CVEs)</h2><span class="sec-num">SECTION 6</span></div>
+    <p>The following publicly known vulnerabilities were identified based on the software versions detected on <strong>{{ target }}</strong>. These are documented in the <strong>National Vulnerability Database (NVD)</strong> — a public registry of security flaws maintained by the US government.</p>
+    <div class="alert alert-crit" style="margin-bottom:18px;">Because these vulnerabilities are publicly documented, automated hacking tools actively scan the internet looking for servers running these exact software versions.</div>
 
-      {% for f in cve_findings %}
-      <div class="finding-card">
-        <div class="fc-head {{ f.severity }}">
-          <div>
-            <div class="fc-title">{{ f.cve_id }}</div>
-            <div class="fc-loc">📍 {{ f.host_ip }}:{{ f.port }} — {{ f.service }}</div>
-            <div class="cvss-score">CVSS Score: {{ f.cvss_score }}/10</div>
-          </div>
-          <span class="badge {{ f.severity }}">{{ f.severity }}</span>
+    {% for f in cve_findings %}
+    <div class="finding-card">
+      <div class="fc-head {{ f.severity }}">
+        <div>
+          <div class="fc-title">{{ f.cve_id }}{% if f.is_new %}<span class="new-badge">New since last scan</span>{% endif %}</div>
+          <div class="fc-loc">{{ f.host_ip }}:{{ f.port }} — {{ f.service }}</div>
+          <div class="cvss-score">CVSS Score: {{ f.cvss_score }}/10</div>
         </div>
-        <div class="fc-explain">
-          <h4>🗣 Plain English Explanation</h4>
-          <div class="pe-grid">
-            <div class="pe-box what">
-              <div class="pe-label">🔍 What is {{ f.cve_id }}?</div>
-              <div class="pe-text">A publicly documented security flaw in <strong>{{ f.service }}</strong> on port {{ f.port }}, rated <strong>{{ f.severity }}</strong> ({{ f.cvss_score }}/10).</div>
-            </div>
-            <div class="pe-box impact">
-              <div class="pe-label">💥 How dangerous?</div>
-              <div class="pe-text">
-                {% if f.cvss_score|float >= 9.0 %}Score {{ f.cvss_score }}/10 — <strong>Extremely dangerous.</strong> Likely allows full server takeover without special skills.
-                {% elif f.cvss_score|float >= 7.0 %}Score {{ f.cvss_score }}/10 — <strong>Highly dangerous.</strong> Can cause data theft or unauthorised access.
-                {% elif f.cvss_score|float >= 4.0 %}Score {{ f.cvss_score }}/10 — <strong>Moderate risk.</strong> Requires specific conditions but can lead to breach.
-                {% else %}Score {{ f.cvss_score }}/10 — <strong>Low severity</strong> with limited direct impact.{% endif %}
-              </div>
-            </div>
-            <div class="pe-box means">
-              <div class="pe-label">📖 Description</div>
-              <div class="pe-text">{{ f.description or 'See the official CVE entry on nvd.nist.gov for full technical details.' }}</div>
-            </div>
-            <div class="pe-box fix">
-              <div class="pe-label">🔧 How to fix</div>
-              <div class="pe-text">Update <strong>{{ f.service }}</strong> to the latest version immediately. Search <strong>nvd.nist.gov</strong> for <strong>{{ f.cve_id }}</strong> to find the exact patched version.</div>
-            </div>
-          </div>
-        </div>
-        <div class="fc-tech">
-          <p>Technical Details</p>
-          <div class="table-wrap">
-            <table>
-              <tr><td>CVE ID</td><td>{{ f.cve_id }}</td></tr>
-              <tr><td>Affected Software</td><td>{{ f.service }}</td></tr>
-              <tr><td>Location</td><td>{{ f.host_ip }}:{{ f.port }}</td></tr>
-              <tr><td>CVSS Score</td><td><strong>{{ f.cvss_score }}/10 ({{ f.severity }})</strong></td></tr>
-              {% if f.reference %}<tr><td>Full Details</td><td><a href="{{ f.reference }}" style="color:var(--blue);">{{ f.reference }}</a></td></tr>{% endif %}
-            </table>
-          </div>
+        <span class="badge {{ f.severity }}">{{ f.severity }}</span>
+      </div>
+      <div class="fc-explain">
+        <h4>Plain English Explanation</h4>
+        <div class="pe-grid">
+          <div class="pe-box"><div class="pe-label">What is {{ f.cve_id }}?</div><div class="pe-text">A publicly documented security flaw in <strong>{{ f.service }}</strong> on port {{ f.port }}, rated <strong>{{ f.severity }}</strong> ({{ f.cvss_score }}/10).</div></div>
+          <div class="pe-box"><div class="pe-label">How dangerous?</div><div class="pe-text">
+            {% if f.cvss_score|float >= 9.0 %}Score {{ f.cvss_score }}/10 — <strong>Extremely dangerous.</strong> Likely allows full server takeover without special skills.
+            {% elif f.cvss_score|float >= 7.0 %}Score {{ f.cvss_score }}/10 — <strong>Highly dangerous.</strong> Can cause data theft or unauthorised access.
+            {% elif f.cvss_score|float >= 4.0 %}Score {{ f.cvss_score }}/10 — <strong>Moderate risk.</strong> Requires specific conditions but can lead to breach.
+            {% else %}Score {{ f.cvss_score }}/10 — <strong>Low severity</strong> with limited direct impact.{% endif %}
+          </div></div>
+          <div class="pe-box"><div class="pe-label">Description</div><div class="pe-text">{{ f.description or 'See the official CVE entry on nvd.nist.gov for full technical details.' }}</div></div>
+          <div class="pe-box"><div class="pe-label">How to fix</div><div class="pe-text">Update <strong>{{ f.service }}</strong> to the latest version immediately. Search <strong>nvd.nist.gov</strong> for <strong>{{ f.cve_id }}</strong> to find the exact patched version.</div></div>
         </div>
       </div>
-      {% endfor %}
+      <div class="fc-tech">
+        <p>Technical Details</p>
+        <div class="table-wrap">
+          <table>
+            <tr><td>CVE ID</td><td>{{ f.cve_id }}</td></tr>
+            <tr><td>Affected Software</td><td>{{ f.service }}</td></tr>
+            <tr><td>Location</td><td>{{ f.host_ip }}:{{ f.port }}</td></tr>
+            <tr><td>CVSS Score</td><td><strong>{{ f.cvss_score }}/10 ({{ f.severity }})</strong></td></tr>
+            {% if f.reference %}<tr><td>Full Details</td><td><a href="{{ f.reference }}" style="color:var(--blue);">{{ f.reference }}</a></td></tr>{% endif %}
+          </table>
+        </div>
+      </div>
     </div>
-  </div>
+    {% endfor %}
+  </section>
   {% endif %}
 
-  <!-- ══ ACTION PLAN ════════════════════════════════════════════════════════ -->
-  <div class="card">
-    <div class="card-head">
-      <h2>✅ Prioritised Action Plan</h2>
-      <span class="section-num">SECTION 7</span>
-    </div>
-    <div class="card-body">
-      <p>The following actions are ranked in order of priority. Start at the top and work downward:</p>
-      <div style="margin-top:14px;">
-        {% set ns = namespace(count=0) %}
-        {% for f in (web_findings + cve_findings)|sort(attribute='severity') %}
-        {% if ns.count < 10 %}
-        {% set ns.count = ns.count + 1 %}
-        <div class="action-item {{ f.severity|lower }}">
-          <div class="action-num">{{ ns.count }}.</div>
-          <div class="action-content">
-            <div class="action-title">
-              {{ f.vuln_type if f.vuln_type is defined else f.cve_id }}
-              <span class="badge {{ f.severity }}" style="margin-left:8px;vertical-align:middle;">{{ f.severity }}</span>
-            </div>
-            <div class="action-rec">{{ f.recommendation if f.recommendation is defined else 'Update the affected software to the latest version.' }}</div>
-          </div>
+  <!-- ══ ACTION PLAN ══════════════════════════════════════════════════════ -->
+  <section class="doc-section" id="action-plan">
+    <div class="sec-head"><h2>Prioritised Action Plan</h2><span class="sec-num">SECTION 7</span></div>
+    <p>The following actions are ranked in order of priority. Start at the top and work downward:</p>
+    <div style="margin-top:6px;">
+      {% set ns = namespace(count=0) %}
+      {% for f in (web_findings + cve_findings)|sort(attribute='severity') %}
+      {% if ns.count < 10 %}
+      {% set ns.count = ns.count + 1 %}
+      <div class="action-item">
+        <div class="action-num">{{ ns.count }}</div>
+        <div class="action-content">
+          <div class="action-title">{{ f.vuln_type if f.vuln_type is defined else f.cve_id }} <span class="badge {{ f.severity }}" style="margin-left:6px;">{{ f.severity }}</span></div>
+          <div class="action-rec">{{ f.recommendation if f.recommendation is defined else 'Update the affected software to the latest version.' }}</div>
         </div>
-        {% endif %}
-        {% endfor %}
-        {% if total_findings == 0 %}
-        <div class="action-item" style="background:#F0FFF4;border-left:4px solid #1E8449;">
-          <div class="action-num" style="color:#1E8449;">✅</div>
-          <div class="action-content">
-            <div class="action-title">No immediate actions required.</div>
-            <div class="action-rec">Continue monitoring and run regular scans to detect new vulnerabilities as they are discovered.</div>
-          </div>
-        </div>
-        {% endif %}
       </div>
+      {% endif %}
+      {% endfor %}
+      {% if total_findings == 0 %}
+      <div class="action-item">
+        <div class="action-num" style="color:var(--green);">✓</div>
+        <div class="action-content">
+          <div class="action-title">No immediate actions required.</div>
+          <div class="action-rec">Continue monitoring and run regular scans to detect new vulnerabilities as they are discovered.</div>
+        </div>
+      </div>
+      {% endif %}
     </div>
-  </div>
+  </section>
 
-  <!-- ══ DISCLAIMER ════════════════════════════════════════════════════════ -->
+  <!-- ══ DISCLAIMER ═══════════════════════════════════════════════════════ -->
   <div class="disclaimer">
-    <p><strong>⚠️ Legal Disclaimer:</strong> This report was generated by CyberScan Pro for authorised security assessment purposes only. All scanning was performed with authorisation on <strong>{{ target }}</strong>. Findings represent the security posture at the time of scanning and may change as new vulnerabilities are discovered or patches are applied. This report does not constitute professional legal or security advice — consult a qualified security professional for critical systems.</p>
+    <p><strong>Legal Disclaimer:</strong> This report was generated by CyberScan Pro for authorised security assessment purposes only. All scanning was performed with authorisation on <strong>{{ target }}</strong>. Findings represent the security posture at the time of scanning and may change as new vulnerabilities are discovered or patches are applied. This report does not constitute professional legal or security advice — consult a qualified security professional for critical systems.</p>
     <p style="margin-top:8px;"><strong>CyberScan Pro v1.0.0</strong> &nbsp;·&nbsp; FUPRE Final Year Project &nbsp;·&nbsp; Obeh Emmanuel Onoriode (COS/9581/2022) &nbsp;·&nbsp; Generated: {{ generated_at }}</p>
   </div>
 
