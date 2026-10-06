@@ -63,41 +63,7 @@ body::before{content:'';position:fixed;inset:0;
 .header-row p{font-size:13px;color:var(--text3);max-width:480px;}
 .header-text{flex:1;min-width:260px;}
 
-.ai-anim-wrap{position:relative;width:380px;height:190px;flex-shrink:0;opacity:0.95;}
-@media(max-width:900px){.ai-anim-wrap{display:none;}}
-.ai-anim-mode{position:absolute;inset:0;width:100%;height:100%;opacity:0;transition:opacity 1.2s ease;}
-.ai-anim-mode.active{opacity:1;}
-
-.hud-label{font-family:var(--mono);font-size:9px;letter-spacing:1.5px;fill:var(--text2);text-transform:uppercase;}
-.hud-label-dim{fill:var(--text3);font-size:8px;letter-spacing:1px;}
-.hud-label-green{fill:var(--green);animation:hudblink 2.4s ease-in-out infinite;}
-@keyframes hudblink{0%,100%{opacity:1;}50%{opacity:0.5;}}
-
-/* Mode 1: HUD radar */
-.hud-ring-slow{animation:spinslow 14s linear infinite;transform-origin:0 0;}
-#radar-sweep-group{transform-origin:0 0;animation:radarspin 4s linear infinite;}
-@keyframes radarspin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
-.hud-core-pulse{animation:corepulse 1.6s ease-in-out infinite;}
-@keyframes corepulse{0%,100%{opacity:0.7;r:4;}50%{opacity:1;r:5.5;}}
-.radar-blip{animation:blipfade 4s ease-in-out infinite;}
-.radar-blip.b1{animation-delay:.2s;}
-.radar-blip.b2{animation-delay:1.6s;}
-.radar-blip.b3{animation-delay:2.8s;}
-@keyframes blipfade{0%,78%,100%{opacity:0;}83%,95%{opacity:1;}}
-
-/* Mode 2: AI neural core */
-.ai-node{animation:aipulse2 2.2s ease-in-out infinite;}
-.ai-node.d1{animation-delay:.3s;}
-.ai-node.d2{animation-delay:.6s;}
-.ai-node.d3{animation-delay:.9s;}
-@keyframes aipulse2{0%,100%{opacity:0.5;transform:scale(1);}50%{opacity:1;transform:scale(1.4);}}
-
-/* Mode 3: Shield core */
-.shield-pulse{animation:shieldglow 2.8s ease-in-out infinite;}
-@keyframes shieldglow{0%,100%{filter:drop-shadow(0 0 2px var(--accent));}50%{filter:drop-shadow(0 0 9px var(--accent));}}
-@keyframes spinslow{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .status-chip{display:inline-flex;align-items:center;gap:6px;font-size:10px;color:var(--green);background:rgba(52,211,153,0.08);border:1px solid rgba(52,211,153,0.2);border-radius:20px;padding:4px 12px;font-family:var(--mono);margin-top:12px;}
-.pulse{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
 
 /* Score strip — full width top row */
@@ -321,114 +287,7 @@ nav{flex:1;padding:12px 0;}
     <div class="header-text">
       <h1 id="greeting-text">Good day, <br><span class="hi">{{ session.username | title }}</span> 👋</h1>
       <p>Your security posture is being monitored across {{ unique_targets }} target{% if unique_targets != 1 %}s{% endif %}. {{ total_scans }} scan{% if total_scans != 1 %}s{% endif %} completed total.</p>
-      <div class="status-chip"><div class="pulse"></div> Systems Online · All APIs Connected</div>
-    </div>
-    <div class="ai-anim-wrap" id="ai-anim-wrap">
-      <!-- Mode 1: HUD radar scanner (inspired by circular tech-HUD reference) -->
-      <svg class="ai-anim-mode active" id="anim-radar" viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <radialGradient id="radarGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="var(--green)" stop-opacity="0.55"/>
-            <stop offset="100%" stop-color="var(--green)" stop-opacity="0"/>
-          </radialGradient>
-          <filter id="glowSoft" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="2.2" result="b"/>
-            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <g transform="translate(190,95)">
-          <circle r="82" fill="none" stroke="var(--accent)" stroke-width="0.6" opacity="0.15"/>
-          <circle r="82" fill="none" stroke="var(--accent)" stroke-width="1.4" stroke-dasharray="2 10" opacity="0.35" class="hud-ring-slow"/>
-          <circle r="60" fill="none" stroke="var(--accent)" stroke-width="0.6" opacity="0.2"/>
-          <g class="hud-ticks" opacity="0.4">
-            <circle r="60" fill="none" stroke="var(--accent)" stroke-width="6" stroke-dasharray="1 7"/>
-          </g>
-          <circle r="34" fill="none" stroke="var(--green)" stroke-width="1" opacity="0.3"/>
-          <g id="radar-sweep-group" filter="url(#glowSoft)">
-            <path d="M0,0 L0,-82 A82,82 0 0,1 71,-41 Z" fill="url(#radarGrad)" opacity="0.65"/>
-            <line x1="0" y1="0" x2="0" y2="-82" stroke="var(--green)" stroke-width="1.2" opacity="0.8"/>
-          </g>
-          <circle r="4" fill="var(--green)" filter="url(#glowSoft)" class="hud-core-pulse"/>
-          <circle cx="46" cy="-24" r="3" fill="var(--red)" class="radar-blip b1"/>
-          <circle cx="-38" cy="30" r="2.5" fill="var(--yellow)" class="radar-blip b2"/>
-          <circle cx="50" cy="28" r="2.2" fill="var(--green)" class="radar-blip b3"/>
-          <circle cx="-52" cy="-18" r="2.2" fill="var(--accent)" class="radar-blip b2"/>
-        </g>
-        <text x="18" y="24" class="hud-label">THREAT SCAN</text>
-        <text x="18" y="38" class="hud-label hud-label-dim">ACTIVE · REAL-TIME</text>
-        <text x="278" y="24" class="hud-label" text-anchor="end">AI ENGINE</text>
-        <text x="278" y="38" class="hud-label hud-label-green" text-anchor="end" id="hud-status-text">● ONLINE</text>
-      </svg>
-
-      <!-- Mode 2: AI core / neural brain (inspired by circuit-brain reference) -->
-      <svg class="ai-anim-mode" id="anim-neural" viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <filter id="glowSoft2" x="-60%" y="-60%" width="220%" height="220%">
-            <feGaussianBlur stdDeviation="2" result="b"/>
-            <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
-        <!-- Circuit head silhouette -->
-        <g transform="translate(190,95)" filter="url(#glowSoft2)">
-          <path d="M-30,-45 C-48,-40 -55,-18 -50,2 C-47,16 -38,26 -30,34 L-30,48 L30,48 L30,30
-                   C40,20 46,6 46,-10 C46,-34 26,-52 0,-52 C-11,-52 -22,-49 -30,-45 Z"
-            fill="none" stroke="var(--accent)" stroke-width="1.3" opacity="0.55"/>
-          <g stroke="var(--accent)" stroke-width="0.8" opacity="0.4">
-            <path d="M-30,-45 L-30,-58 M-30,-58 L-20,-58"/>
-            <path d="M46,-10 L60,-10 M60,-10 L60,-2"/>
-            <path d="M0,-52 L0,-64 M0,-64 L10,-64"/>
-            <path d="M-50,2 L-64,2 M-64,2 L-64,10"/>
-          </g>
-          <g class="ai-node" fill="var(--accent)"><circle cx="-30" cy="-58" r="2.2"/></g>
-          <g class="ai-node d2" fill="var(--green)"><circle cx="60" cy="-2" r="2.2"/></g>
-          <g class="ai-node d1" fill="var(--accent)"><circle cx="10" cy="-64" r="2.2"/></g>
-          <g class="ai-node d3" fill="var(--accent)"><circle cx="-64" cy="10" r="2.2"/></g>
-          <!-- inner neural mesh -->
-          <g stroke="var(--green)" stroke-width="0.7" opacity="0.4">
-            <line x1="-18" y1="-20" x2="6" y2="-8"/><line x1="6" y1="-8" x2="-4" y2="16"/>
-            <line x1="6" y1="-8" x2="20" y2="-18"/><line x1="-4" y1="16" x2="16" y2="20"/>
-          </g>
-          <g class="ai-node d1" fill="var(--green)"><circle cx="-18" cy="-20" r="2.6"/></g>
-          <g class="ai-node d3" fill="var(--accent)"><circle cx="6" cy="-8" r="3.4"/></g>
-          <g class="ai-node d2" fill="var(--green)"><circle cx="-4" cy="16" r="2.4"/></g>
-          <g class="ai-node d1" fill="var(--accent)"><circle cx="20" cy="-18" r="2.2"/></g>
-          <g class="ai-node d2" fill="var(--green)"><circle cx="16" cy="20" r="2.2"/></g>
-        </g>
-        <text x="18" y="24" class="hud-label">AI ANALYSIS</text>
-        <text x="18" y="38" class="hud-label hud-label-dim">PATTERN RECOGNITION</text>
-        <text x="278" y="24" class="hud-label" text-anchor="end">VULN ENGINE</text>
-        <text x="278" y="38" class="hud-label hud-label-green" text-anchor="end">● PROCESSING</text>
-      </svg>
-
-      <!-- Mode 3: Secure shield core (inspired by shield/lock + low-poly mesh reference) -->
-      <svg class="ai-anim-mode" id="anim-shield" viewBox="0 0 380 190" xmlns="http://www.w3.org/2000/svg">
-        <g stroke="var(--accent)" stroke-width="0.6" opacity="0.22">
-          <line x1="90" y1="40" x2="150" y2="70"/><line x1="150" y1="70" x2="230" y2="60"/>
-          <line x1="230" y1="60" x2="290" y2="90"/><line x1="90" y1="40" x2="70" y2="110"/>
-          <line x1="70" y1="110" x2="150" y2="70"/><line x1="150" y1="70" x2="150" y2="140"/>
-          <line x1="230" y1="60" x2="230" y2="140"/><line x1="150" y1="140" x2="230" y2="140"/>
-          <line x1="70" y1="110" x2="150" y2="140"/><line x1="230" y1="140" x2="290" y2="90"/>
-        </g>
-        <g class="ai-node d3" fill="var(--accent)" opacity="0.5"><circle cx="90" cy="40" r="2"/></g>
-        <g class="ai-node d1" fill="var(--accent)" opacity="0.5"><circle cx="230" cy="60" r="2"/></g>
-        <g class="ai-node d2" fill="var(--accent)" opacity="0.5"><circle cx="70" cy="110" r="2"/></g>
-        <g class="ai-node d1" fill="var(--accent)" opacity="0.5"><circle cx="290" cy="90" r="2"/></g>
-        <g class="ai-node d2" fill="var(--accent)" opacity="0.5"><circle cx="150" cy="140" r="2"/></g>
-        <g class="ai-node d3" fill="var(--accent)" opacity="0.5"><circle cx="230" cy="140" r="2"/></g>
-
-        <g transform="translate(190,95)">
-          <path d="M0,-42 L28,-30 L28,-2 C28,20 15,36 0,44 C-15,36 -28,20 -28,-2 L-28,-30 Z"
-            fill="rgba(0,200,255,0.05)" stroke="var(--accent)" stroke-width="1.4" opacity="0.75"
-            class="shield-pulse"/>
-          <rect x="-12" y="-4" width="24" height="18" rx="3" fill="rgba(0,255,157,0.1)" stroke="var(--green)" stroke-width="1.2"/>
-          <path d="M-7,-4 V-10 C-7,-16 -2,-19 0,-19 C2,-19 7,-16 7,-10 V-4" fill="none" stroke="var(--green)" stroke-width="1.2"/>
-          <circle cx="0" cy="4" r="2.2" fill="var(--green)"/>
-        </g>
-        <text x="18" y="24" class="hud-label">SYSTEM SECURE</text>
-        <text x="18" y="38" class="hud-label hud-label-dim">ASSETS PROTECTED</text>
-        <text x="278" y="24" class="hud-label" text-anchor="end">INTEGRITY</text>
-        <text x="278" y="38" class="hud-label hud-label-green" text-anchor="end">● VERIFIED</text>
-      </svg>
+      <div class="status-chip">Systems Online · All APIs Connected</div>
     </div>
   </div>
 
@@ -630,8 +489,8 @@ nav{flex:1;padding:12px 0;}
                          hour < 21 ? ["Good evening"] : ["Working late"];
   const anyTimeGreetings = [
     "Welcome back", "Good to see you", "Systems ready for", "Standing by",
-    "All clear", "Mission control ready", "Perimeter secure", "Back on watch",
-    "Ready when you are", "Let's keep things secure"
+    "All clear,", "Mission control ready,", "Perimeter secure,", "Back on watch,",
+    "Ready when you are,", "Let's keep things secure,"
   ];
   const pool = timeGreetings.concat(anyTimeGreetings);
   const pick = pool[Math.floor(Math.random() * pool.length)];
@@ -641,19 +500,6 @@ nav{flex:1;padding:12px 0;}
   if(el){
     el.innerHTML = pick + ', <br><span class="hi">' + name + '</span> ' + emoji;
   }
-})();
-
-// ── Rotating AI animation (cycles through 3 visual modes) ──
-(function(){
-  const modes = ['anim-radar','anim-neural','anim-shield'];
-  let idx = 0;
-  setInterval(()=>{
-    const cur = document.getElementById(modes[idx]);
-    if(cur) cur.classList.remove('active');
-    idx = (idx + 1) % modes.length;
-    const next = document.getElementById(modes[idx]);
-    if(next) next.classList.add('active');
-  }, 6000);
 })();
 
 const MODALS = {
